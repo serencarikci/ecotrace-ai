@@ -32,7 +32,7 @@ describe('HTTP interceptors', () => {
   });
 
   it('attaches Authorization header when access token exists', () => {
-    localStorage.setItem('ecotrace.accessToken', 'access-123');
+    auth.accessToken.set('access-123');
     http.get('/api/v1/auth/me').subscribe();
     const req = httpMock.expectOne('/api/v1/auth/me');
     expect(req.request.headers.get('Authorization')).toBe('Bearer access-123');
@@ -48,8 +48,8 @@ describe('HTTP interceptors', () => {
   });
 
   it('refreshes token once on 401 and retries', () => {
-    localStorage.setItem('ecotrace.accessToken', 'old');
-    localStorage.setItem('ecotrace.refreshToken', 'refresh-1');
+    auth.accessToken.set('old');
+    auth.refreshToken.set('refresh-1');
 
     http.get('/api/v1/organizations').subscribe();
     const first = httpMock.expectOne('/api/v1/organizations');
@@ -70,8 +70,8 @@ describe('HTTP interceptors', () => {
   });
 
   it('clears session on logout', () => {
-    localStorage.setItem('ecotrace.accessToken', 'a');
-    localStorage.setItem('ecotrace.refreshToken', 'r');
+    auth.accessToken.set('a');
+    auth.refreshToken.set('r');
     auth.clearSession();
     expect(auth.getAccessToken()).toBeNull();
     expect(auth.currentUser()).toBeNull();

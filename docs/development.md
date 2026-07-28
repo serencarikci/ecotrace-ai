@@ -127,3 +127,9 @@ Confirm `CORS_ALLOWED_ORIGINS` includes `http://localhost:4200` and `environment
 
 **Login works in Swagger but not UI**  
 Hard-refresh the SPA; check browser network for `/api/v1/auth/login` and token persistence keys `ecotrace.*`.
+
+## Phase 7 local extras
+
+- Scheduler: `docker compose up scheduler` or `python -m ecotrace.scheduler_main`
+- Backup scripts: `scripts/backup.sh`, `scripts/verify-backup.sh`, `scripts/restore.sh`
+- Perf smoke: `python scripts/perf/health_burst.py`

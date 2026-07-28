@@ -1,24 +1,5 @@
 from fastapi import APIRouter
-
-from ecotrace.api.v1 import (
-    activity_records,
-    attachments,
-    auth,
-    carbon_inventories,
-    carbon_preferences,
-    data_sources,
-    emission_factor_sources,
-    emission_factors,
-    equipment,
-    facilities,
-    health,
-    imports,
-    organizations,
-    production_lines,
-    reference,
-    reporting_periods,
-)
-
+from ecotrace.api.v1 import activity_records, ai_copilot, analytics, attachments, auth, carbon_inventories, carbon_preferences, data_sources, digital_product_passports, emission_factor_sources, emission_factors, equipment, facilities, health, imports, lca_studies, materials, organizations, phase7, product_carbon_footprints, production_lines, products, reference, reporting_periods, reports, scenarios, suppliers, sustainability_targets, system_ops
 api_router = APIRouter()
 api_router.include_router(auth.router)
 api_router.include_router(organizations.router)
@@ -36,4 +17,25 @@ api_router.include_router(emission_factors.router)
 api_router.include_router(carbon_preferences.router)
 api_router.include_router(carbon_inventories.router)
 api_router.include_router(carbon_inventories.items_router)
+api_router.include_router(analytics.router)
+api_router.include_router(sustainability_targets.intensity_router)
+api_router.include_router(sustainability_targets.kpi_router)
+api_router.include_router(sustainability_targets.baseline_router)
+api_router.include_router(sustainability_targets.target_router)
+api_router.include_router(sustainability_targets.initiative_router)
+api_router.include_router(scenarios.router)
+api_router.include_router(reports.router)
+api_router.include_router(products.router)
+api_router.include_router(suppliers.router)
+api_router.include_router(materials.router)
+api_router.include_router(lca_studies.router)
+api_router.include_router(product_carbon_footprints.router)
+api_router.include_router(digital_product_passports.router)
+api_router.include_router(digital_product_passports.public_router)
+api_router.include_router(ai_copilot.router)
+api_router.include_router(phase7.agents_router)
+api_router.include_router(phase7.org_router)
+api_router.include_router(phase7.notif_router)
+api_router.include_router(phase7.reg_router)
+api_router.include_router(system_ops.system_router)
 api_router.include_router(health.meta_router)

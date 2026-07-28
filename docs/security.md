@@ -91,3 +91,12 @@ Foundation auth/org events plus Operations facility/asset/period/activity/attach
 6. Replace local attachment storage with object storage
 7. Enable OpenTelemetry tracing
 8. Regular dependency scanning in CI
+
+## Phase 7 hardening
+
+- Trusted host / CSP / optional HSTS middleware
+- Login lockout (in-process + configurable thresholds)
+- Agent tool allowlisting and write-approval workflow
+- Prompt injection markers and secret redaction
+- Production configuration fail-fast for weak secrets
+- Detailed system health endpoints require system_admin

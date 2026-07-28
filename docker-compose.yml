@@ -1,10 +1,10 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: ecotrace-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-ecotrace}
+      POSTGRES_DB: ecotrace
       POSTGRES_USER: ${POSTGRES_USER:-ecotrace}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecotrace_dev_password}
     ports:
@@ -30,12 +30,19 @@ services:
       - .env
     environment:
       POSTGRES_HOST: postgres
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ecotrace}:${POSTGRES_PASSWORD:-ecotrace_dev_password}@postgres:5432/${POSTGRES_DB:-ecotrace}
+      POSTGRES_DB: ecotrace
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ecotrace}:${POSTGRES_PASSWORD:-ecotrace_dev_password}@postgres:5432/ecotrace
       ATTACHMENT_STORAGE_PATH: /data/attachments
+      KNOWLEDGE_STORAGE_PATH: /data/knowledge
+      REPORT_STORAGE_PATH: /data/reports
+      BACKUP_STORAGE_PATH: /data/backups
     ports:
       - "${API_HOST_PORT:-8000}:8000"
     volumes:
       - ecotrace_attachments:/data/attachments
+      - ecotrace_knowledge:/data/knowledge
+      - ecotrace_reports:/data/reports
+      - ecotrace_backups:/data/backups
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,6 +52,37 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
+    networks:
+      - ecotrace-net
+
+  scheduler:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: ecotrace-scheduler
+    restart: unless-stopped
+    command: ["python", "-m", "ecotrace.scheduler_main"]
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ecotrace
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ecotrace}:${POSTGRES_PASSWORD:-ecotrace_dev_password}@postgres:5432/ecotrace
+      SCHEDULER_ENABLED: "true"
+      RUN_SEED: "false"
+      RUN_MIGRATIONS: "false"
+      ATTACHMENT_STORAGE_PATH: /data/attachments
+      KNOWLEDGE_STORAGE_PATH: /data/knowledge
+      REPORT_STORAGE_PATH: /data/reports
+    volumes:
+      - ecotrace_attachments:/data/attachments
+      - ecotrace_knowledge:/data/knowledge
+      - ecotrace_reports:/data/reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
     networks:
       - ecotrace-net
 
@@ -69,6 +107,12 @@ volumes:
     name: ecotrace_pgdata
   ecotrace_attachments:
     name: ecotrace_attachments
+  ecotrace_knowledge:
+    name: ecotrace_knowledge
+  ecotrace_reports:
+    name: ecotrace_reports
+  ecotrace_backups:
+    name: ecotrace_backups
 
 networks:
   ecotrace-net:

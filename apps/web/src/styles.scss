@@ -2,19 +2,60 @@
   --et-forest: #1b4332;
   --et-forest-deep: #0f2a1f;
   --et-moss: #2d6a4f;
+  --et-leaf: #40916c;
   --et-sage: #95d5b2;
   --et-mist: #eef4f0;
   --et-slate: #243038;
   --et-ink: #14212b;
   --et-muted: #5c6b73;
-  --et-surface: #ffffff;
+  --et-surface: rgba(255, 255, 255, 0.88);
+  --et-surface-solid: #ffffff;
   --et-border: #d5e0da;
   --et-danger: #9b2226;
   --et-warning: #bb3e03;
-  --et-radius: 12px;
-  --et-shadow: 0 12px 40px rgba(15, 42, 31, 0.08);
-  --et-font-sans: 'DM Sans', system-ui, sans-serif;
-  --et-font-display: 'Fraunces', Georgia, serif;
+  --et-radius: 16px;
+  --et-radius-sm: 10px;
+  --et-shadow: 0 18px 50px rgba(15, 42, 31, 0.1);
+  --et-shadow-soft: 0 8px 24px rgba(15, 42, 31, 0.06);
+  --et-font: 'Sora', system-ui, sans-serif;
+  --et-font-sans: var(--et-font);
+  --et-font-display: var(--et-font);
+  --et-font-body: var(--et-font);
+
+  --mat-sys-primary: #2d6a4f;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e8f0eb;
+  --mat-sys-on-primary-container: #0f2a1f;
+  --mat-sys-secondary: #1b4332;
+  --mat-sys-surface: #ffffff;
+  --mat-sys-on-surface: #14212b;
+  --mat-sys-outline: rgba(45, 106, 79, 0.28);
+  --mdc-filled-button-container-color: #2d6a4f;
+  --mdc-filled-button-label-text-color: #ffffff;
+  --mdc-protected-button-container-color: #2d6a4f;
+  --mdc-protected-button-label-text-color: #ffffff;
+  --mdc-outlined-button-label-text-color: #1b4332;
+  --mdc-outlined-button-outline-color: rgba(45, 106, 79, 0.35);
+  --mdc-text-button-label-text-color: #1b4332;
+  --mdc-circular-progress-active-indicator-color: #2d6a4f;
+  --mdc-theme-primary: #2d6a4f;
+  --mat-toolbar-container-background-color: transparent;
+  --mat-form-field-outlined-outline-color: rgba(45, 106, 79, 0.28);
+  --mat-form-field-outlined-focus-outline-color: #2d6a4f;
+  --mat-form-field-focus-select-arrow-color: #2d6a4f;
+  --mat-option-selected-state-label-text-color: #1b4332;
+  --mat-full-pseudo-checkbox-selected-icon-color: #2d6a4f;
+  --mat-minimal-pseudo-checkbox-selected-checkmark-color: #2d6a4f;
+  --mat-checkbox-selected-icon-color: #2d6a4f;
+  --mat-radio-checked-ripple-color: #2d6a4f;
+  --mat-slider-ripple-color: #2d6a4f;
+  --mat-slider-thumb-color: #2d6a4f;
+  --mat-slider-track-active-color: #2d6a4f;
+  --mat-tab-header-active-focus-indicator-color: #2d6a4f;
+  --mat-tab-header-active-hover-indicator-color: #2d6a4f;
+  --mat-tab-header-active-label-text-color: #1b4332;
+  --mat-tab-header-active-focus-label-text-color: #1b4332;
+  --mat-tab-header-active-hover-label-text-color: #1b4332;
 }
 
 *,
@@ -30,12 +71,17 @@ body {
 }
 
 body {
-  font-family: var(--et-font-sans);
+  font-family: var(--et-font);
   color: var(--et-ink);
-  background:
-    radial-gradient(circle at top left, rgba(149, 213, 178, 0.25), transparent 40%),
+  background-color: #eef4f0;
+  background-image:
+    radial-gradient(ellipse 80% 55% at 0% -10%, rgba(149, 213, 178, 0.28), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(45, 106, 79, 0.1), transparent 50%),
+    radial-gradient(circle at 50% 120%, rgba(149, 213, 178, 0.22), transparent 45%),
     linear-gradient(160deg, #f7faf8 0%, #eef4f0 45%, #e7efea 100%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -44,30 +90,44 @@ a {
 }
 
 .page {
-  padding: 1.5rem;
-  max-width: 1100px;
+  padding: 1.75rem 1.5rem 2.5rem;
+  max-width: 1120px;
+  animation: et-rise 0.45s ease-out both;
 }
 
 .page-title {
-  font-family: var(--et-font-display);
-  font-size: clamp(1.6rem, 2vw, 2rem);
-  font-weight: 600;
-  margin: 0 0 0.35rem;
+  font-family: var(--et-font);
+  font-size: clamp(1.75rem, 2.4vw, 2.15rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.4rem;
   color: var(--et-forest-deep);
 }
 
 .page-subtitle {
-  margin: 0 0 1.5rem;
+  margin: 0 0 1.75rem;
   color: var(--et-muted);
-  max-width: 52ch;
+  max-width: 54ch;
+  line-height: 1.55;
+  font-size: 0.98rem;
 }
 
 .surface-card {
   background: var(--et-surface);
   border: 1px solid var(--et-border);
   border-radius: var(--et-radius);
+  box-shadow: var(--et-shadow-soft);
+  padding: 1.35rem 1.5rem;
+  backdrop-filter: blur(14px);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.surface-card:hover {
   box-shadow: var(--et-shadow);
-  padding: 1.25rem 1.5rem;
+  border-color: rgba(45, 106, 79, 0.28);
 }
 
 .error-text {
@@ -103,10 +163,11 @@ a {
 .status-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.15rem 0.55rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
   background: rgba(45, 106, 79, 0.12);
   color: var(--et-moss);
 }
@@ -173,9 +234,9 @@ a {
 }
 
 .detail-grid dt {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: var(--et-muted);
   margin: 0;
 }
@@ -199,8 +260,10 @@ a {
 
 .counts strong {
   display: block;
-  font-family: var(--et-font-display);
-  font-size: 1.35rem;
+  font-family: var(--et-font);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--et-forest-deep);
 }
 
@@ -212,12 +275,21 @@ a {
 .upload-label {
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 0.9rem;
+  padding: 0.45rem 0.95rem;
   border: 1px solid var(--et-border);
-  border-radius: 8px;
+  border-radius: var(--et-radius-sm);
   cursor: pointer;
   font-weight: 600;
   color: var(--et-moss);
+  background: rgba(255, 255, 255, 0.7);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.upload-label:hover {
+  background: #fff;
+  border-color: rgba(45, 106, 79, 0.4);
 }
 
 .material-symbols-outlined {
@@ -227,4 +299,33 @@ a {
     'GRAD' 0,
     'opsz' 24;
   vertical-align: middle;
+}
+
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-flat-button.mat-primary {
+  --mdc-filled-button-container-color: #2d6a4f;
+  --mdc-filled-button-label-text-color: #fff;
+  --mdc-protected-button-container-color: #2d6a4f;
+  --mdc-protected-button-label-text-color: #fff;
+}
+
+@keyframes et-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes et-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

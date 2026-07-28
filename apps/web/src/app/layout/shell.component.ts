@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AuthService } from '../core/services/auth.service';
+import { Phase7ApiService } from '../core/services/phase7-api.service';
 import { canManageReferenceData } from '../core/services/roles.util';
 import { APP_VERSION } from '../core/version';
 
@@ -30,6 +31,7 @@ import { APP_VERSION } from '../core/version';
 })
 export class ShellComponent {
   private readonly auth = inject(AuthService);
+  private readonly phase7 = inject(Phase7ApiService);
   private readonly breakpoints = inject(BreakpointObserver);
 
   readonly appVersion = APP_VERSION;
@@ -37,6 +39,7 @@ export class ShellComponent {
   readonly organizations = this.auth.organizations;
   readonly currentOrganizationId = this.auth.currentOrganizationId;
   readonly sidenavOpen = signal(true);
+  readonly unreadCount = signal(0);
   readonly showSystemAdmin = computed(() => canManageReferenceData(this.auth.currentRoles()));
 
   readonly selectedOrganizationName = computed(() => {
@@ -53,6 +56,12 @@ export class ShellComponent {
     });
     if (this.auth.isAuthenticated() && this.organizations().length === 0) {
       this.auth.loadMyOrganizations().subscribe({ error: () => undefined });
+    }
+    if (this.auth.isAuthenticated()) {
+      this.phase7.unreadCount().subscribe({
+        next: (r) => this.unreadCount.set(r.count ?? 0),
+        error: () => undefined,
+      });
     }
   }
 

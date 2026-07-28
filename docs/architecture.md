@@ -146,3 +146,21 @@ flowchart LR
 AI copilots, RAG, full LCA/PCF, Digital Product Passport, IoT/MQTT/Kafka ingestion, market-based Scope 2 evidence models, spend-based Scope 3, Redis/Celery workers, and executive dashboards.
 
 See [carbon-accounting.md](carbon-accounting.md) for calculation methodology, matching precedence, and snapshot design.
+
+## Phase 7 extensions
+
+Additional modules: agents, automation, job_execution, anomaly_detection, forecasting, data_quality, alerts, notifications, scheduled_reports, supplier_monitoring, regulatory_intelligence, production_operations.
+
+```mermaid
+flowchart TB
+  UI[Angular Web] --> API[FastAPI Modular Monolith]
+  API --> PG[(PostgreSQL)]
+  SCH[Scheduler Worker] --> PG
+  SCH --> API
+  API --> STOR[/Attachments Knowledge Reports/]
+  Agents[Agents] --> Services[Application Services]
+  Tools[Allowlisted Tools] --> Services
+  Agents --> Approvals[Human Approvals]
+```
+
+Agent execution: prompt → injection check → allowlisted tools → read results or pending approvals → audited rationale (no hidden CoT).

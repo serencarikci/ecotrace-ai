@@ -5,6 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { of } from 'rxjs';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { extractApiErrorMessage } from '../../core/services/error.util';
 
@@ -42,18 +44,30 @@ export class LoginComponent {
     }
     this.loading.set(true);
     const { email, password } = this.form.getRawValue();
-    this.auth.login(email, password).subscribe({
-      next: () => {
-        this.auth.loadMyOrganizations().subscribe({
-          error: () => undefined,
-        });
-        this.loading.set(false);
-        void this.router.navigate(['/app/dashboard']);
-      },
-      error: (err: unknown) => {
-        this.loading.set(false);
-        this.errorMessage.set(extractApiErrorMessage(err, 'Invalid email or password.'));
-      },
-    });
+    this.auth
+      .login(email, password)
+      .pipe(
+        switchMap(() => this.auth.loadMyOrganizations().pipe(catchError(() => of([])))),
+        finalize(() => this.loading.set(false)),
+      )
+      .subscribe({
+        next: () => {
+          void this.goToDashboard();
+        },
+        error: (err: unknown) => {
+          this.errorMessage.set(extractApiErrorMessage(err, 'Invalid email or password.'));
+        },
+      });
+  }
+
+  private async goToDashboard(): Promise<void> {
+    try {
+      const ok = await this.router.navigateByUrl('/app/dashboard', { replaceUrl: true });
+      if (!ok && !this.router.url.startsWith('/app')) {
+        window.location.assign('/app/dashboard');
+      }
+    } catch {
+      window.location.assign('/app/dashboard');
+    }
   }
 }

@@ -4,72 +4,105 @@
 }
 
 .sidenav {
-  width: 260px;
-  background: linear-gradient(180deg, var(--et-forest-deep), var(--et-forest));
+  width: 272px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(149, 213, 178, 0.16), transparent 42%),
+    linear-gradient(175deg, #0f2a1f 0%, #1b4332 55%, #2d6a4f 100%);
   color: #f4faf6;
   border: none;
+  box-shadow: 8px 0 32px rgba(15, 42, 31, 0.18);
 }
 
 .sidenav-brand {
-  font-family: var(--et-font-display);
-  padding: 1.25rem 1rem 0.75rem;
+  padding: 1.35rem 1.15rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidenav-brand-name {
-  font-size: 1.35rem;
+  font-size: 1.28rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .sidenav-brand-version {
-  margin-top: 0.2rem;
-  font-family: var(--et-font-body, inherit);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  opacity: 0.72;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.65;
 }
 
 .sidenav a {
-  color: #f4faf6 !important;
+  color: rgba(244, 250, 246, 0.9) !important;
+  border-radius: 10px !important;
+  margin: 0.1rem 0.55rem;
+  width: calc(100% - 1.1rem) !important;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.sidenav a:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 .sidenav .active {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(149, 213, 178, 0.18) !important;
+  box-shadow: inset 3px 0 0 #95d5b2;
 }
 
 .nav-section {
-  margin: 1rem 1rem 0.35rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  margin: 1.1rem 1.15rem 0.3rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.7;
+  font-weight: 600;
+  opacity: 0.55;
 }
 
 .topbar {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.72);
   border-bottom: 1px solid var(--et-border);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .app-name {
-  font-family: var(--et-font-display);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--et-forest-deep);
   margin-left: 0.25rem;
 }
 
 .app-version {
-  margin-left: 0.5rem;
-  font-size: 0.78rem;
-  color: var(--et-muted, #5f6f66);
+  margin-left: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--et-moss);
+  background: rgba(45, 106, 79, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
 }
 
 .spacer {
   flex: 1;
 }
 
+.badge {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--et-forest-deep);
+}
+
 .org-selector {
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .content {

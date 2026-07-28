@@ -68,7 +68,10 @@ describe('ShellComponent role-based navigation', () => {
     expect(text).toContain('Activity Data');
     expect(text).toContain('Carbon Accounting');
     expect(text).toContain('Carbon Inventories');
-    expect(text).toContain('v0.3.0');
+    expect(text).toContain('v0.7.1');
+    expect(text).toContain('Intelligence');
+    expect(text).toContain('AI Agents');
+    expect(text).toContain('Health');
   });
 
   it('hides System Administration for viewer', async () => {
@@ -77,6 +80,9 @@ describe('ShellComponent role-based navigation', () => {
     expect(text).not.toContain('System Administration');
     expect(text).toContain('Facilities');
     expect(text).toContain('Carbon Accounting');
-    expect(text).toContain('Coming soon');
+    expect(text).toContain('AI Copilot');
+    expect(text).toContain('Sustainability Copilot');
+    expect(text).toContain('Anomalies');
+    expect(text).toContain('Automation Rules');
   });
 });

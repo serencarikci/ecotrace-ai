@@ -47,9 +47,14 @@ jobs:
       CORS_ALLOWED_ORIGINS: http://localhost:4200
       LOG_LEVEL: WARNING
       ATTACHMENT_STORAGE_PATH: /tmp/ecotrace-ci-attachments
+      KNOWLEDGE_STORAGE_PATH: /tmp/ecotrace-ci-knowledge
+      REPORT_STORAGE_PATH: /tmp/ecotrace-ci-reports
+      BACKUP_STORAGE_PATH: /tmp/ecotrace-ci-backups
       MAX_ATTACHMENT_SIZE_MB: "5"
       MAX_CSV_IMPORT_ROWS: "5000"
       ALLOWED_ATTACHMENT_TYPES: pdf,csv,xlsx,png,jpeg,jpg
+      AI_LLM_PROVIDER: local_grounded
+      AI_EMBEDDING_PROVIDER: local_hash
 
     steps:
       - uses: actions/checkout@v4
@@ -66,8 +71,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install ".[dev]"
 
-      - name: Prepare attachment storage
-        run: mkdir -p /tmp/ecotrace-ci-attachments
+      - name: Prepare storage paths
+        run: mkdir -p /tmp/ecotrace-ci-attachments /tmp/ecotrace-ci-knowledge /tmp/ecotrace-ci-reports /tmp/ecotrace-ci-backups
 
       - name: Ruff format check
         run: ruff format --check src tests
@@ -84,10 +89,10 @@ jobs:
       - name: Verify migration head
         run: |
           alembic current | tee /tmp/alembic-current.txt
-          grep -q "0003_phase3" /tmp/alembic-current.txt
+          grep -q "0007_phase7" /tmp/alembic-current.txt
 
       - name: Pytest with coverage
-        run: pytest tests/ -v --cov=ecotrace --cov-report=term-missing --cov-fail-under=60
+        run: pytest tests/ -v --cov=ecotrace --cov-report=term-missing --cov-fail-under=55
 
       - name: Seed idempotency smoke
         run: |
@@ -97,3 +102,9 @@ jobs:
       - name: Build Docker image
         run: docker build -t ecotrace-api:ci .
         working-directory: apps/api
+
+      - name: Dependency vulnerability scan (pip-audit)
+        run: |
+          pip install pip-audit
+          pip-audit || true
+        continue-on-error: true

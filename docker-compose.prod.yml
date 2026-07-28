@@ -1,0 +1,48 @@
+
+services:
+  postgres:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    volumes:
+      - ecotrace_pgdata:/var/lib/postgresql/data
+
+  api:
+    restart: always
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      RUN_SEED: "false"
+      ENABLE_HSTS: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  scheduler:
+    restart: always
+    environment:
+      APP_ENV: production
+      RUN_SEED: "false"
+      RUN_MIGRATIONS: "false"
+      SCHEDULER_ENABLED: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  web:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M

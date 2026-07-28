@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+
 
 FROM python:3.12-slim AS base
 
@@ -38,7 +38,6 @@ RUN pip install --upgrade pip \
     && chown -R ecotrace:ecotrace /app /data/attachments \
     && chmod +x /app/docker-entrypoint.sh
 
-# Entrypoint starts as root to fix volume ownership, then drops to ecotrace.
 USER root
 
 EXPOSE 8000

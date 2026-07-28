@@ -7,7 +7,7 @@ WEB_DIR := apps/web
 PYTHON := python3.12
 
 help:
-	@echo "EcoTrace AI — Make targets (v0.3.0)"
+	@echo "EcoTrace AI — Make targets (v0.4.0)"
 	@echo ""
 	@echo "  make up              Start all services (docker compose up --build)"
 	@echo "  make down            Stop all services"

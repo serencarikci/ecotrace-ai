@@ -26,13 +26,15 @@ describe('auth guards', () => {
   });
 
   it('authGuard allows authenticated users', () => {
-    localStorage.setItem('ecotrace.accessToken', 'token');
+    const auth = TestBed.inject(AuthService);
+    auth.accessToken.set('token');
     const result = TestBed.runInInjectionContext(() => authGuard({} as never, {} as never));
     expect(result).toBeTrue();
   });
 
   it('guestGuard redirects authenticated users to dashboard', () => {
-    localStorage.setItem('ecotrace.accessToken', 'token');
+    const auth = TestBed.inject(AuthService);
+    auth.accessToken.set('token');
     const result = TestBed.runInInjectionContext(() => guestGuard({} as never, {} as never));
     expect(String(result)).toContain('dashboard');
   });

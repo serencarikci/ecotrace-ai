@@ -42,7 +42,7 @@ describe('LoginComponent', () => {
     const fixture = TestBed.createComponent(LoginComponent);
     const component = fixture.componentInstance;
     const router = TestBed.inject(Router);
-    const navigateSpy = spyOn(router, 'navigate').and.resolveTo(true);
+    const navigateSpy = spyOn(router, 'navigateByUrl').and.resolveTo(true);
     const auth = TestBed.inject(AuthService);
     spyOn(auth, 'login').and.returnValue(
       of({
@@ -58,14 +58,15 @@ describe('LoginComponent', () => {
         },
       }),
     );
-    spyOn(auth, 'loadMyOrganizations').and.returnValue(of([]));
+    const orgsSpy = spyOn(auth, 'loadMyOrganizations').and.returnValue(of([]));
 
     component.form.setValue({
       email: 'admin@ecotrace.dev',
       password: 'EcoTraceAdmin!2024',
     });
     component.submit();
-    expect(navigateSpy).toHaveBeenCalledWith(['/app/dashboard']);
+    expect(orgsSpy).toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith('/app/dashboard', { replaceUrl: true });
   });
 
   it('should show error on failed login', () => {

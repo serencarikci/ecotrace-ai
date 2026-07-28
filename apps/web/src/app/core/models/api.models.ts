@@ -68,13 +68,6 @@ export interface Page<T> {
   totalPages: number;
 }
 
-export interface MetaResponse {
-  name: string;
-  version: string;
-  environment: string;
-  apiVersion: string;
-}
-
 export interface ApiErrorDetail {
   field?: string | null;
   message: string;

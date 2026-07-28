@@ -43,6 +43,87 @@
         >Factor Preferences</a
       >
 
+      <div class="nav-section">Analytics</div>
+      <a mat-list-item routerLink="/app/analytics" routerLinkActive="active">Executive Analytics</a>
+      <a mat-list-item routerLink="/app/analytics/trends" routerLinkActive="active">Trends</a>
+      <a mat-list-item routerLink="/app/analytics/categories" routerLinkActive="active"
+        >Categories</a
+      >
+      <a mat-list-item routerLink="/app/analytics/facilities" routerLinkActive="active"
+        >Facilities</a
+      >
+      <a mat-list-item routerLink="/app/analytics/intensity" routerLinkActive="active"
+        >Intensity &amp; KPIs</a
+      >
+      <a mat-list-item routerLink="/app/analytics/decision-support" routerLinkActive="active"
+        >Decision Support</a
+      >
+
+      <div class="nav-section">Planning</div>
+      <a mat-list-item routerLink="/app/planning/baselines" routerLinkActive="active">Baselines</a>
+      <a mat-list-item routerLink="/app/planning/targets" routerLinkActive="active">Targets</a>
+      <a mat-list-item routerLink="/app/planning/initiatives" routerLinkActive="active"
+        >Initiatives</a
+      >
+      <a mat-list-item routerLink="/app/planning/scenarios" routerLinkActive="active">Scenarios</a>
+
+      <div class="nav-section">Reporting</div>
+      <a mat-list-item routerLink="/app/reports" routerLinkActive="active">Report Center</a>
+
+      <div class="nav-section">Product Sustainability</div>
+      <a mat-list-item routerLink="/app/products" routerLinkActive="active">Products</a>
+      <a mat-list-item routerLink="/app/product-batches" routerLinkActive="active"
+        >Product Batches</a
+      >
+      <a mat-list-item routerLink="/app/suppliers" routerLinkActive="active">Suppliers</a>
+      <a mat-list-item routerLink="/app/materials" routerLinkActive="active">Materials</a>
+      <a mat-list-item routerLink="/app/lca-studies" routerLinkActive="active">LCA Studies</a>
+      <a mat-list-item routerLink="/app/product-carbon-footprints" routerLinkActive="active"
+        >Product Carbon Footprints</a
+      >
+
+      <div class="nav-section">Digital Product Passport</div>
+      <a mat-list-item routerLink="/app/digital-product-passports" routerLinkActive="active"
+        >Passports</a
+      >
+      <a mat-list-item routerLink="/passport/ecobottle-750" routerLinkActive="active"
+        >Public Preview</a
+      >
+
+      <div class="nav-section">AI Copilot</div>
+      <a mat-list-item routerLink="/app/ai" routerLinkActive="active">Sustainability Copilot</a>
+      <a mat-list-item routerLink="/app/ai/documents" routerLinkActive="active">Knowledge Docs</a>
+      <a mat-list-item routerLink="/app/ai/search" routerLinkActive="active">Enterprise Search</a>
+      <a mat-list-item routerLink="/app/ai/admin" routerLinkActive="active">AI Admin</a>
+
+      <div class="nav-section">Intelligence</div>
+      <a mat-list-item routerLink="/app/agents" routerLinkActive="active">AI Agents</a>
+      <a mat-list-item routerLink="/app/agent-approvals" routerLinkActive="active"
+        >Agent Approvals</a
+      >
+      <a mat-list-item routerLink="/app/anomalies" routerLinkActive="active">Anomalies</a>
+      <a mat-list-item routerLink="/app/forecasts" routerLinkActive="active">Forecasts</a>
+      <a mat-list-item routerLink="/app/data-quality" routerLinkActive="active">Data Quality</a>
+
+      <div class="nav-section">Automation</div>
+      <a mat-list-item routerLink="/app/automation" routerLinkActive="active">Automation Rules</a>
+      <a mat-list-item routerLink="/app/scheduled-reports" routerLinkActive="active"
+        >Scheduled Reports</a
+      >
+      <a mat-list-item routerLink="/app/system/job-monitoring" routerLinkActive="active"
+        >Job Monitoring</a
+      >
+
+      <div class="nav-section">Operations</div>
+      <a mat-list-item routerLink="/app/alerts" routerLinkActive="active">Alerts</a>
+      <a mat-list-item routerLink="/app/notifications" routerLinkActive="active">Notifications</a>
+      <a mat-list-item routerLink="/app/supplier-monitoring" routerLinkActive="active"
+        >Supplier Monitoring</a
+      >
+      <a mat-list-item routerLink="/app/regulatory-intelligence" routerLinkActive="active"
+        >Regulatory Intelligence</a
+      >
+
       @if (showSystemAdmin()) {
         <div class="nav-section">System Administration</div>
         <a mat-list-item routerLink="/app/reference-data/units" routerLinkActive="active">Units</a>
@@ -52,14 +133,17 @@
           routerLinkActive="active"
           >Activity Types</a
         >
+        <a mat-list-item routerLink="/app/system/operations" routerLinkActive="active"
+          >Operations</a
+        >
+        <a mat-list-item routerLink="/app/system/health" routerLinkActive="active">Health</a>
+        <a mat-list-item routerLink="/app/system/job-monitoring" routerLinkActive="active"
+          >Job Executions</a
+        >
       }
 
       <div class="nav-section">Profile</div>
       <a mat-list-item routerLink="/app/profile" routerLinkActive="active">Profile</a>
-
-      <div class="nav-section">Coming soon</div>
-      <a mat-list-item disabled>LCA &amp; PCF</a>
-      <a mat-list-item disabled>AI Copilot</a>
     </mat-nav-list>
   </mat-sidenav>
 
@@ -71,6 +155,12 @@
       <span class="app-name">EcoTrace AI</span>
       <span class="app-version">v{{ appVersion }}</span>
       <span class="spacer"></span>
+      <a mat-button routerLink="/app/notifications" aria-label="Notifications">
+        <mat-icon>notifications</mat-icon>
+        @if (unreadCount() > 0) {
+          <span class="badge">{{ unreadCount() }}</span>
+        }
+      </a>
       <button mat-button type="button" [matMenuTriggerFor]="orgMenu" class="org-selector">
         {{ selectedOrganizationName() }}
       </button>

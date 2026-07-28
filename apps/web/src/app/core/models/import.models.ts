@@ -1,24 +1,3 @@
-export type ImportJobStatus =
-  | 'uploaded'
-  | 'validating'
-  | 'validation_failed'
-  | 'ready'
-  | 'importing'
-  | 'completed'
-  | 'completed_with_errors'
-  | 'failed';
-
-export const IMPORT_JOB_STATUSES: ImportJobStatus[] = [
-  'uploaded',
-  'validating',
-  'validation_failed',
-  'ready',
-  'importing',
-  'completed',
-  'completed_with_errors',
-  'failed',
-];
-
 export interface ImportJob {
   id: string;
   organizationId: string;

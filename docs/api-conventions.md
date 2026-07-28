@@ -94,3 +94,7 @@ Attachment and CSV import endpoints accept `multipart/form-data` with a `file` f
 - Client may send `X-Request-ID` (8–128 safe chars)
 - Server echoes `X-Request-ID` on every response
 - Invalid incoming IDs are replaced with a new UUID
+
+## Phase 7 endpoint groups
+
+Under `/api/v1`: `agents`, `agent-executions`, `agent-action-requests`, `automation-rules`, `job-executions`, `anomaly-rules`, `anomalies`, `forecast-definitions`, `forecast-runs`, `data-quality`, `alerts`, `notifications`, `scheduled-reports`, `generated-reports`, `supplier-monitoring`, `regulatory-documents`, `regulatory-assessments`, `system/health*`.
