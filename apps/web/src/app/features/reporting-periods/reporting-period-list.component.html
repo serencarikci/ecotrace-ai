@@ -1,0 +1,35 @@
+<section class="page">
+  <div class="header-row">
+    <div><h1 class="page-title">Reporting Periods</h1><p class="page-subtitle">Time boundaries for activity data entry and review.</p></div>
+    @if (canManage) { <a mat-flat-button color="primary" routerLink="/app/reporting-periods/new">New period</a> }
+  </div>
+  <div class="filters-row surface-card">
+    <form [formGroup]="filters" (ngSubmit)="applyFilters()" class="filters-row">
+      <mat-form-field appearance="outline"><mat-label>Search</mat-label><input matInput formControlName="search" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Status</mat-label>
+        <mat-select formControlName="status"><mat-option value="">All</mat-option>@for (s of statuses; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Type</mat-label>
+        <mat-select formControlName="periodType"><mat-option value="">All</mat-option>@for (t of types; track t) { <mat-option [value]="t">{{ t }}</mat-option> }</mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="submit">Filter</button>
+    </form>
+  </div>
+  @if (errorMessage()) { <p class="error-text" role="alert">{{ errorMessage() }}</p> }
+  <div class="surface-card table-wrap">
+    @if (loading()) { <div class="loading-state"><mat-spinner diameter="36" /></div> } @else {
+      <table mat-table [dataSource]="items()" class="full-width">
+        <ng-container matColumnDef="code"><th mat-header-cell *matHeaderCellDef>Code</th><td mat-cell *matCellDef="let row">{{ row.code }}</td></ng-container>
+        <ng-container matColumnDef="name"><th mat-header-cell *matHeaderCellDef>Name</th><td mat-cell *matCellDef="let row">{{ row.name }}</td></ng-container>
+        <ng-container matColumnDef="periodType"><th mat-header-cell *matHeaderCellDef>Type</th><td mat-cell *matCellDef="let row">{{ row.periodType }}</td></ng-container>
+        <ng-container matColumnDef="dates"><th mat-header-cell *matHeaderCellDef>Dates</th><td mat-cell *matCellDef="let row">{{ row.startDate }} → {{ row.endDate }}</td></ng-container>
+        <ng-container matColumnDef="status"><th mat-header-cell *matHeaderCellDef>Status</th><td mat-cell *matCellDef="let row"><span class="status-chip" [class]="row.status">{{ row.status }}</span></td></ng-container>
+        <ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef></th><td mat-cell *matCellDef="let row"><a [routerLink]="['/app/reporting-periods', row.id]">View</a></td></ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+      @if (items().length === 0) { <p class="empty-state">No reporting periods found.</p> }
+      <mat-paginator [length]="totalItems()" [pageIndex]="page()-1" [pageSize]="pageSize()" [pageSizeOptions]="[10,20,50]" (page)="onPage($event)" />
+    }
+  </div>
+</section>

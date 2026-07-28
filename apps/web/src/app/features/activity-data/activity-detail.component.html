@@ -1,0 +1,122 @@
+<section class="page">
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (loading()) {
+    <p class="loading-state">Loading activity record…</p>
+  }
+  @if (!loading() && record(); as row) {
+    <div class="header-row">
+      <div>
+        <h1 class="page-title">Activity record</h1>
+        <p class="page-subtitle">
+          {{ row.quantity }} {{ row.unitCode }} ·
+          <span class="status-chip" [class]="row.status">{{ row.status }}</span>
+        </p>
+      </div>
+      <div class="actions-row">
+        <a mat-stroked-button routerLink="/app/activity-data">Back</a>
+        @if (canWrite && row.status === 'draft') {
+          <a mat-stroked-button [routerLink]="['/app/activity-data', row.id, 'edit']">Edit</a>
+        }
+        @for (action of workflowActions(); track action) {
+          <button mat-flat-button color="primary" type="button" (click)="runWorkflow(action)">
+            {{ action }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="surface-card">
+      <dl class="detail-grid">
+        <div>
+          <dt>Quantity</dt>
+          <dd>{{ row.quantity }} {{ row.unitCode }}</dd>
+        </div>
+        <div>
+          <dt>Normalized</dt>
+          <dd>{{ row.normalizedQuantity }} {{ row.normalizedUnitCode }}</dd>
+        </div>
+        <div>
+          <dt>Activity date</dt>
+          <dd>{{ row.activityDate || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Facility</dt>
+          <dd>{{ row.facilityId || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Activity type</dt>
+          <dd>{{ row.activityTypeId }}</dd>
+        </div>
+        <div>
+          <dt>Reporting period</dt>
+          <dd>{{ row.reportingPeriodId }}</dd>
+        </div>
+        <div>
+          <dt>Data source</dt>
+          <dd>{{ row.dataSourceId || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Row version</dt>
+          <dd>{{ row.rowVersion }}</dd>
+        </div>
+      </dl>
+      @if (row.rejectionReason) {
+        <p class="muted-note">Rejection reason: {{ row.rejectionReason }}</p>
+      }
+      @if (row.correctionReason) {
+        <p class="muted-note">Correction reason: {{ row.correctionReason }}</p>
+      }
+      @if (row.description) {
+        <p class="muted-note">{{ row.description }}</p>
+      }
+    </div>
+
+    <div class="surface-card" style="margin-top: 1rem">
+      <div class="header-row">
+        <h2>Attachments</h2>
+        @if (canWrite && row.status !== 'archived') {
+          <label class="upload-label">
+            Upload
+            <input type="file" hidden (change)="onFileSelected($event)" />
+          </label>
+        }
+      </div>
+      @if (attachments().length === 0) {
+        <p class="empty-state">No attachments uploaded.</p>
+      } @else {
+        <ul>
+          @for (file of attachments(); track file.id) {
+            <li>
+              <button mat-button type="button" (click)="downloadAttachment(file)">
+                {{ file.originalFileName }}
+              </button>
+              @if (canWrite) {
+                <button mat-button type="button" (click)="deleteAttachment(file)">Delete</button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="surface-card" style="margin-top: 1rem">
+      <h2>Revision history</h2>
+      @if (revisions().length === 0) {
+        <p class="empty-state">No revisions yet.</p>
+      } @else {
+        <ul>
+          @for (rev of revisions(); track rev.id) {
+            <li>
+              #{{ rev.revisionNumber }} · {{ rev.changeType }} · {{ rev.createdAt }}
+              @if (rev.changeReason) {
+                — {{ rev.changeReason }}
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</section>

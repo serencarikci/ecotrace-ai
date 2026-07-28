@@ -1,0 +1,1 @@
+from ecotrace.modules.organizations.application import organization_service as organization_service

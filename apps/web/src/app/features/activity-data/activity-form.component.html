@@ -1,0 +1,122 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">{{ isEdit() ? 'Edit activity record' : 'New activity record' }}</h1>
+      <p class="page-subtitle">Capture operational quantities. Carbon values are out of scope.</p>
+    </div>
+    <a mat-stroked-button routerLink="/app/activity-data">Back</a>
+  </div>
+
+  <div class="surface-card">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Facility</mat-label>
+        <mat-select formControlName="facilityId">
+          <mat-option value="">None</mat-option>
+          @for (f of facilities(); track f.id) {
+            <mat-option [value]="f.id">{{ f.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Production line</mat-label>
+        <mat-select formControlName="productionLineId">
+          <mat-option value="">None</mat-option>
+          @for (l of lines(); track l.id) {
+            <mat-option [value]="l.id">{{ l.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Equipment</mat-label>
+        <mat-select formControlName="equipmentId">
+          <mat-option value="">None</mat-option>
+          @for (e of equipment(); track e.id) {
+            <mat-option [value]="e.id">{{ e.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Data source</mat-label>
+        <mat-select formControlName="dataSourceId">
+          <mat-option value="">None</mat-option>
+          @for (s of dataSources(); track s.id) {
+            <mat-option [value]="s.id">{{ s.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Activity type</mat-label>
+        <mat-select formControlName="activityTypeId">
+          @for (t of activityTypes(); track t.id) {
+            <mat-option [value]="t.id">{{ t.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.activityTypeId.touched && form.controls.activityTypeId.invalid) {
+          <mat-error>Activity type is required.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Reporting period</mat-label>
+        <mat-select formControlName="reportingPeriodId">
+          @for (p of periods(); track p.id) {
+            <mat-option [value]="p.id">{{ p.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.reportingPeriodId.touched && form.controls.reportingPeriodId.invalid) {
+          <mat-error>Reporting period is required.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Activity date</mat-label>
+        <input matInput type="date" formControlName="activityDate" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Period start</mat-label>
+        <input matInput type="date" formControlName="periodStart" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Period end</mat-label>
+        <input matInput type="date" formControlName="periodEnd" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Quantity</mat-label>
+        <input matInput type="number" formControlName="quantity" />
+        @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
+          <mat-error>Quantity must be zero or greater.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Unit</mat-label>
+        <mat-select formControlName="unitCode">
+          @for (u of units(); track u.id) {
+            <mat-option [value]="u.code">{{ u.name }} ({{ u.symbol }})</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.unitCode.touched && form.controls.unitCode.invalid) {
+          <mat-error>Unit is required.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Source reference</mat-label>
+        <input matInput formControlName="sourceReference" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="grid-column: 1 / -1">
+        <mat-label>Description</mat-label>
+        <textarea matInput rows="2" formControlName="description"></textarea>
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="grid-column: 1 / -1">
+        <mat-label>Notes</mat-label>
+        <textarea matInput rows="2" formControlName="notes"></textarea>
+      </mat-form-field>
+      @if (errorMessage()) {
+        <p class="error-text" role="alert">{{ errorMessage() }}</p>
+      }
+      <div class="actions-row" style="grid-column: 1 / -1">
+        <button mat-flat-button color="primary" type="submit" [disabled]="loading()">
+          {{ isEdit() ? 'Save' : 'Create' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

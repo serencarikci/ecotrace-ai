@@ -1,0 +1,35 @@
+<section class="page">
+  <div class="header-row">
+    <div><h1 class="page-title">{{ isEdit() ? 'Edit data source' : 'New data source' }}</h1><p class="page-subtitle">Describe where activity data originates.</p></div>
+    <a mat-stroked-button routerLink="/app/data-sources">Back</a>
+  </div>
+  <div class="surface-card">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+      <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput formControlName="code" />
+        @if (form.controls.code.touched && form.controls.code.invalid) { <mat-error>Code is required.</mat-error> }
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput formControlName="name" />
+        @if (form.controls.name.touched && form.controls.name.invalid) { <mat-error>Name is required.</mat-error> }
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Source type</mat-label>
+        <mat-select formControlName="sourceType">@for (t of sourceTypes; track t) { <mat-option [value]="t">{{ t }}</mat-option> }</mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Facility</mat-label>
+        <mat-select formControlName="facilityId"><mat-option value="">None</mat-option>
+          @for (f of facilities(); track f.id) { <mat-option [value]="f.id">{{ f.name }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Equipment</mat-label>
+        <mat-select formControlName="equipmentId"><mat-option value="">None</mat-option>
+          @for (e of equipment(); track e.id) { <mat-option [value]="e.id">{{ e.name }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>External reference</mat-label><input matInput formControlName="externalReference" /></mat-form-field>
+      <mat-form-field appearance="outline" style="grid-column:1/-1"><mat-label>Description</mat-label><textarea matInput rows="3" formControlName="description"></textarea></mat-form-field>
+      @if (isLiveType()) { <p class="muted-note" style="grid-column:1/-1">Integration is planned for a later phase.</p> }
+      <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+      @if (errorMessage()) { <p class="error-text" role="alert">{{ errorMessage() }}</p> }
+      <div class="actions-row" style="grid-column:1/-1"><button mat-flat-button color="primary" type="submit" [disabled]="loading()">{{ isEdit() ? 'Save' : 'Create' }}</button></div>
+    </form>
+  </div>
+</section>

@@ -1,0 +1,77 @@
+.shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.sidenav {
+  width: 260px;
+  background: linear-gradient(180deg, var(--et-forest-deep), var(--et-forest));
+  color: #f4faf6;
+  border: none;
+}
+
+.sidenav-brand {
+  font-family: var(--et-font-display);
+  padding: 1.25rem 1rem 0.75rem;
+}
+
+.sidenav-brand-name {
+  font-size: 1.35rem;
+}
+
+.sidenav-brand-version {
+  margin-top: 0.2rem;
+  font-family: var(--et-font-body, inherit);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+}
+
+.sidenav a {
+  color: #f4faf6 !important;
+}
+
+.sidenav .active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.nav-section {
+  margin: 1rem 1rem 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.topbar {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid var(--et-border);
+  backdrop-filter: blur(8px);
+}
+
+.app-name {
+  font-family: var(--et-font-display);
+  font-weight: 600;
+  color: var(--et-forest-deep);
+  margin-left: 0.25rem;
+}
+
+.app-version {
+  margin-left: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--et-muted, #5f6f66);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.org-selector {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content {
+  min-height: calc(100vh - 64px);
+}

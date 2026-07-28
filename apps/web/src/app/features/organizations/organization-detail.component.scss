@@ -1,0 +1,14 @@
+.slug {
+  color: var(--et-muted);
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: center;
+}
+
+.success {
+  color: var(--et-moss);
+}

@@ -1,0 +1,27 @@
+<section class="page">
+  <div class="header-row">
+    <div><h1 class="page-title">New reporting period</h1><p class="page-subtitle">Create an open period for activity entry.</p></div>
+    <a mat-stroked-button routerLink="/app/reporting-periods">Back</a>
+  </div>
+  <div class="surface-card">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+      <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput formControlName="code" />
+        @if (form.controls.code.touched && form.controls.code.invalid) { <mat-error>Code is required.</mat-error> }
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput formControlName="name" />
+        @if (form.controls.name.touched && form.controls.name.invalid) { <mat-error>Name is required.</mat-error> }
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Type</mat-label>
+        <mat-select formControlName="periodType">@for (t of types; track t) { <mat-option [value]="t">{{ t }}</mat-option> }</mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Start date</mat-label><input matInput type="date" formControlName="startDate" />
+        @if (form.controls.startDate.touched && form.controls.startDate.invalid) { <mat-error>Start date is required.</mat-error> }
+      </mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>End date</mat-label><input matInput type="date" formControlName="endDate" />
+        @if (form.controls.endDate.touched && form.controls.endDate.invalid) { <mat-error>End date is required.</mat-error> }
+      </mat-form-field>
+      @if (errorMessage()) { <p class="error-text" role="alert">{{ errorMessage() }}</p> }
+      <div class="actions-row" style="grid-column:1/-1"><button mat-flat-button color="primary" type="submit" [disabled]="loading()">Create</button></div>
+    </form>
+  </div>
+</section>

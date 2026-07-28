@@ -1,0 +1,39 @@
+.counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.counts strong {
+  display: block;
+  font-family: var(--et-font-display);
+  font-size: 1.5rem;
+  color: var(--et-forest-deep);
+}
+
+.counts span {
+  color: var(--et-muted);
+  font-size: 0.875rem;
+}
+
+.recent-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-list li + li {
+  margin-top: 0.5rem;
+}
+
+a {
+  color: var(--et-moss);
+  font-weight: 600;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  font-family: var(--et-font-display);
+}

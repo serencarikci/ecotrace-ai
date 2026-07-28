@@ -1,0 +1,99 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ecotrace_test
+          POSTGRES_USER: ecotrace
+          POSTGRES_PASSWORD: ecotrace_dev_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecotrace -d ecotrace_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: test
+      APP_DEBUG: "true"
+      SECRET_KEY: test-secret-key-that-is-long-enough-32chars
+      INITIAL_ADMIN_PASSWORD: EcoTraceAdmin!2024
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ecotrace_test
+      POSTGRES_USER: ecotrace
+      POSTGRES_PASSWORD: ecotrace_dev_password
+      DATABASE_URL: postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5432/ecotrace_test
+      CORS_ALLOWED_ORIGINS: http://localhost:4200
+      LOG_LEVEL: WARNING
+      ATTACHMENT_STORAGE_PATH: /tmp/ecotrace-ci-attachments
+      MAX_ATTACHMENT_SIZE_MB: "5"
+      MAX_CSV_IMPORT_ROWS: "5000"
+      ALLOWED_ATTACHMENT_TYPES: pdf,csv,xlsx,png,jpeg,jpg
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: apps/api/pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ".[dev]"
+
+      - name: Prepare attachment storage
+        run: mkdir -p /tmp/ecotrace-ci-attachments
+
+      - name: Ruff format check
+        run: ruff format --check src tests
+
+      - name: Ruff lint
+        run: ruff check src tests
+
+      - name: MyPy
+        run: mypy src
+
+      - name: Alembic migrations
+        run: alembic upgrade head
+
+      - name: Verify migration head
+        run: |
+          alembic current | tee /tmp/alembic-current.txt
+          grep -q "0003_phase3" /tmp/alembic-current.txt
+
+      - name: Pytest with coverage
+        run: pytest tests/ -v --cov=ecotrace --cov-report=term-missing --cov-fail-under=60
+
+      - name: Seed idempotency smoke
+        run: |
+          python -m ecotrace.db.seed
+          python -m ecotrace.db.seed
+
+      - name: Build Docker image
+        run: docker build -t ecotrace-api:ci .
+        working-directory: apps/api

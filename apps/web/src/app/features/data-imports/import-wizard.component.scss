@@ -1,0 +1,20 @@
+.step-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  color: var(--et-muted);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.step-list .active {
+  color: var(--et-forest-deep);
+  font-weight: 700;
+}
+
+.step-list .done {
+  color: var(--et-moss);
+}

@@ -1,0 +1,90 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">New data import</h1>
+      <p class="page-subtitle">
+        Download template → upload → validate → review → execute → results.
+      </p>
+    </div>
+    <a mat-stroked-button routerLink="/app/data-imports">Back</a>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+
+  <div class="surface-card">
+    <ol class="step-list">
+      @for (s of steps; track s; let i = $index) {
+        <li [class.active]="stepIndex() === i" [class.done]="stepIndex() > i">
+          {{ i + 1 }}. {{ s }}
+        </li>
+      }
+    </ol>
+
+    @switch (step()) {
+      @case ('template') {
+        <p>Start by downloading the CSV template with required and optional columns.</p>
+        <button mat-flat-button color="primary" type="button" (click)="downloadTemplate()">
+          Download template
+        </button>
+        <button mat-button type="button" (click)="step.set('select')">Skip download</button>
+      }
+      @case ('select') {
+        <p>Select a CSV file to import.</p>
+        <input type="file" accept=".csv,text/csv" (change)="onFileSelected($event)" />
+      }
+      @case ('upload') {
+        <p>Selected: {{ selectedFile()?.name }}</p>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="loading()"
+          (click)="upload()"
+        >
+          Upload file
+        </button>
+      }
+      @case ('validate') {
+        <p>File uploaded. Run validation before reviewing rows.</p>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="loading()"
+          (click)="validate()"
+        >
+          Validate rows
+        </button>
+      }
+      @case ('review') {
+        <p>Validation finished. Review valid and invalid rows on the job detail page, then continue.</p>
+        <div class="actions-row">
+          <button mat-stroked-button type="button" (click)="openResults()">Review rows</button>
+          <button mat-flat-button color="primary" type="button" (click)="goToExecute()">
+            Continue to execute
+          </button>
+        </div>
+      }
+      @case ('execute') {
+        <p>Import only successfully validated rows. This cannot be re-executed for the same job.</p>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="loading()"
+          (click)="execute()"
+        >
+          Execute import
+        </button>
+      }
+      @case ('results') {
+        <p>Import finished. Open the job detail page for counts and row outcomes.</p>
+        <button mat-flat-button color="primary" type="button" (click)="openResults()">
+          View results
+        </button>
+      }
+    }
+  </div>
+</section>

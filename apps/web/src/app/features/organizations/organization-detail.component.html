@@ -1,0 +1,39 @@
+<section class="page">
+  <h1 class="page-title">Organization detail</h1>
+  <p class="page-subtitle">View and update organization profile fields.</p>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="success">{{ successMessage() }}</p>
+  }
+
+  @if (organization(); as org) {
+    <div class="surface-card">
+      <p class="slug">Slug: <strong>{{ org.slug }}</strong></p>
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Legal name</mat-label>
+          <input matInput formControlName="legalName" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Country code</mat-label>
+          <input matInput formControlName="countryCode" maxlength="2" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Timezone</mat-label>
+          <input matInput formControlName="timezone" />
+        </mat-form-field>
+        <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+        @if (canEdit()) {
+          <button mat-flat-button color="primary" type="submit">Save changes</button>
+        }
+      </form>
+    </div>
+  }
+</section>

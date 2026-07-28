@@ -1,0 +1,1 @@
+from ecotrace.modules.facilities.application import facility_service as facility_service

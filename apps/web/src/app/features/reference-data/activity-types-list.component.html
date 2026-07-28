@@ -1,0 +1,81 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">Activity Types</h1>
+      <p class="page-subtitle">Global measurable activity categories (system admin).</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="showCreate.set(!showCreate())">
+      {{ showCreate() ? 'Close form' : 'New activity type' }}
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (showCreate()) {
+    <div class="surface-card">
+      <form [formGroup]="form" (ngSubmit)="create()" class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Code</mat-label>
+          <input matInput formControlName="code" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <input matInput formControlName="category" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Default unit</mat-label>
+          <input matInput formControlName="defaultUnitCode" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Allowed dimension</mat-label>
+          <input matInput formControlName="allowedUnitDimension" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" style="grid-column: 1 / -1">
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="2" formControlName="description"></textarea>
+        </mat-form-field>
+        <mat-checkbox formControlName="requiresFacility">Requires facility</mat-checkbox>
+        <mat-checkbox formControlName="requiresEquipment">Requires equipment</mat-checkbox>
+        <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+        <button mat-flat-button color="primary" type="submit">Create</button>
+      </form>
+    </div>
+  }
+
+  <div class="surface-card table-wrap" style="margin-top: 1rem">
+    <table mat-table [dataSource]="items()" class="full-width">
+      <ng-container matColumnDef="code">
+        <th mat-header-cell *matHeaderCellDef>Code</th>
+        <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <td mat-cell *matCellDef="let row">{{ row.category }}</td>
+      </ng-container>
+      <ng-container matColumnDef="defaultUnitCode">
+        <th mat-header-cell *matHeaderCellDef>Default unit</th>
+        <td mat-cell *matCellDef="let row">{{ row.defaultUnitCode }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="status-chip" [class.active]="row.isActive">{{
+            row.isActive ? 'Active' : 'Inactive'
+          }}</span>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+</section>

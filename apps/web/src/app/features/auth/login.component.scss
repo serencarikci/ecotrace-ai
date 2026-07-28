@@ -1,0 +1,83 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(320px, 480px) 1fr;
+}
+
+.login-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.88);
+  border-right: 1px solid var(--et-border);
+  backdrop-filter: blur(8px);
+}
+
+.brand-mark {
+  font-family: var(--et-font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--et-forest);
+  margin: 0 0 1.5rem;
+}
+
+.brand h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.lede {
+  color: var(--et-muted);
+  margin: 0 0 2rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.submit {
+  height: 44px;
+  margin-top: 0.5rem;
+}
+
+.login-visual {
+  position: relative;
+  background:
+    linear-gradient(145deg, rgba(15, 42, 31, 0.88), rgba(45, 106, 79, 0.72)),
+    url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80')
+      center / cover;
+  color: #f4faf6;
+  display: flex;
+  align-items: flex-end;
+  padding: 3rem;
+}
+
+.visual-copy p {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.visual-copy h2 {
+  font-family: var(--et-font-display);
+  font-weight: 500;
+  max-width: 18ch;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.2;
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-visual {
+    min-height: 220px;
+    order: -1;
+  }
+}

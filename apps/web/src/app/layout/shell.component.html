@@ -1,0 +1,98 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    class="sidenav"
+    [mode]="'side'"
+    [opened]="sidenavOpen()"
+    fixedInViewport
+  >
+    <div class="sidenav-brand">
+      <div class="sidenav-brand-name">EcoTrace AI</div>
+      <div class="sidenav-brand-version">v{{ appVersion }}</div>
+    </div>
+    <mat-nav-list>
+      <div class="nav-section">Overview</div>
+      <a mat-list-item routerLink="/app/dashboard" routerLinkActive="active">Dashboard</a>
+
+      <div class="nav-section">Organization</div>
+      <a mat-list-item routerLink="/app/organizations" routerLinkActive="active">Organizations</a>
+      <a mat-list-item routerLink="/app/facilities" routerLinkActive="active">Facilities</a>
+      <a mat-list-item routerLink="/app/production-lines" routerLinkActive="active"
+        >Production Lines</a
+      >
+      <a mat-list-item routerLink="/app/equipment" routerLinkActive="active">Equipment</a>
+      <a mat-list-item routerLink="/app/data-sources" routerLinkActive="active">Data Sources</a>
+
+      <div class="nav-section">Data Management</div>
+      <a mat-list-item routerLink="/app/reporting-periods" routerLinkActive="active"
+        >Reporting Periods</a
+      >
+      <a mat-list-item routerLink="/app/activity-data" routerLinkActive="active">Activity Data</a>
+      <a mat-list-item routerLink="/app/data-imports" routerLinkActive="active">Data Imports</a>
+
+      <div class="nav-section">Carbon Accounting</div>
+      <a mat-list-item routerLink="/app/carbon-inventories" routerLinkActive="active"
+        >Carbon Inventories</a
+      >
+      <a mat-list-item routerLink="/app/emission-factors" routerLinkActive="active"
+        >Emission Factors</a
+      >
+      <a mat-list-item routerLink="/app/emission-factor-sources" routerLinkActive="active"
+        >Factor Sources</a
+      >
+      <a mat-list-item routerLink="/app/emission-factor-preferences" routerLinkActive="active"
+        >Factor Preferences</a
+      >
+
+      @if (showSystemAdmin()) {
+        <div class="nav-section">System Administration</div>
+        <a mat-list-item routerLink="/app/reference-data/units" routerLinkActive="active">Units</a>
+        <a
+          mat-list-item
+          routerLink="/app/reference-data/activity-types"
+          routerLinkActive="active"
+          >Activity Types</a
+        >
+      }
+
+      <div class="nav-section">Profile</div>
+      <a mat-list-item routerLink="/app/profile" routerLinkActive="active">Profile</a>
+
+      <div class="nav-section">Coming soon</div>
+      <a mat-list-item disabled>LCA &amp; PCF</a>
+      <a mat-list-item disabled>AI Copilot</a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="topbar">
+      <button mat-icon-button type="button" aria-label="Toggle navigation" (click)="toggleSidenav()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="app-name">EcoTrace AI</span>
+      <span class="app-version">v{{ appVersion }}</span>
+      <span class="spacer"></span>
+      <button mat-button type="button" [matMenuTriggerFor]="orgMenu" class="org-selector">
+        {{ selectedOrganizationName() }}
+      </button>
+      <mat-menu #orgMenu="matMenu">
+        @for (org of organizations(); track org.organizationId) {
+          <button mat-menu-item type="button" (click)="selectOrganization(org.organizationId)">
+            {{ org.organizationName }}
+          </button>
+        } @empty {
+          <button mat-menu-item type="button" disabled>No memberships</button>
+        }
+      </mat-menu>
+      <button mat-button type="button" [matMenuTriggerFor]="userMenu">
+        {{ user()?.fullName || 'Account' }}
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <a mat-menu-item routerLink="/app/profile">Profile</a>
+        <button mat-menu-item type="button" (click)="logout()">Logout</button>
+      </mat-menu>
+    </mat-toolbar>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

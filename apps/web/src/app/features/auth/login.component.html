@@ -1,0 +1,58 @@
+<section class="login-page">
+  <div class="login-panel">
+    <div class="brand">
+      <p class="brand-mark">EcoTrace AI</p>
+      <h1>Sign in to continue</h1>
+      <p class="lede">
+        Secure access to the sustainability intelligence platform foundation.
+      </p>
+    </div>
+
+    <form class="login-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="username" />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+          <mat-error>Email is required.</mat-error>
+        }
+        @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+          <mat-error>Enter a valid email address.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+        />
+        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+          <mat-error>Password is required.</mat-error>
+        }
+        @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+          <mat-error>Password must be at least 8 characters.</mat-error>
+        }
+      </mat-form-field>
+
+      @if (errorMessage()) {
+        <p class="error-text" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <button mat-flat-button color="primary" class="full-width submit" [disabled]="loading()">
+        @if (loading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          Sign in
+        }
+      </button>
+    </form>
+  </div>
+  <aside class="login-visual" aria-hidden="true">
+    <div class="visual-copy">
+      <p>EcoTrace AI</p>
+      <h2>Identity, organizations, and a secure platform baseline.</h2>
+    </div>
+  </aside>
+</section>

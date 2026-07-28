@@ -1,0 +1,87 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">Units</h1>
+      <p class="page-subtitle">System-wide units of measurement (system admin).</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="showCreate.set(!showCreate())">
+      {{ showCreate() ? 'Close form' : 'New unit' }}
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (showCreate()) {
+    <div class="surface-card">
+      <form [formGroup]="form" (ngSubmit)="create()" class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Code</mat-label>
+          <input matInput formControlName="code" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Symbol</mat-label>
+          <input matInput formControlName="symbol" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Dimension</mat-label>
+          <input matInput formControlName="dimension" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Conversion factor</mat-label>
+          <input matInput type="number" formControlName="conversionFactorToBase" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Base unit code</mat-label>
+          <input matInput formControlName="baseUnitCode" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Decimal precision</mat-label>
+          <input matInput type="number" formControlName="decimalPrecision" />
+        </mat-form-field>
+        <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+        <button mat-flat-button color="primary" type="submit">Create</button>
+      </form>
+    </div>
+  }
+
+  <div class="surface-card table-wrap" style="margin-top: 1rem">
+    <table mat-table [dataSource]="items()" class="full-width">
+      <ng-container matColumnDef="code">
+        <th mat-header-cell *matHeaderCellDef>Code</th>
+        <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="symbol">
+        <th mat-header-cell *matHeaderCellDef>Symbol</th>
+        <td mat-cell *matCellDef="let row">{{ row.symbol }}</td>
+      </ng-container>
+      <ng-container matColumnDef="dimension">
+        <th mat-header-cell *matHeaderCellDef>Dimension</th>
+        <td mat-cell *matCellDef="let row">{{ row.dimension }}</td>
+      </ng-container>
+      <ng-container matColumnDef="factor">
+        <th mat-header-cell *matHeaderCellDef>Factor</th>
+        <td mat-cell *matCellDef="let row">{{ row.conversionFactorToBase }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="status-chip" [class.active]="row.isActive">{{
+            row.isActive ? 'Active' : 'Inactive'
+          }}</span>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+</section>

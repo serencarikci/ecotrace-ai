@@ -1,0 +1,101 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">Facilities</h1>
+      <p class="page-subtitle">Organization sites used for operational activity data.</p>
+    </div>
+    @if (canManage) {
+      <a mat-flat-button color="primary" routerLink="/app/facilities/new">New facility</a>
+    }
+  </div>
+
+  <div class="filters-row surface-card">
+    <form [formGroup]="filters" class="filters-row" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="search" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="facilityType">
+          <mat-option value="">All</mat-option>
+          @for (type of facilityTypes; track type) {
+            <mat-option [value]="type">{{ type }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="isActive">
+          <mat-option value="">All</mat-option>
+          <mat-option value="true">Active</mat-option>
+          <mat-option value="false">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button type="submit">Filter</button>
+    </form>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+
+  <div class="surface-card table-wrap">
+    @if (loading()) {
+      <div class="loading-state"><mat-spinner diameter="36" /></div>
+    } @else {
+      <table mat-table [dataSource]="facilities()" class="full-width">
+        <ng-container matColumnDef="code">
+          <th mat-header-cell *matHeaderCellDef>Code</th>
+          <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+        </ng-container>
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="facilityType">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let row">{{ row.facilityType }}</td>
+        </ng-container>
+        <ng-container matColumnDef="city">
+          <th mat-header-cell *matHeaderCellDef>City</th>
+          <td mat-cell *matCellDef="let row">{{ row.city || '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="status-chip" [class.active]="row.isActive">{{
+              row.isActive ? 'Active' : 'Inactive'
+            }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">
+            <a [routerLink]="['/app/facilities', row.id]">View</a>
+            @if (canManage) {
+              ·
+              <a [routerLink]="['/app/facilities', row.id, 'edit']">Edit</a>
+              @if (row.isActive) {
+                ·
+                <button mat-button type="button" (click)="archive(row)">Archive</button>
+              }
+            }
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+      @if (facilities().length === 0) {
+        <p class="empty-state">No facilities have been created.</p>
+      }
+      <mat-paginator
+        [length]="totalItems()"
+        [pageIndex]="page() - 1"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="onPage($event)"
+      />
+    }
+  </div>
+</section>

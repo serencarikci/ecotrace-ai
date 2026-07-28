@@ -1,0 +1,95 @@
+<section class="page">
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (loading()) {
+    <p class="loading-state">Loading facility…</p>
+  } @else if (facility()) {
+    <div class="header-row">
+      <div>
+        <h1 class="page-title">{{ facility()!.name }}</h1>
+        <p class="page-subtitle">{{ facility()!.code }} · {{ facility()!.facilityType }}</p>
+      </div>
+      <div class="actions-row">
+        <a mat-stroked-button routerLink="/app/facilities">Back</a>
+        @if (canManage) {
+          <a
+            mat-flat-button
+            color="primary"
+            [routerLink]="['/app/facilities', facility()!.id, 'edit']"
+            >Edit</a
+          >
+        }
+      </div>
+    </div>
+
+    <div class="surface-card">
+      <dl class="detail-grid">
+        <div>
+          <dt>Status</dt>
+          <dd>
+            <span class="status-chip" [class.active]="facility()!.isActive">{{
+              facility()!.isActive ? 'Active' : 'Inactive'
+            }}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Country</dt>
+          <dd>{{ facility()!.countryCode }}</dd>
+        </div>
+        <div>
+          <dt>City</dt>
+          <dd>{{ facility()!.city || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Timezone</dt>
+          <dd>{{ facility()!.timezone }}</dd>
+        </div>
+        <div>
+          <dt>Address</dt>
+          <dd>{{ facility()!.addressLine || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Coordinates</dt>
+          <dd>{{ facility()!.latitude ?? '—' }}, {{ facility()!.longitude ?? '—' }}</dd>
+        </div>
+      </dl>
+      @if (facility()!.description) {
+        <p class="muted-note">{{ facility()!.description }}</p>
+      }
+    </div>
+
+    <div class="surface-card counts">
+      <div>
+        <strong>{{ lineCount() }}</strong>
+        <span>Production lines</span>
+      </div>
+      <div>
+        <strong>{{ equipmentCount() }}</strong>
+        <span>Equipment</span>
+      </div>
+      <div>
+        <strong>{{ dataSourceCount() }}</strong>
+        <span>Data sources</span>
+      </div>
+    </div>
+
+    <div class="surface-card">
+      <h2>Recent activity records</h2>
+      @if (recentActivities().length === 0) {
+        <p class="empty-state">No activity records for this facility yet.</p>
+      } @else {
+        <ul class="recent-list">
+          @for (item of recentActivities(); track item.id) {
+            <li>
+              <a [routerLink]="['/app/activity-data', item.id]">
+                {{ item.quantity }} {{ item.unitCode }} ·
+                <span class="status-chip" [class]="item.status">{{ item.status }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</section>

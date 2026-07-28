@@ -1,0 +1,65 @@
+<section class="page">
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (job(); as row) {
+    <div class="header-row">
+      <div>
+        <h1 class="page-title">{{ row.fileName }}</h1>
+        <p class="page-subtitle">
+          <span class="status-chip" [class]="row.status">{{ row.status }}</span>
+        </p>
+      </div>
+      <a mat-stroked-button routerLink="/app/data-imports">Back</a>
+    </div>
+
+    <div class="surface-card counts">
+      <div><strong>{{ row.totalRows }}</strong><span>Total</span></div>
+      <div><strong>{{ row.validRows }}</strong><span>Valid</span></div>
+      <div><strong>{{ row.invalidRows }}</strong><span>Invalid</span></div>
+      <div><strong>{{ row.duplicateRows }}</strong><span>Duplicates</span></div>
+      <div><strong>{{ row.importedRows }}</strong><span>Imported</span></div>
+    </div>
+
+    <div class="filters-row surface-card">
+      <form [formGroup]="filters" (ngSubmit)="reload()" class="filters-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Row status</mat-label>
+          <mat-select formControlName="validationStatus">
+            <mat-option value="">All</mat-option>
+            <mat-option value="valid">Valid</mat-option>
+            <mat-option value="invalid">Invalid</mat-option>
+            <mat-option value="duplicate">Duplicate</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button mat-stroked-button type="submit">Filter</button>
+      </form>
+    </div>
+
+    <div class="surface-card table-wrap">
+      <table mat-table [dataSource]="rows()" class="full-width">
+        <ng-container matColumnDef="rowNumber">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let item">{{ item.rowNumber }}</td>
+        </ng-container>
+        <ng-container matColumnDef="validationStatus">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let item">{{ item.validationStatus }}</td>
+        </ng-container>
+        <ng-container matColumnDef="errors">
+          <th mat-header-cell *matHeaderCellDef>Errors</th>
+          <td mat-cell *matCellDef="let item">{{ formatErrors(item) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="raw">
+          <th mat-header-cell *matHeaderCellDef>Raw</th>
+          <td mat-cell *matCellDef="let item">{{ item.rawDataJson | json }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let item; columns: displayedColumns"></tr>
+      </table>
+      @if (rows().length === 0) {
+        <p class="empty-state">No import rows to display.</p>
+      }
+    </div>
+  }
+</section>

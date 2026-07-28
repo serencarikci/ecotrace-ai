@@ -1,0 +1,28 @@
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.form-wrap {
+  margin-bottom: 1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.org-table {
+  width: 100%;
+}
+
+.empty {
+  color: var(--et-muted);
+  margin: 1rem 0 0;
+}
+
+a {
+  color: var(--et-moss);
+  font-weight: 600;
+}
