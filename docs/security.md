@@ -92,7 +92,7 @@ Foundation auth/org events plus Operations facility/asset/period/activity/attach
 7. Enable OpenTelemetry tracing
 8. Regular dependency scanning in CI
 
-## Phase 7 hardening
+## Production hardening
 
 - Trusted host / CSP / optional HSTS middleware
 - Login lockout (in-process + configurable thresholds)

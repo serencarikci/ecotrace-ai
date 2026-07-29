@@ -14,7 +14,19 @@ from ecotrace.modules.knowledge.application.chunking import clean_text
 def detect_document_type(file_name: str, content_type: str, text: str) -> str:
     lower = file_name.lower()
     blob = f'{lower} {content_type} {text[:500].lower()}'
-    mapping = [('policy', ('policy', 'politika')), ('procedure', ('procedure', 'prosedür', 'procedure')), ('report', ('report', 'rapor')), ('meeting_notes', ('meeting', 'toplanti', 'minutes')), ('supplier_document', ('supplier', 'tedarik')), ('manual', ('manual', 'kilavuz')), ('training', ('training', 'egitim')), ('technical', ('technical', 'teknik')), ('passport_document', ('passport', 'dpp')), ('invoice', ('invoice', 'fatura')), ('certificate', ('certificate', 'sertifika'))]
+    mapping = [
+        ('policy', ('policy',)),
+        ('procedure', ('procedure',)),
+        ('report', ('report',)),
+        ('meeting_notes', ('meeting', 'minutes')),
+        ('supplier_document', ('supplier',)),
+        ('manual', ('manual', 'handbook')),
+        ('training', ('training',)),
+        ('technical', ('technical',)),
+        ('passport_document', ('passport', 'dpp')),
+        ('invoice', ('invoice',)),
+        ('certificate', ('certificate',)),
+    ]
     for doc_type, keys in mapping:
         if any((k in blob for k in keys)):
             return doc_type if doc_type in DOCUMENT_TYPES else 'other'
@@ -67,7 +79,7 @@ def sha256_bytes(content: bytes) -> str:
 
 def slugify(value: str) -> str:
     value = value.lower().strip()
-    value = re.sub('[^a-z0-9çğıöşü]+', '-', value)
+    value = re.sub('[^a-z0-9]+', '-', value)
     value = re.sub('-+', '-', value).strip('-')
     return value[:200] or 'document'
 

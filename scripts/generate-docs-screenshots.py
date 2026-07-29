@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Generate EcoTrace docs screenshots as styled HTML mockups via Chrome headless."""
+"""Generate EcoTrace docs screenshots (English UI mockups) via Chrome headless."""
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -12,66 +13,66 @@ OUT = ROOT / "docs" / "screenshots"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 GROUPS = {
-    "01-giris": "Giriş & Genel",
+    "01-intro": "Intro & Overview",
     "02-platform": "Platform",
-    "03-organizasyon": "Organizasyon",
-    "04-veri-karbon": "Veri & Karbon",
-    "05-analitik": "Analitik",
-    "06-urun-lca": "Ürün & LCA",
-    "07-ai-otomasyon": "AI & Otomasyon",
-    "08-guvenlik-ops": "Güvenlik & Ops",
-    "09-altyapi-demo": "Altyapı & Demo",
+    "03-organization": "Organization",
+    "04-data-carbon": "Data & Carbon",
+    "05-analytics": "Analytics",
+    "06-product-lca": "Product & LCA",
+    "07-ai-automation": "AI & Automation",
+    "08-security-ops": "Security & Ops",
+    "09-infra-demo": "Infrastructure & Demo",
 }
 
 # (group, filename, title, kind, blurb, nav_hint)
 SHOTS: list[tuple[str, str, str, str, str, str]] = [
-    ("01-giris", "01-giris.png", "Giriş", "login", "Güvenli oturum açma: e-posta ve parola ile JWT + refresh token.", "Sign in"),
-    ("01-giris", "02-dokumanin-amaci.png", "Dokümanın Amacı", "doc", "Platform yeteneklerini, ekranlarını ve operasyonel kullanımı açıklar. Portföy / referans uygulama; sertifikasyon ürünü değildir.", "Docs"),
-    ("01-giris", "03-platform-hakkinda.png", "Platform Hakkında", "doc", "Karbon muhasebesi, LCA/PCF, DPP, analitik, hedefler, grounded AI ve onaylı otomasyonu birleştiren modüler monolith.", "Overview"),
-    ("01-giris", "04-genel-bakis.png", "Genel Bakış", "app", "Operasyonlardan karbon envanterine, ürün LCA’sından AI ve otomasyona tek sistem kaydı.", "Dashboard"),
-    ("02-platform", "01-platform-mimarisi.png", "Platform Mimarisi", "arch", "FastAPI API · Angular 19 Web · PostgreSQL (+ pgvector) · Scheduler. LLM’ler veritabanına erişmez.", "Architecture"),
-    ("02-platform", "02-teknoloji-altyapisi.png", "Teknoloji Altyapısı", "doc", "Python 3.12, FastAPI, SQLAlchemy, Alembic · Angular Material · PostgreSQL 16 · Docker Compose · GitHub Actions.", "Stack"),
-    ("02-platform", "03-kullanici-rolleri.png", "Kullanıcı Rolleri", "app", "system_admin · organization_admin · analyst · viewer — organizasyon kapsamlı RBAC.", "Profile"),
-    ("03-organizasyon", "01-dashboard.png", "Gösterge Paneli (Dashboard)", "app", "Komuta merkezi: tesisler, karbon, ürünler ve zekâ yollarına hızlı erişim.", "Dashboard"),
-    ("03-organizasyon", "02-organizasyon-yonetimi.png", "Organizasyon Yönetimi", "app", "Çok kiracılı organizasyonlar, üyelikler ve seçili org bağlamı.", "Organizations"),
-    ("03-organizasyon", "03-kullanici-rol-yonetimi.png", "Kullanıcı ve Rol Yönetimi", "app", "Kimlik, roller ve profil; oturum ve yetki sınırları.", "Profile"),
-    ("03-organizasyon", "04-tesis-yonetimi.png", "Tesis (Facility) Yönetimi", "app", "Üretim sahaları, depolar ve operasyonel tesis kayıtları.", "Facilities"),
-    ("03-organizasyon", "05-operasyonel-varlik.png", "Operasyonel Varlık Yönetimi", "app", "Ekipman, üretim hatları ve veri kaynakları.", "Equipment"),
-    ("04-veri-karbon", "01-aktivite-verisi.png", "Aktivite Verisi Yönetimi", "app", "Denetlenebilir aktivite kayıtları, dönemler ve onay akışları.", "Activity Data"),
-    ("04-veri-karbon", "02-csv-veri-aktarimi.png", "CSV Veri Aktarımı", "app", "CSV içe aktarım sihirbazı, doğrulama ve satır hataları.", "Data Imports"),
-    ("04-veri-karbon", "03-emisyon-faktoru.png", "Emisyon Faktörü Yönetimi", "app", "Faktör kaynakları, tercihler ve eşleştirme kuralları.", "Emission Factors"),
-    ("04-veri-karbon", "04-karbon-envanteri.png", "Karbon Envanteri", "app", "Organizasyon emisyon envanterleri, kapsamlar ve snapshot’lar.", "Carbon Inventories"),
-    ("04-veri-karbon", "05-karbon-hesaplama-motoru.png", "Karbon Hesaplama Motoru", "doc", "Aktivite × faktör → Scope sonuçları; doğrulama ve tekrarlanabilir hesaplama motoru.", "Engine"),
-    ("05-analitik", "01-analitik-raporlama.png", "Analitik ve Raporlama", "app", "Yönetici analitiği, trendler, kategoriler ve karar desteği.", "Analytics"),
-    ("05-analitik", "02-surdurulebilirlik-hedefleri.png", "Sürdürülebilirlik Hedefleri", "app", "Baseline’lar, mutlak/yoğunluk hedefleri ve girişimler.", "Targets"),
-    ("05-analitik", "03-senaryo-analizi.png", "Senaryo Analizi", "app", "What-if senaryoları ve yol haritası karşılaştırmaları.", "Scenarios"),
-    ("06-urun-lca", "01-urun-yonetimi.png", "Ürün Yönetimi", "app", "Ürünler, varyantlar ve parti (batch) kayıtları.", "Products"),
-    ("06-urun-lca", "02-tedarikci-yonetimi.png", "Tedarikçi Yönetimi", "app", "Tedarikçi master data ve bağlantılar.", "Suppliers"),
-    ("06-urun-lca", "03-malzeme-yonetimi.png", "Malzeme Yönetimi", "app", "Malzeme kataloğu ve özellikler.", "Materials"),
-    ("06-urun-lca", "04-urun-recetesi-bom.png", "Ürün Reçetesi (Bill of Materials)", "app", "BOM satırları ile ürün bileşen ağacı.", "BOM"),
-    ("06-urun-lca", "05-lca.png", "Yaşam Döngüsü Analizi (LCA)", "app", "LCA çalışmaları, envanter ve sonuç ekranları.", "LCA Studies"),
-    ("06-urun-lca", "06-pcf.png", "Ürün Karbon Ayak İzi (PCF)", "app", "Ürün bazlı karbon ayak izi hesapları.", "PCF"),
-    ("06-urun-lca", "07-dpp.png", "Dijital Ürün Pasaportu (DPP)", "app", "Pasaport sürümleri, önizleme ve genel yayın.", "Passports"),
-    ("07-ai-otomasyon", "01-ai-copilot.png", "Yapay Zekâ Asistanı (AI Copilot)", "app", "Grounded RAG yanıtları, alıntılar ve güven skorları.", "AI Copilot"),
-    ("07-ai-otomasyon", "02-enterprise-search.png", "Kurumsal Doküman Arama", "app", "Hibrit arama: anahtar kelime + vektör.", "Enterprise Search"),
-    ("07-ai-otomasyon", "03-dokuman-yonetimi.png", "Doküman Yönetimi", "app", "Bilgi bankası yükleme, chunking ve yetkilendirme.", "Knowledge Docs"),
-    ("07-ai-otomasyon", "04-otomasyon.png", "Otomasyon Yönetimi", "app", "Kurallar, tetikleyiciler, duraklat/çalıştır.", "Automation"),
-    ("07-ai-otomasyon", "05-ai-ajanlari.png", "Yapay Zekâ Ajanları", "app", "Allowlist tool’lar ve insan onaylı yazma işlemleri.", "AI Agents"),
-    ("07-ai-otomasyon", "06-tahminleme.png", "Tahminleme (Forecasting)", "app", "İstatistiksel projeksiyonlar ve hedef yörüngesi etiketleri.", "Forecasts"),
-    ("07-ai-otomasyon", "07-anomali-tespiti.png", "Anomali Tespiti", "app", "Z-score, IQR, yüzde değişim ve eksik veri kontrolleri.", "Anomalies"),
-    ("07-ai-otomasyon", "08-veri-kalitesi.png", "Veri Kalitesi Yönetimi", "app", "Kalite kuralları, bulgular ve izleme.", "Data Quality"),
-    ("07-ai-otomasyon", "09-uyari-merkezi.png", "Uyarı Merkezi (Alerts)", "app", "Operasyonel uyarılar ve önem seviyeleri.", "Alerts"),
-    ("07-ai-otomasyon", "10-bildirim-merkezi.png", "Bildirim Merkezi", "app", "Uygulama içi bildirimler ve tercihler.", "Notifications"),
-    ("07-ai-otomasyon", "11-zamanlanmis-raporlar.png", "Zamanlanmış Raporlar", "app", "Planlı rapor üretimi ve dağıtım.", "Scheduled Reports"),
-    ("07-ai-otomasyon", "12-tedarikci-takibi.png", "Tedarikçi Sürdürülebilirlik Takibi", "app", "İç skorlar (sertifikalı değil) ve izleme.", "Supplier Monitoring"),
-    ("07-ai-otomasyon", "13-regulasyon.png", "Regülasyon Yönetimi", "app", "Regülasyon istihbaratı — hukuki tavsiye değildir.", "Regulatory"),
-    ("08-guvenlik-ops", "01-sistem-guvenligi.png", "Sistem Güvenliği", "doc", "Org izolasyonu, RBAC, CSP, refresh rotasyonu, agent allowlist, audit log.", "Security"),
-    ("08-guvenlik-ops", "02-sistem-izleme.png", "Sistem İzleme ve Operasyon", "app", "Sağlık, job monitoring ve operasyon panelleri.", "Health"),
-    ("09-altyapi-demo", "01-api-altyapisi.png", "API Altyapısı", "api", "OpenAPI / Swagger, versioned /api/v1, camelCase sözleşmesi.", "API Docs"),
-    ("09-altyapi-demo", "02-yedekleme.png", "Yedekleme ve Geri Yükleme", "doc", "backup.sh · verify-backup.sh · restore.sh — PostgreSQL yedekleri.", "Backup"),
-    ("09-altyapi-demo", "03-dagitim.png", "Dağıtım Mimarisi (Deployment)", "arch", "Compose (dev/prod) · API + Web + Postgres + Scheduler · zayıf secret reddi.", "Deploy"),
-    ("09-altyapi-demo", "04-demo-senaryosu.png", "Demo Senaryosu", "doc", "Seed: admin/orgadmin/analyst/viewer · demo org · EcoBottle · DPP · AI knowledge.", "Demo"),
-    ("09-altyapi-demo", "05-sonuc.png", "Sonuç", "doc", "Phase 1–7 tamamlandı. Uçtan uca sürdürülebilirlik zekâsı referans platformu.", "Complete"),
+    ("01-intro", "01-sign-in.png", "Sign In", "login", "Secure sign-in with email and password. Uses JWT and refresh tokens.", "Sign in"),
+    ("01-intro", "02-document-purpose.png", "Document Purpose", "doc", "This guide explains EcoTrace AI features and screens. It is a reference portfolio app, not a certification product.", "Docs"),
+    ("01-intro", "03-about-the-platform.png", "About the Platform", "doc", "EcoTrace AI combines carbon accounting, LCA/PCF, digital product passports, analytics, targets, grounded AI, and approved automation.", "Overview"),
+    ("01-intro", "04-overview.png", "Overview", "app", "One system of record from operations to carbon inventories, product LCA, AI, and automation.", "Dashboard"),
+    ("02-platform", "01-platform-architecture.png", "Platform Architecture", "arch", "FastAPI API · Angular 19 Web · PostgreSQL (+ pgvector) · Scheduler. LLMs never access the database.", "Architecture"),
+    ("02-platform", "02-technology-stack.png", "Technology Stack", "doc", "Python 3.12, FastAPI, SQLAlchemy, Alembic · Angular Material · PostgreSQL 16 · Docker Compose · GitHub Actions.", "Stack"),
+    ("02-platform", "03-user-roles.png", "User Roles", "app", "system_admin · organization_admin · analyst · viewer — organization-scoped RBAC.", "Profile"),
+    ("03-organization", "01-dashboard.png", "Dashboard", "app", "Command center with quick links to facilities, carbon, products, and intelligence.", "Dashboard"),
+    ("03-organization", "02-organization-management.png", "Organization Management", "app", "Multi-tenant organizations, memberships, and selected org context.", "Organizations"),
+    ("03-organization", "03-users-and-roles.png", "Users and Roles", "app", "Identity, roles, and profile. Session and permission boundaries.", "Profile"),
+    ("03-organization", "04-facility-management.png", "Facility Management", "app", "Production sites, warehouses, and operational facilities.", "Facilities"),
+    ("03-organization", "05-operational-assets.png", "Operational Assets", "app", "Equipment, production lines, and data sources.", "Equipment"),
+    ("04-data-carbon", "01-activity-data.png", "Activity Data Management", "app", "Auditable activity records, reporting periods, and approval flows.", "Activity Data"),
+    ("04-data-carbon", "02-csv-import.png", "CSV Data Import", "app", "CSV import wizard with validation and row-level errors.", "Data Imports"),
+    ("04-data-carbon", "03-emission-factors.png", "Emission Factor Management", "app", "Factor sources, preferences, and matching rules.", "Emission Factors"),
+    ("04-data-carbon", "04-carbon-inventory.png", "Carbon Inventory", "app", "Organization emission inventories, scopes, and snapshots.", "Carbon Inventories"),
+    ("04-data-carbon", "05-calculation-engine.png", "Carbon Calculation Engine", "doc", "Activity × factor → scope results. Validation and repeatable calculation runs.", "Engine"),
+    ("05-analytics", "01-analytics-reporting.png", "Analytics and Reporting", "app", "Executive analytics, trends, categories, and decision support.", "Analytics"),
+    ("05-analytics", "02-sustainability-targets.png", "Sustainability Targets", "app", "Baselines, absolute/intensity targets, and initiatives.", "Targets"),
+    ("05-analytics", "03-scenario-analysis.png", "Scenario Analysis", "app", "What-if scenarios and roadmap comparisons.", "Scenarios"),
+    ("06-product-lca", "01-product-management.png", "Product Management", "app", "Products, variants, and batch records.", "Products"),
+    ("06-product-lca", "02-supplier-management.png", "Supplier Management", "app", "Supplier master data and links.", "Suppliers"),
+    ("06-product-lca", "03-material-management.png", "Material Management", "app", "Material catalog and attributes.", "Materials"),
+    ("06-product-lca", "04-bill-of-materials.png", "Bill of Materials (BOM)", "app", "BOM lines that describe the product component tree.", "BOM"),
+    ("06-product-lca", "05-lca.png", "Life Cycle Assessment (LCA)", "app", "LCA studies, inventory, and results screens.", "LCA Studies"),
+    ("06-product-lca", "06-pcf.png", "Product Carbon Footprint (PCF)", "app", "Product-level carbon footprint calculations.", "PCF"),
+    ("06-product-lca", "07-dpp.png", "Digital Product Passport (DPP)", "app", "Passport versions, preview, and public publish.", "Passports"),
+    ("07-ai-automation", "01-ai-copilot.png", "AI Sustainability Copilot", "app", "Grounded RAG answers with citations and confidence scores.", "AI Copilot"),
+    ("07-ai-automation", "02-enterprise-search.png", "Enterprise Document Search", "app", "Hybrid search: keywords plus vectors.", "Enterprise Search"),
+    ("07-ai-automation", "03-document-management.png", "Document Management", "app", "Knowledge upload, chunking, and access control.", "Knowledge Docs"),
+    ("07-ai-automation", "04-automation.png", "Automation Management", "app", "Rules, triggers, pause, and run actions.", "Automation"),
+    ("07-ai-automation", "05-ai-agents.png", "AI Agents", "app", "Allowlisted tools and human-approved write actions.", "AI Agents"),
+    ("07-ai-automation", "06-forecasting.png", "Forecasting", "app", "Statistical projections and target trajectory labels.", "Forecasts"),
+    ("07-ai-automation", "07-anomaly-detection.png", "Anomaly Detection", "app", "Z-score, IQR, percent change, and missing-data checks.", "Anomalies"),
+    ("07-ai-automation", "08-data-quality.png", "Data Quality Management", "app", "Quality rules, findings, and monitoring.", "Data Quality"),
+    ("07-ai-automation", "09-alerts.png", "Alert Center", "app", "Operational alerts and severity levels.", "Alerts"),
+    ("07-ai-automation", "10-notifications.png", "Notification Center", "app", "In-app notifications and preferences.", "Notifications"),
+    ("07-ai-automation", "11-scheduled-reports.png", "Scheduled Reports", "app", "Planned report generation and delivery.", "Scheduled Reports"),
+    ("07-ai-automation", "12-supplier-monitoring.png", "Supplier Sustainability Monitoring", "app", "Internal scores (not certified) and monitoring.", "Supplier Monitoring"),
+    ("07-ai-automation", "13-regulatory.png", "Regulatory Intelligence", "app", "Regulatory document support — not legal advice.", "Regulatory"),
+    ("08-security-ops", "01-system-security.png", "System Security", "doc", "Org isolation, RBAC, CSP, refresh rotation, agent allowlists, audit log.", "Security"),
+    ("08-security-ops", "02-system-monitoring.png", "System Monitoring and Operations", "app", "Health checks, job monitoring, and operations panels.", "Health"),
+    ("09-infra-demo", "01-api-infrastructure.png", "API Infrastructure", "api", "OpenAPI / Swagger, versioned /api/v1, camelCase contracts.", "API Docs"),
+    ("09-infra-demo", "02-backup-restore.png", "Backup and Restore", "doc", "backup.sh · verify-backup.sh · restore.sh — PostgreSQL backups.", "Backup"),
+    ("09-infra-demo", "03-deployment.png", "Deployment Architecture", "arch", "Compose (dev/prod) · API + Web + Postgres + Scheduler · weak secrets rejected.", "Deploy"),
+    ("09-infra-demo", "04-demo-scenario.png", "Demo Scenario", "doc", "Seed users: admin / orgadmin / analyst / viewer · demo org · EcoBottle · DPP · AI knowledge.", "Demo"),
+    ("09-infra-demo", "05-conclusion.png", "Conclusion", "doc", "The platform is complete. An end-to-end sustainability intelligence reference platform.", "Complete"),
 ]
 
 
@@ -103,7 +104,7 @@ def html_for(title: str, kind: str, blurb: str, nav: str) -> str:
     )
 
     if kind == "login":
-        return f"""<!doctype html><html lang="tr"><head><meta charset="utf-8"/>
+        return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
 *{{box-sizing:border-box}} body{{margin:0;font-family:Sora,system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;
@@ -144,7 +145,7 @@ background:linear-gradient(120deg,rgba(15,42,31,.88),rgba(27,67,50,.72)),#0f2a1f
             <div class="chips">
               <span>GET /health</span><span>POST /api/v1/auth/login</span><span>OpenAPI</span><span>camelCase</span>
             </div>"""
-        return f"""<!doctype html><html lang="tr"><head><meta charset="utf-8"/>
+        return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
 *{{box-sizing:border-box}} html,body{{margin:0;height:100%;font-family:Sora,system-ui,sans-serif}}
@@ -160,7 +161,7 @@ p{{margin:0;font-size:17px;line-height:1.65;color:#5c6b73;max-width:64ch}}
 .foot{{margin-top:28px;font-size:12px;color:#95d5b2;font-weight:600}}
 </style></head><body>
 <article class="card">
-  <p class="brand">EcoTrace AI · Dokümantasyon</p>
+  <p class="brand">EcoTrace AI · Documentation</p>
   <h1>{esc(title)}</h1>
   <p>{esc(blurb)}</p>
   {chips}
@@ -168,12 +169,11 @@ p{{margin:0;font-size:17px;line-height:1.65;color:#5c6b73;max-width:64ch}}
 </article>
 </body></html>"""
 
-    # app shell mock
     rows = "".join(
         f"<div class='row'><strong>{esc(title.split('(')[0].strip())} #{i}</strong><span>Active</span><span>Demo Org</span></div>"
         for i in range(1, 5)
     )
-    return f"""<!doctype html><html lang="tr"><head><meta charset="utf-8"/>
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
 *{{box-sizing:border-box}} body{{margin:0;font-family:Sora,system-ui,sans-serif;background:#eef4f0;color:#14212b;min-height:100vh;display:grid;grid-template-columns:272px 1fr}}
@@ -234,6 +234,12 @@ def capture(html: str, dest: Path) -> None:
 
 
 def main() -> None:
+    if OUT.exists():
+        for child in OUT.iterdir():
+            if child.is_dir():
+                shutil.rmtree(child)
+            elif child.name in {"index.json", "README.md"}:
+                child.unlink()
     index = []
     for group, filename, title, kind, blurb, nav in SHOTS:
         out = OUT / group / filename

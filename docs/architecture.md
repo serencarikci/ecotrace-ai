@@ -147,7 +147,7 @@ AI copilots, RAG, full LCA/PCF, Digital Product Passport, IoT/MQTT/Kafka ingesti
 
 See [carbon-accounting.md](carbon-accounting.md) for calculation methodology, matching precedence, and snapshot design.
 
-## Phase 7 extensions
+## Intelligence & automation extensions
 
 Additional modules: agents, automation, job_execution, anomaly_detection, forecasting, data_quality, alerts, notifications, scheduled_reports, supplier_monitoring, regulatory_intelligence, production_operations.
 

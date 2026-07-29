@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any
-from ecotrace.core.phase7_constants import CONTROLLED_WRITE_TOOLS, READ_ONLY_TOOLS
+from ecotrace.core.intelligence_constants import CONTROLLED_WRITE_TOOLS, READ_ONLY_TOOLS
 
 def _tool(code: str, description: str, *, write: bool=False, input_schema: dict[str, Any] | None=None) -> dict[str, Any]:
     return {'name': code, 'description': description, 'inputSchema': input_schema or {'type': 'object', 'properties': {'organizationId': {'type': 'string', 'format': 'uuid'}, 'query': {'type': 'string'}}, 'required': ['organizationId']}, 'annotations': {'readOnlyHint': not write, 'destructiveHint': False, 'openWorldHint': False}, 'authorization': 'organization_scoped', 'approvalRequired': write}

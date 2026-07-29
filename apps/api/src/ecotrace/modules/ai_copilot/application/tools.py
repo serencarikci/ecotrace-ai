@@ -19,7 +19,21 @@ from ecotrace.shared.application.org_access import require_ai_read
 def detect_safe_actions(question: str) -> list[str]:
     q = question.lower()
     actions: list[str] = []
-    mapping = [('summarize_inventory', ('inventory', 'envanter', 'özetle inventory')), ('compare_inventories', ('compare invent', 'envanter karşılaştır')), ('explain_emission_increase', ('increase', 'artış', 'neden artt')), ('highest_emitting_facility', ('highest', 'en yüksek', 'facility', 'tesis')), ('explain_scope_breakdown', ('scope', 'kapsam')), ('summarize_product_footprint', ('footprint', 'ayak izi', 'pcf')), ('summarize_passport', ('passport', 'pasaport', 'dpp')), ('compare_products', ('compare product', 'ürün karşılaştır')), ('compare_scenarios', ('scenario', 'senaryo')), ('explain_target_progress', ('target', 'hedef')), ('generate_sustainability_summary', ('sustainability summary', 'sürdürülebilirlik özeti')), ('find_related_documents', ('related document', 'ilgili belge')), ('locate_evidence', ('evidence', 'kanıt', 'locate'))]
+    mapping = [
+        ('summarize_inventory', ('inventory', 'summarize inventory')),
+        ('compare_inventories', ('compare invent', 'compare inventory')),
+        ('explain_emission_increase', ('increase', 'why did emissions')),
+        ('highest_emitting_facility', ('highest', 'facility')),
+        ('explain_scope_breakdown', ('scope', 'breakdown')),
+        ('summarize_product_footprint', ('footprint', 'pcf')),
+        ('summarize_passport', ('passport', 'dpp')),
+        ('compare_products', ('compare product',)),
+        ('compare_scenarios', ('scenario',)),
+        ('explain_target_progress', ('target', 'progress')),
+        ('generate_sustainability_summary', ('sustainability summary',)),
+        ('find_related_documents', ('related document', 'documents')),
+        ('locate_evidence', ('evidence', 'locate')),
+    ]
     for action, keys in mapping:
         if any((k in q for k in keys)) and action in SAFE_AI_ACTIONS:
             actions.append(action)
@@ -110,7 +124,7 @@ def _sustainability_summary(db: Session, organization_id: uuid.UUID, question: s
 
 def _find_related_documents(db: Session, organization_id: uuid.UUID, question: str) -> dict[str, Any]:
     from ecotrace.modules.knowledge.infrastructure.models import KnowledgeDocument
-    tokens = [t for t in re.findall('[a-zA-ZçğıöşüÇĞİÖŞÜ0-9]{3,}', question.lower())][:5]
+    tokens = [t for t in re.findall('[a-zA-Z0-9]{3,}', question.lower())][:5]
     stmt = select(KnowledgeDocument).where(KnowledgeDocument.organization_id == organization_id, KnowledgeDocument.status == 'published')
     docs = list(db.execute(stmt.limit(20)).scalars())
     scored: list[tuple[int, KnowledgeDocument]] = []

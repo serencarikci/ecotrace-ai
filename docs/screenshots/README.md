@@ -1,215 +1,215 @@
-# EcoTrace AI — Dokümantasyon Ekran Görüntüleri
+# EcoTrace AI — Documentation Screenshots
 
-Bu klasör kullanıcı kılavuzu başlıkları için gruplanmış ekran görüntülerini içerir.
+Real UI captures from the running Angular app (not HTML mocks).
 
-Yeniden üretmek için:
+Regenerate (API on `:8000`, web on `:4200`, Playwright available):
 
 ```bash
-python3 scripts/generate-docs-screenshots.py
+NODE_PATH=/tmp/ecotrace-shots/node_modules node scripts/capture-real-screenshots.cjs
 ```
 
-## Giriş & Genel
+## Intro & Overview
 
-### Giriş
+### Sign In
 
-![Giriş](01-giris/01-giris.png)
+![Sign In](01-intro/01-sign-in.png)
 
-### Dokümanın Amacı
+### Document Purpose
 
-![Dokümanın Amacı](01-giris/02-dokumanin-amaci.png)
+![Document Purpose](01-intro/02-document-purpose.png)
 
-### Platform Hakkında
+### About the Platform
 
-![Platform Hakkında](01-giris/03-platform-hakkinda.png)
+![About the Platform](01-intro/03-about-the-platform.png)
 
-### Genel Bakış
+### Overview
 
-![Genel Bakış](01-giris/04-genel-bakis.png)
+![Overview](01-intro/04-overview.png)
 
 ## Platform
 
-### Platform Mimarisi
+### Platform Architecture
 
-![Platform Mimarisi](02-platform/01-platform-mimarisi.png)
+![Platform Architecture](02-platform/01-platform-architecture.png)
 
-### Teknoloji Altyapısı
+### Technology Stack
 
-![Teknoloji Altyapısı](02-platform/02-teknoloji-altyapisi.png)
+![Technology Stack](02-platform/02-technology-stack.png)
 
-### Kullanıcı Rolleri
+### User Roles
 
-![Kullanıcı Rolleri](02-platform/03-kullanici-rolleri.png)
+![User Roles](02-platform/03-user-roles.png)
 
-## Organizasyon
+## Organization
 
-### Gösterge Paneli (Dashboard)
+### Dashboard
 
-![Gösterge Paneli (Dashboard)](03-organizasyon/01-dashboard.png)
+![Dashboard](03-organization/01-dashboard.png)
 
-### Organizasyon Yönetimi
+### Organization Management
 
-![Organizasyon Yönetimi](03-organizasyon/02-organizasyon-yonetimi.png)
+![Organization Management](03-organization/02-organization-management.png)
 
-### Kullanıcı ve Rol Yönetimi
+### Users and Roles
 
-![Kullanıcı ve Rol Yönetimi](03-organizasyon/03-kullanici-rol-yonetimi.png)
+![Users and Roles](03-organization/03-users-and-roles.png)
 
-### Tesis (Facility) Yönetimi
+### Facility Management
 
-![Tesis (Facility) Yönetimi](03-organizasyon/04-tesis-yonetimi.png)
+![Facility Management](03-organization/04-facility-management.png)
 
-### Operasyonel Varlık Yönetimi
+### Operational Assets
 
-![Operasyonel Varlık Yönetimi](03-organizasyon/05-operasyonel-varlik.png)
+![Operational Assets](03-organization/05-operational-assets.png)
 
-## Veri & Karbon
+## Data & Carbon
 
-### Aktivite Verisi Yönetimi
+### Activity Data Management
 
-![Aktivite Verisi Yönetimi](04-veri-karbon/01-aktivite-verisi.png)
+![Activity Data Management](04-data-carbon/01-activity-data.png)
 
-### CSV Veri Aktarımı
+### CSV Data Import
 
-![CSV Veri Aktarımı](04-veri-karbon/02-csv-veri-aktarimi.png)
+![CSV Data Import](04-data-carbon/02-csv-import.png)
 
-### Emisyon Faktörü Yönetimi
+### Emission Factor Management
 
-![Emisyon Faktörü Yönetimi](04-veri-karbon/03-emisyon-faktoru.png)
+![Emission Factor Management](04-data-carbon/03-emission-factors.png)
 
-### Karbon Envanteri
+### Carbon Inventory
 
-![Karbon Envanteri](04-veri-karbon/04-karbon-envanteri.png)
+![Carbon Inventory](04-data-carbon/04-carbon-inventory.png)
 
-### Karbon Hesaplama Motoru
+### Carbon Calculation Engine
 
-![Karbon Hesaplama Motoru](04-veri-karbon/05-karbon-hesaplama-motoru.png)
+![Carbon Calculation Engine](04-data-carbon/05-calculation-engine.png)
 
-## Analitik
+## Analytics
 
-### Analitik ve Raporlama
+### Analytics and Reporting
 
-![Analitik ve Raporlama](05-analitik/01-analitik-raporlama.png)
+![Analytics and Reporting](05-analytics/01-analytics-reporting.png)
 
-### Sürdürülebilirlik Hedefleri
+### Sustainability Targets
 
-![Sürdürülebilirlik Hedefleri](05-analitik/02-surdurulebilirlik-hedefleri.png)
+![Sustainability Targets](05-analytics/02-sustainability-targets.png)
 
-### Senaryo Analizi
+### Scenario Analysis
 
-![Senaryo Analizi](05-analitik/03-senaryo-analizi.png)
+![Scenario Analysis](05-analytics/03-scenario-analysis.png)
 
-## Ürün & LCA
+## Product & LCA
 
-### Ürün Yönetimi
+### Product Management
 
-![Ürün Yönetimi](06-urun-lca/01-urun-yonetimi.png)
+![Product Management](06-product-lca/01-product-management.png)
 
-### Tedarikçi Yönetimi
+### Supplier Management
 
-![Tedarikçi Yönetimi](06-urun-lca/02-tedarikci-yonetimi.png)
+![Supplier Management](06-product-lca/02-supplier-management.png)
 
-### Malzeme Yönetimi
+### Material Management
 
-![Malzeme Yönetimi](06-urun-lca/03-malzeme-yonetimi.png)
+![Material Management](06-product-lca/03-material-management.png)
 
-### Ürün Reçetesi (Bill of Materials)
+### Bill of Materials (BOM)
 
-![Ürün Reçetesi (Bill of Materials)](06-urun-lca/04-urun-recetesi-bom.png)
+![Bill of Materials (BOM)](06-product-lca/04-bill-of-materials.png)
 
-### Yaşam Döngüsü Analizi (LCA)
+### Life Cycle Assessment (LCA)
 
-![Yaşam Döngüsü Analizi (LCA)](06-urun-lca/05-lca.png)
+![Life Cycle Assessment (LCA)](06-product-lca/05-lca.png)
 
-### Ürün Karbon Ayak İzi (PCF)
+### Product Carbon Footprint (PCF)
 
-![Ürün Karbon Ayak İzi (PCF)](06-urun-lca/06-pcf.png)
+![Product Carbon Footprint (PCF)](06-product-lca/06-pcf.png)
 
-### Dijital Ürün Pasaportu (DPP)
+### Digital Product Passport (DPP)
 
-![Dijital Ürün Pasaportu (DPP)](06-urun-lca/07-dpp.png)
+![Digital Product Passport (DPP)](06-product-lca/07-dpp.png)
 
-## AI & Otomasyon
+## AI & Automation
 
-### Yapay Zekâ Asistanı (AI Copilot)
+### AI Sustainability Copilot
 
-![Yapay Zekâ Asistanı (AI Copilot)](07-ai-otomasyon/01-ai-copilot.png)
+![AI Sustainability Copilot](07-ai-automation/01-ai-copilot.png)
 
-### Kurumsal Doküman Arama
+### Enterprise Document Search
 
-![Kurumsal Doküman Arama](07-ai-otomasyon/02-enterprise-search.png)
+![Enterprise Document Search](07-ai-automation/02-enterprise-search.png)
 
-### Doküman Yönetimi
+### Document Management
 
-![Doküman Yönetimi](07-ai-otomasyon/03-dokuman-yonetimi.png)
+![Document Management](07-ai-automation/03-document-management.png)
 
-### Otomasyon Yönetimi
+### Automation Management
 
-![Otomasyon Yönetimi](07-ai-otomasyon/04-otomasyon.png)
+![Automation Management](07-ai-automation/04-automation.png)
 
-### Yapay Zekâ Ajanları
+### AI Agents
 
-![Yapay Zekâ Ajanları](07-ai-otomasyon/05-ai-ajanlari.png)
+![AI Agents](07-ai-automation/05-ai-agents.png)
 
-### Tahminleme (Forecasting)
+### Forecasting
 
-![Tahminleme (Forecasting)](07-ai-otomasyon/06-tahminleme.png)
+![Forecasting](07-ai-automation/06-forecasting.png)
 
-### Anomali Tespiti
+### Anomaly Detection
 
-![Anomali Tespiti](07-ai-otomasyon/07-anomali-tespiti.png)
+![Anomaly Detection](07-ai-automation/07-anomaly-detection.png)
 
-### Veri Kalitesi Yönetimi
+### Data Quality Management
 
-![Veri Kalitesi Yönetimi](07-ai-otomasyon/08-veri-kalitesi.png)
+![Data Quality Management](07-ai-automation/08-data-quality.png)
 
-### Uyarı Merkezi (Alerts)
+### Alert Center
 
-![Uyarı Merkezi (Alerts)](07-ai-otomasyon/09-uyari-merkezi.png)
+![Alert Center](07-ai-automation/09-alerts.png)
 
-### Bildirim Merkezi
+### Notification Center
 
-![Bildirim Merkezi](07-ai-otomasyon/10-bildirim-merkezi.png)
+![Notification Center](07-ai-automation/10-notifications.png)
 
-### Zamanlanmış Raporlar
+### Scheduled Reports
 
-![Zamanlanmış Raporlar](07-ai-otomasyon/11-zamanlanmis-raporlar.png)
+![Scheduled Reports](07-ai-automation/11-scheduled-reports.png)
 
-### Tedarikçi Sürdürülebilirlik Takibi
+### Supplier Sustainability Monitoring
 
-![Tedarikçi Sürdürülebilirlik Takibi](07-ai-otomasyon/12-tedarikci-takibi.png)
+![Supplier Sustainability Monitoring](07-ai-automation/12-supplier-monitoring.png)
 
-### Regülasyon Yönetimi
+### Regulatory Intelligence
 
-![Regülasyon Yönetimi](07-ai-otomasyon/13-regulasyon.png)
+![Regulatory Intelligence](07-ai-automation/13-regulatory.png)
 
-## Güvenlik & Ops
+## Security & Ops
 
-### Sistem Güvenliği
+### System Security
 
-![Sistem Güvenliği](08-guvenlik-ops/01-sistem-guvenligi.png)
+![System Security](08-security-ops/01-system-security.png)
 
-### Sistem İzleme ve Operasyon
+### System Monitoring and Operations
 
-![Sistem İzleme ve Operasyon](08-guvenlik-ops/02-sistem-izleme.png)
+![System Monitoring and Operations](08-security-ops/02-system-monitoring.png)
 
-## Altyapı & Demo
+## Infrastructure & Demo
 
-### API Altyapısı
+### API Infrastructure
 
-![API Altyapısı](09-altyapi-demo/01-api-altyapisi.png)
+![API Infrastructure](09-infra-demo/01-api-infrastructure.png)
 
-### Yedekleme ve Geri Yükleme
+### Backup and Restore
 
-![Yedekleme ve Geri Yükleme](09-altyapi-demo/02-yedekleme.png)
+![Backup and Restore](09-infra-demo/02-backup-restore.png)
 
-### Dağıtım Mimarisi (Deployment)
+### Deployment Architecture
 
-![Dağıtım Mimarisi (Deployment)](09-altyapi-demo/03-dagitim.png)
+![Deployment Architecture](09-infra-demo/03-deployment.png)
 
-### Demo Senaryosu
+### Demo Scenario
 
-![Demo Senaryosu](09-altyapi-demo/04-demo-senaryosu.png)
+![Demo Scenario](09-infra-demo/04-demo-scenario.png)
 
-### Sonuç
+### Conclusion
 
-![Sonuç](09-altyapi-demo/05-sonuc.png)
+![Conclusion](09-infra-demo/05-conclusion.png)

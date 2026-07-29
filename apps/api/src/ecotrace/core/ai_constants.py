@@ -12,6 +12,5 @@ DOCUMENT_STATUSES: Final[frozenset[str]] = frozenset({'draft', 'processing', 'pu
 CHUNKING_STRATEGIES: Final[frozenset[str]] = frozenset({'fixed', 'semantic', 'heading', 'markdown', 'table', 'code'})
 CONVERSATION_STATUSES: Final[frozenset[str]] = frozenset({'active', 'archived', 'shared', 'deleted'})
 MESSAGE_ROLES: Final[frozenset[str]] = frozenset({'user', 'assistant', 'system', 'tool'})
-INSUFFICIENT_EVIDENCE_EN: Final[str] = 'I could not find sufficient authorized evidence in EcoTrace data to answer this confidently. No unsupported claims are provided.'
-INSUFFICIENT_EVIDENCE_TR: Final[str] = 'Bu soruyu güvenle yanıtlamak için yetkili EcoTrace verilerinde yeterli kanıt bulunamadı. Desteklenmeyen iddialar üretilmez.'
+INSUFFICIENT_EVIDENCE_EN: Final[str] = 'I could not find enough authorized EcoTrace data to answer this with confidence. Unsupported claims are not provided.'
 SAFE_AI_ACTIONS: Final[frozenset[str]] = frozenset({'summarize_inventory', 'compare_inventories', 'explain_emission_increase', 'highest_emitting_facility', 'explain_scope_breakdown', 'summarize_product_footprint', 'summarize_passport', 'compare_products', 'compare_scenarios', 'explain_target_progress', 'generate_sustainability_summary', 'find_related_documents', 'locate_evidence'})

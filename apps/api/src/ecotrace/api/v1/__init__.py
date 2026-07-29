@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ecotrace.api.v1 import activity_records, ai_copilot, analytics, attachments, auth, carbon_inventories, carbon_preferences, data_sources, digital_product_passports, emission_factor_sources, emission_factors, equipment, facilities, health, imports, lca_studies, materials, organizations, phase7, product_carbon_footprints, production_lines, products, reference, reporting_periods, reports, scenarios, suppliers, sustainability_targets, system_ops
+from ecotrace.api.v1 import activity_records, ai_copilot, analytics, attachments, auth, carbon_inventories, carbon_preferences, data_sources, digital_product_passports, emission_factor_sources, emission_factors, equipment, facilities, health, imports, lca_studies, materials, organizations, intelligence, product_carbon_footprints, production_lines, products, reference, reporting_periods, reports, scenarios, suppliers, sustainability_targets, system_ops
 api_router = APIRouter()
 api_router.include_router(auth.router)
 api_router.include_router(organizations.router)
@@ -33,9 +33,9 @@ api_router.include_router(product_carbon_footprints.router)
 api_router.include_router(digital_product_passports.router)
 api_router.include_router(digital_product_passports.public_router)
 api_router.include_router(ai_copilot.router)
-api_router.include_router(phase7.agents_router)
-api_router.include_router(phase7.org_router)
-api_router.include_router(phase7.notif_router)
-api_router.include_router(phase7.reg_router)
+api_router.include_router(intelligence.agents_router)
+api_router.include_router(intelligence.org_router)
+api_router.include_router(intelligence.notif_router)
+api_router.include_router(intelligence.reg_router)
 api_router.include_router(system_ops.system_router)
 api_router.include_router(health.meta_router)

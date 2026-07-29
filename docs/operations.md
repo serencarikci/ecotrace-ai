@@ -9,7 +9,7 @@ Organization-scoped operational sustainability data management for EcoTrace AI.
 - Reporting periods with lock/unlock
 - Activity records with workflow, revisions, optimistic concurrency
 - Attachments and CSV activity imports
-- Alembic migration revision `0002_phase2`
+- Alembic migration revision `0002_operations`
 
 Unauthorized cross-organization access returns **404** (resource existence is not revealed).
 

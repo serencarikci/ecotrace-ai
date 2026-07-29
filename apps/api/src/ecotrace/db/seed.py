@@ -175,7 +175,7 @@ def _upsert_period(db: Session, org: Organization, *, code: str, name: str, peri
 def seed_ops(db: Session, org: Organization, analyst: User) -> None:
     seed_units(db)
     activity_types = seed_activity_types(db)
-    izmir = _upsert_facility(db, org, code='IZM-PROD', name='İzmir Production Plant', city='İzmir')
+    izmir = _upsert_facility(db, org, code='IZM-PROD', name='Izmir Production Plant', city='Izmir')
     manisa = _upsert_facility(db, org, code='MAN-WH', name='Manisa Logistics Warehouse', city='Manisa', facility_type='warehouse')
     line_a = _upsert_line(db, org, izmir, code='FERM-01', name='Fermentation Line')
     line_b = _upsert_line(db, org, izmir, code='PACK-01', name='Packaging Line')
@@ -234,8 +234,8 @@ def run_seed(db: Session | None=None) -> None:
         seed_lca(session, org, org_admin)
         from ecotrace.db.seed_ai import seed_ai
         seed_ai(session, org, org_admin)
-        from ecotrace.db.seed_phase7 import seed_phase7
-        seed_phase7(session, org, org_admin)
+        from ecotrace.db.seed_intelligence import seed_intelligence
+        seed_intelligence(session, org, org_admin)
         session.commit()
         logger.info('seed.completed')
     except Exception:

@@ -46,11 +46,11 @@ def expand_query(query: str) -> list[str]:
     base = query.strip()
     variants = [base]
     lower = base.lower()
-    if "emisyon" in lower or "emission" in lower:
+    if "emission" in lower:
         variants.append(base + " carbon inventory scope")
-    if "ürün" in lower or "product" in lower:
+    if "product" in lower:
         variants.append(base + " product carbon footprint passport")
-    if "hedef" in lower or "target" in lower:
+    if "target" in lower:
         variants.append(base + " sustainability target progress")
     seen: set[str] = set()
     out: list[str] = []
@@ -189,10 +189,8 @@ def hybrid_retrieve(
 
 
 def build_context_prompt(evidence: list[RetrievedEvidence], *, language: str) -> str:
-    if language == "tr":
-        header = "Yalnızca aşağıdaki yetkili kanıtları kullan. Kanıt yoksa uydurma. Her iddiayı [E#] ile doğrula."
-    else:
-        header = "Use only the authorized evidence below. Do not invent facts. Ground every claim with [E#] citations."
+    _ = language
+    header = "Use only the authorized evidence below. Do not invent facts. Ground every claim with [E#] citations."
     blocks = [header, ""]
     for item in evidence:
         blocks.append(

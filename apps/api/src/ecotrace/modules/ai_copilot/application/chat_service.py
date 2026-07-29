@@ -9,7 +9,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from ecotrace.core.ai.protocols import ChatMessage as LLMChatMessage
 from ecotrace.core.ai.providers import build_llm_provider, detect_language
-from ecotrace.core.ai_constants import INSUFFICIENT_EVIDENCE_EN, INSUFFICIENT_EVIDENCE_TR
+from ecotrace.core.ai_constants import INSUFFICIENT_EVIDENCE_EN
 from ecotrace.core.config import get_settings
 from ecotrace.core.exceptions import NotFoundError, ValidationAppError
 from ecotrace.modules.ai_copilot.application.tools import run_tools, tool_evidence_blocks
@@ -154,7 +154,7 @@ def _generate_grounded_answer(db: Session, *, user: User, organization_id: uuid.
         provider = LocalGroundedLLM()
     t0 = time.perf_counter()
     if not grounded:
-        content = INSUFFICIENT_EVIDENCE_TR if language == 'tr' else INSUFFICIENT_EVIDENCE_EN
+        content = INSUFFICIENT_EVIDENCE_EN
         llm_meta = {'provider': 'grounding', 'model': 'insufficient-evidence', 'promptTokens': 0, 'completionTokens': len(content) // 4}
     else:
         llm_result = provider.complete(messages=messages, temperature=org_settings.temperature, max_tokens=org_settings.max_tokens, top_p=org_settings.top_p, language=language)
@@ -208,9 +208,8 @@ def _stream_and_persist(db: Session, *, conversation: ChatConversation, organiza
     yield f"data: {json.dumps({'event': 'done'})}\n\n"
 
 def _default_system_prompt(language: str) -> str:
-    if language == 'tr':
-        return "Sen EcoTrace AI Sustainability Copilot'sun. Yalnızca yetkili kanıtlara dayan. Uydurma. Her yanıtta alıntı kullan. Yıkıcı işlem önerme."
-    return 'You are the EcoTrace AI Sustainability Copilot. Answer only from authorized evidence. Never fabricate. Always cite sources. Never perform destructive actions.'
+    _ = language
+    return 'You are the EcoTrace AI Sustainability Copilot. Answer only from authorized evidence. Never invent facts. Always cite sources. Never suggest destructive actions.'
 
 def _get_or_create_ai_settings(db: Session, organization_id: uuid.UUID) -> OrganizationAiSettings:
     row = db.execute(select(OrganizationAiSettings).where(OrganizationAiSettings.organization_id == organization_id)).scalar_one_or_none()

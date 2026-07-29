@@ -89,7 +89,7 @@ jobs:
       - name: Verify migration head
         run: |
           alembic current | tee /tmp/alembic-current.txt
-          grep -q "0007_phase7" /tmp/alembic-current.txt
+          grep -q "0007_intelligence" /tmp/alembic-current.txt
 
       - name: Pytest with coverage
         run: pytest tests/ -v --cov=ecotrace --cov-report=term-missing --cov-fail-under=55

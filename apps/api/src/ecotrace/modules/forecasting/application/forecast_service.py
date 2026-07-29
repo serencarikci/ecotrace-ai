@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from ecotrace.core.exceptions import NotFoundError, ValidationAppError
-from ecotrace.core.phase7_constants import FORECAST_ENGINE_VERSION, FORECAST_METHODS
+from ecotrace.core.intelligence_constants import FORECAST_ENGINE_VERSION, FORECAST_METHODS
 from ecotrace.modules.forecasting.application.methods import accuracy_bundle, d, run_method, select_method, target_trajectory_label
 from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.modules.production_operations.infrastructure.models import ForecastDefinition, ForecastPoint, ForecastRun

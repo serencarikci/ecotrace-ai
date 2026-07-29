@@ -36,7 +36,7 @@ def scan(db: Session, user: User, organization_id: uuid.UUID) -> dict[str, Any]:
         exists = db.execute(select(DataQualityIssue.id).where(DataQualityIssue.organization_id == organization_id, DataQualityIssue.fingerprint == fp)).scalar_one_or_none()
         if exists:
             continue
-        db.add(DataQualityIssue(organization_id=organization_id, fingerprint=fp, issue_type=issue_type, entity_type=entity_type, entity_id=None, severity=severity, title=title, description=title, evidence_json={'detectedBy': 'phase7-data-quality-scan'}, status='open', detected_at=datetime.now(UTC)))
+        db.add(DataQualityIssue(organization_id=organization_id, fingerprint=fp, issue_type=issue_type, entity_type=entity_type, entity_id=None, severity=severity, title=title, description=title, evidence_json={'detectedBy': 'intelligence-data-quality-scan'}, status='open', detected_at=datetime.now(UTC)))
         created += 1
     write_audit_log(db, action='data_quality.scan.completed', actor_user_id=user.id, organization_id=organization_id, entity_type='organization', entity_id=str(organization_id), metadata={'created': created})
     db.flush()

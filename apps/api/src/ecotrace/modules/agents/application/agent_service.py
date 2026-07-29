@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from ecotrace.core.config import get_settings
 from ecotrace.core.exceptions import AuthorizationError, NotFoundError, ValidationAppError
-from ecotrace.core.phase7_constants import AGENT_CODES, CONTROLLED_WRITE_TOOLS, FORBIDDEN_AGENT_ACTIONS, READ_ONLY_TOOLS
+from ecotrace.core.intelligence_constants import AGENT_CODES, CONTROLLED_WRITE_TOOLS, FORBIDDEN_AGENT_ACTIONS, READ_ONLY_TOOLS
 from ecotrace.modules.agents.application.security import detect_prompt_injection, redact_secrets
 from ecotrace.modules.ai_copilot.application.tools import run_tools
 from ecotrace.modules.identity.infrastructure.models import User

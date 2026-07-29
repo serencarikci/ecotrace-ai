@@ -700,190 +700,190 @@ export const routes: Routes = [
       {
         path: 'automation',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AutomationListComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AutomationListComponent),
       },
       {
         path: 'automation/new',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AutomationFormComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AutomationFormComponent),
       },
       {
         path: 'automation/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AutomationFormComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AutomationFormComponent),
       },
       {
         path: 'automation/:id/executions',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.AutomationExecutionsComponent,
           ),
       },
       {
         path: 'agents',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AgentsListComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AgentsListComponent),
       },
       {
         path: 'agents/:code',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AgentDetailComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AgentDetailComponent),
       },
       {
         path: 'agent-executions',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.AgentExecutionsComponent,
           ),
       },
       {
         path: 'agent-executions/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.AgentExecutionDetailComponent,
           ),
       },
       {
         path: 'agent-approvals',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AgentApprovalsComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AgentApprovalsComponent),
       },
       {
         path: 'anomalies',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AnomaliesComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AnomaliesComponent),
       },
       {
         path: 'anomalies/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AnomalyDetailComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AnomalyDetailComponent),
       },
       {
         path: 'anomaly-rules',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AnomalyRulesComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AnomalyRulesComponent),
       },
       {
         path: 'forecasts',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.ForecastsComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.ForecastsComponent),
       },
       {
         path: 'forecasts/new',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.ForecastFormComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.ForecastFormComponent),
       },
       {
         path: 'forecasts/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.ForecastFormComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.ForecastFormComponent),
       },
       {
         path: 'forecasts/:id/results',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.ForecastResultsComponent,
           ),
       },
       {
         path: 'data-quality',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.DataQualityComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.DataQualityComponent),
       },
       {
         path: 'data-quality/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.DataQualityDetailComponent,
           ),
       },
       {
         path: 'alerts',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AlertsComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AlertsComponent),
       },
       {
         path: 'alerts/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.AlertDetailComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.AlertDetailComponent),
       },
       {
         path: 'notifications',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.NotificationsComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.NotificationsComponent),
       },
       {
         path: 'notification-settings',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.NotificationSettingsComponent,
           ),
       },
       {
         path: 'scheduled-reports',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.ScheduledReportsComponent,
           ),
       },
       {
         path: 'scheduled-reports/new',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.ScheduledReportFormComponent,
           ),
       },
       {
         path: 'scheduled-reports/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.ScheduledReportFormComponent,
           ),
       },
       {
         path: 'generated-reports',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.GeneratedReportsComponent,
           ),
       },
       {
         path: 'generated-reports/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.GeneratedReportDetailComponent,
           ),
       },
       {
         path: 'supplier-monitoring',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.SupplierMonitoringComponent,
           ),
       },
       {
         path: 'supplier-monitoring/:supplierId',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.SupplierMonitoringDetailComponent,
           ),
       },
       {
         path: 'regulatory-intelligence',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.RegulatoryListComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.RegulatoryListComponent),
       },
       {
         path: 'regulatory-intelligence/:id',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.RegulatoryDetailComponent,
           ),
       },
       {
         path: 'regulatory-assessments',
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.RegulatoryAssessmentsComponent,
           ),
       },
@@ -892,14 +892,14 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['system_admin', 'organization_admin'] },
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.JobMonitoringComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.JobMonitoringComponent),
       },
       {
         path: 'system/operations',
         canActivate: [roleGuard],
         data: { roles: ['system_admin'] },
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then(
+          import('./features/ops/ops-pages.component').then(
             (m) => m.SystemOperationsComponent,
           ),
       },
@@ -908,7 +908,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['system_admin'] },
         loadComponent: () =>
-          import('./features/phase7/phase7-pages.component').then((m) => m.SystemHealthComponent),
+          import('./features/ops/ops-pages.component').then((m) => m.SystemHealthComponent),
       },
     ],
   },

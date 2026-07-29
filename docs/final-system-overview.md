@@ -10,4 +10,4 @@ EcoTrace AI (v0.7.1) is a completed portfolio / production-conscious reference p
 6. AI Copilot, RAG, hybrid search, citations
 7. Agents, automation, anomalies, forecasts, ops hardening
 
-**Project status:** Complete through Phase 7. No Phase 8 roadmap.
+**Project status:** Complete (v0.7.1).

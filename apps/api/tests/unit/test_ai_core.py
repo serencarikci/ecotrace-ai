@@ -14,11 +14,9 @@ class _Settings:
     ai_embedding_api_key = None
     ai_reranker = 'local_lexical'
 
-def test_detect_language_turkish() -> None:
-    assert detect_language('Karbon emisyonları nedir?') == 'tr'
-
-def test_detect_language_english() -> None:
+def test_detect_language_defaults_to_english() -> None:
     assert detect_language('What is the carbon inventory total?') == 'en'
+    assert detect_language('any text') == 'en'
 
 def test_local_hash_embedding_dimensions() -> None:
     emb = LocalHashEmbedding()

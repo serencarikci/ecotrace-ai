@@ -17,12 +17,11 @@ from ecotrace.core.ai.protocols import (
 from ecotrace.core.ai_constants import (
     DEFAULT_EMBEDDING_DIM,
     INSUFFICIENT_EVIDENCE_EN,
-    INSUFFICIENT_EVIDENCE_TR,
 )
 
 
 def tokenize_text(text: str) -> set[str]:
-    return {t for t in re.findall("[a-zA-ZçğıöşüÇĞİÖŞÜ0-9]{2,}", text.lower())}
+    return {t for t in re.findall("[a-zA-Z0-9]{2,}", text.lower())}
 
 
 def _tokenize(text: str) -> set[str]:
@@ -30,12 +29,8 @@ def _tokenize(text: str) -> set[str]:
 
 
 def detect_language(text: str) -> str:
-    tr_markers = {"ve", "bir", "için", "olan", "nedir", "kaç", "emisyon", "karbon", "hedef"}
-    tokens = _tokenize(text)
-    if not tokens:
-        return "en"
-    score = len(tokens & tr_markers)
-    return "tr" if score >= 1 or any(ch in text for ch in "çğıöşüÇĞİÖŞÜ") else "en"
+    _ = text
+    return "en"
 
 
 class LocalHashEmbedding:
@@ -127,24 +122,18 @@ class LocalGroundedLLM:
             yield token
 
     def _synthesize(self, *, user: str, system: str, language: str) -> str:
+        _ = language
         evidence_blocks = re.findall("\\[E(\\d+)\\](.*?)(?=\\[E\\d+\\]|\\Z)", system, flags=re.S)
         if not evidence_blocks:
-            return INSUFFICIENT_EVIDENCE_TR if language == "tr" else INSUFFICIENT_EVIDENCE_EN
+            return INSUFFICIENT_EVIDENCE_EN
         lines: list[str] = []
-        if language == "tr":
-            lines.append("Yetkili EcoTrace kanıtlarına dayanan yanıt:")
-        else:
-            lines.append("Answer grounded in authorized EcoTrace evidence:")
+        lines.append("Answer grounded in authorized EcoTrace evidence:")
         for idx, body in evidence_blocks[:5]:
             snippet = " ".join(body.strip().split())[:280]
             lines.append(f"- {snippet} [E{idx}]")
         lines.append("")
-        if language == "tr":
-            lines.append(f"Soru bağlamı: {user[:240]}")
-            lines.append("Güven: orta (kanıt destekli, sertifikalı değil).")
-        else:
-            lines.append(f"Question context: {user[:240]}")
-            lines.append("Confidence: medium (evidence-backed, non-certified).")
+        lines.append(f"Question context: {user[:240]}")
+        lines.append("Confidence: medium (evidence-backed, not certified).")
         return "\n".join(lines)
 
 

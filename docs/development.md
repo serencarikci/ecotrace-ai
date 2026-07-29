@@ -50,7 +50,7 @@ npm start
 
 ```bash
 docker compose exec api alembic upgrade head
-docker compose exec api alembic current   # expect 0003_phase3 (head)
+docker compose exec api alembic current   # expect 0007_intelligence (head)
 docker compose exec api alembic revision --autogenerate -m "description"
 ```
 
@@ -64,7 +64,7 @@ docker compose exec api python -m ecotrace.db.seed
 docker compose exec api python -m ecotrace.db.seed
 ```
 
-Seed includes roles/users/org plus units, activity types, İzmir/Manisa facilities, lines, equipment, sources, periods, and sample activity records.
+Seed includes roles/users/org plus units, activity types, Izmir/Manisa facilities, lines, equipment, sources, periods, and sample activity records.
 
 ## Attachments
 
@@ -128,7 +128,7 @@ Confirm `CORS_ALLOWED_ORIGINS` includes `http://localhost:4200` and `environment
 **Login works in Swagger but not UI**  
 Hard-refresh the SPA; check browser network for `/api/v1/auth/login` and token persistence keys `ecotrace.*`.
 
-## Phase 7 local extras
+## Local extras (automation & intelligence)
 
 - Scheduler: `docker compose up scheduler` or `python -m ecotrace.scheduler_main`
 - Backup scripts: `scripts/backup.sh`, `scripts/verify-backup.sh`, `scripts/restore.sh`

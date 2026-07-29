@@ -139,7 +139,7 @@ import { extractApiErrorMessage } from '../../core/services/error.util';
 
         <form class="composer surface-card" (ngSubmit)="send()">
           <mat-form-field appearance="outline" class="full">
-            <mat-label>Ask in Turkish or English</mat-label>
+            <mat-label>Ask in English</mat-label>
             <textarea
               matInput
               rows="3"

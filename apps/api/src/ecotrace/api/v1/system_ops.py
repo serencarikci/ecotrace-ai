@@ -7,7 +7,7 @@ from ecotrace.api.dependencies.auth import CurrentUser, DbSession
 from ecotrace.core.config import get_settings
 from ecotrace.core.database import check_database_connectivity
 from ecotrace.core.exceptions import AuthorizationError, EcoTraceError
-from ecotrace.core.phase7_constants import ANOMALY_ENGINE_VERSION, FORECAST_ENGINE_VERSION, PHASE7_ENGINE_VERSION
+from ecotrace.core.intelligence_constants import ANOMALY_ENGINE_VERSION, FORECAST_ENGINE_VERSION, INTELLIGENCE_ENGINE_VERSION
 from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.modules.job_execution.application import job_service
 from ecotrace.shared.application.org_access import require_system_admin
@@ -23,7 +23,7 @@ class VersionResponse(CamelModel):
     forecasting_engine_version: str
     anomaly_engine_version: str
     rag_pipeline_version: str
-    phase7_engine_version: str
+    intelligence_engine_version: str
     build_commit: str | None = None
     build_timestamp: str | None = None
     environment: str
@@ -78,7 +78,7 @@ def health_vector(db: DbSession, user: CurrentUser) -> dict[str, Any]:
 def system_version(user: CurrentUser) -> VersionResponse:
     _require_sys(user)
     settings = get_settings()
-    return VersionResponse(application_version=__version__, api_version='v1', calculation_engine_version='ecotrace-carbon-0.3.0', forecasting_engine_version=FORECAST_ENGINE_VERSION, anomaly_engine_version=ANOMALY_ENGINE_VERSION, rag_pipeline_version='ecotrace-rag-0.6.0', phase7_engine_version=PHASE7_ENGINE_VERSION, build_commit=settings.build_commit, build_timestamp=settings.build_timestamp, environment=settings.app_env)
+    return VersionResponse(application_version=__version__, api_version='v1', calculation_engine_version='ecotrace-carbon-0.3.0', forecasting_engine_version=FORECAST_ENGINE_VERSION, anomaly_engine_version=ANOMALY_ENGINE_VERSION, rag_pipeline_version='ecotrace-rag-0.6.0', intelligence_engine_version=INTELLIGENCE_ENGINE_VERSION, build_commit=settings.build_commit, build_timestamp=settings.build_timestamp, environment=settings.app_env)
 
 @system_router.get('/metrics')
 def prometheus_metrics(user: CurrentUser) -> Response:

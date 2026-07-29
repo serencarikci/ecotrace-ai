@@ -11,7 +11,7 @@ from ecotrace.core.config import get_settings
 from ecotrace.core.exceptions import AuthorizationError, NotFoundError
 from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.modules.production_operations.infrastructure.models import GeneratedReport, ScheduledReport
-from ecotrace.modules.reporting.application import report_service as phase4_reports
+from ecotrace.modules.reporting.application import report_service as reporting
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.application.org_access import require_automation_manage, require_automation_read, require_automation_write
 
@@ -118,11 +118,11 @@ def _needs_approval(db: Session, scheduled_report_id: uuid.UUID) -> bool:
 def _build_report_payload(db: Session, user: User, organization_id: uuid.UUID, report_type: str) -> dict[str, Any]:
     try:
         if report_type in {'executive_sustainability_summary', 'executive'}:
-            return phase4_reports.executive_report(db, user, organization_id)
+            return reporting.executive_report(db, user, organization_id)
         if report_type in {'carbon_inventory_summary', 'inventory_summary'}:
-            return phase4_reports.inventory_summary_report(db, user, organization_id)
+            return reporting.inventory_summary_report(db, user, organization_id)
         if report_type == 'target_progress_report':
-            return phase4_reports.target_progress_report(db, user, organization_id)
+            return reporting.target_progress_report(db, user, organization_id)
     except Exception as exc:
         return {'reportType': report_type, 'organizationId': str(organization_id), 'generatedAt': datetime.now(UTC).isoformat(), 'warning': f'Fallback payload due to: {exc}', 'summary': 'Report generated with limited data.'}
     return {'reportType': report_type, 'organizationId': str(organization_id), 'generatedAt': datetime.now(UTC).isoformat(), 'summary': f'EcoTrace {report_type} snapshot'}

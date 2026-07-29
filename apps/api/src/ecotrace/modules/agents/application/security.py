@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 from typing import Any
-from ecotrace.core.phase7_constants import PROMPT_INJECTION_MARKERS
+from ecotrace.core.intelligence_constants import PROMPT_INJECTION_MARKERS
 
 def detect_prompt_injection(text: str) -> bool:
     lowered = text.lower()
