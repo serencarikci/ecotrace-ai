@@ -68,7 +68,7 @@ describe('ShellComponent role-based navigation', () => {
     expect(text).toContain('Activity Data');
     expect(text).toContain('Carbon Accounting');
     expect(text).toContain('Carbon Inventories');
-    expect(text).toContain('v0.7.3');
+    expect(text).toContain('v0.7.1');
     expect(text).toContain('Intelligence');
     expect(text).toContain('AI Agents');
     expect(text).toContain('Health');

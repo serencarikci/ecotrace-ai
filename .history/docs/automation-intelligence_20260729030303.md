@@ -1,6 +1,6 @@
 # Intelligent Automation, Forecasting, Anomaly Detection, and Production Hardening
 
-**Status:** Complete (v0.7.3)  
+**Status:** Complete (v0.7.1)  
 **Scope:** Automation and intelligence capabilities for production use.
 
 ## Summary

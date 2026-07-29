@@ -1,28 +1,28 @@
 [
   {
     "group": "01-intro",
-    "groupTitle": "Intro & Overview",
+    "groupTitle": "Intro and Overview",
     "file": "01-sign-in.png",
     "title": "Sign In",
     "rel": "docs/screenshots/01-intro/01-sign-in.png"
   },
   {
     "group": "01-intro",
-    "groupTitle": "Intro & Overview",
+    "groupTitle": "Intro and Overview",
     "file": "02-document-purpose.png",
     "title": "Document Purpose",
     "rel": "docs/screenshots/01-intro/02-document-purpose.png"
   },
   {
     "group": "01-intro",
-    "groupTitle": "Intro & Overview",
+    "groupTitle": "Intro and Overview",
     "file": "03-about-the-platform.png",
     "title": "About the Platform",
     "rel": "docs/screenshots/01-intro/03-about-the-platform.png"
   },
   {
     "group": "01-intro",
-    "groupTitle": "Intro & Overview",
+    "groupTitle": "Intro and Overview",
     "file": "04-overview.png",
     "title": "Overview",
     "rel": "docs/screenshots/01-intro/04-overview.png"
@@ -85,35 +85,35 @@
   },
   {
     "group": "04-data-carbon",
-    "groupTitle": "Data & Carbon",
+    "groupTitle": "Data and Carbon",
     "file": "01-activity-data.png",
     "title": "Activity Data Management",
     "rel": "docs/screenshots/04-data-carbon/01-activity-data.png"
   },
   {
     "group": "04-data-carbon",
-    "groupTitle": "Data & Carbon",
+    "groupTitle": "Data and Carbon",
     "file": "02-csv-import.png",
     "title": "CSV Data Import",
     "rel": "docs/screenshots/04-data-carbon/02-csv-import.png"
   },
   {
     "group": "04-data-carbon",
-    "groupTitle": "Data & Carbon",
+    "groupTitle": "Data and Carbon",
     "file": "03-emission-factors.png",
     "title": "Emission Factor Management",
     "rel": "docs/screenshots/04-data-carbon/03-emission-factors.png"
   },
   {
     "group": "04-data-carbon",
-    "groupTitle": "Data & Carbon",
+    "groupTitle": "Data and Carbon",
     "file": "04-carbon-inventory.png",
     "title": "Carbon Inventory",
     "rel": "docs/screenshots/04-data-carbon/04-carbon-inventory.png"
   },
   {
     "group": "04-data-carbon",
-    "groupTitle": "Data & Carbon",
+    "groupTitle": "Data and Carbon",
     "file": "05-calculation-engine.png",
     "title": "Carbon Calculation Engine",
     "rel": "docs/screenshots/04-data-carbon/05-calculation-engine.png"
@@ -141,70 +141,70 @@
   },
   {
     "group": "06-product-lca",
-    "groupTitle": "Product & LCA",
+    "groupTitle": "Product and LCA",
     "file": "01-product-management.png",
     "title": "Product Management",
     "rel": "docs/screenshots/06-product-lca/01-product-management.png"
   },
   {
     "group": "06-product-lca",
-    "groupTitle": "Product & LCA",
+    "groupTitle": "Product and LCA",
     "file": "02-supplier-management.png",
     "title": "Supplier Management",
     "rel": "docs/screenshots/06-product-lca/02-supplier-management.png"
   },
   {
     "group": "06-product-lca",
-    "groupTitle": "Product & LCA",
+    "groupTitle": "Product and LCA",
     "file": "03-material-management.png",
     "title": "Material Management",
     "rel": "docs/screenshots/06-product-lca/03-material-management.png"
   },
   {
     "group": "06-product-lca",
-    "groupTitle": "Product & LCA",
+    "groupTitle": "Product and LCA",
     "file": "04-bill-of-materials.png",
     "title": "Bill of Materials (BOM)",
     "rel": "docs/screenshots/06-product-lca/04-bill-of-materials.png"
   },
   {
     "group": "06-product-lca",
-    "groupTitle": "Product & LCA",
+    "groupTitle": "Product and LCA",
     "file": "05-lca.png",
     "title": "Life Cycle Assessment (LCA)",
     "rel": "docs/screenshots/06-product-lca/05-lca.png"
   },
   {
     "group": "06-product-lca",
-    "groupTitle": "Product & LCA",
+    "groupTitle": "Product and LCA",
     "file": "06-pcf.png",
     "title": "Product Carbon Footprint (PCF)",
     "rel": "docs/screenshots/06-product-lca/06-pcf.png"
   },
   {
     "group": "06-product-lca",
-    "groupTitle": "Product & LCA",
+    "groupTitle": "Product and LCA",
     "file": "07-dpp.png",
     "title": "Digital Product Passport (DPP)",
     "rel": "docs/screenshots/06-product-lca/07-dpp.png"
   },
   {
     "group": "07-ai-automation",
-    "groupTitle": "AI & Automation",
+    "groupTitle": "AI and Automation",
     "file": "01-ai-copilot.png",
     "title": "AI Sustainability Copilot",
     "rel": "docs/screenshots/07-ai-automation/01-ai-copilot.png"
   },
   {
     "group": "07-ai-automation",
-    "groupTitle": "AI & Automation",
+    "groupTitle": "AI and Automation",
     "file": "02-enterprise-search.png",
     "title": "Enterprise Document Search",
     "rel": "docs/screenshots/07-ai-automation/02-enterprise-search.png"
   },
   {
     "group": "07-ai-automation",
-    "groupTitle": "AI & Automation",
+    "groupTitle": "AI and Automation",
     "file": "03-document-management.png",
     "title": "Document Management",
     "rel": "docs/screenshots/07-ai-automation/03-document-management.png"

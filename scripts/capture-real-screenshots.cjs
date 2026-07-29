@@ -16,15 +16,15 @@ const PASSWORD = process.env.DEMO_PASSWORD || 'EcoTraceAdmin!2024';
 const VIEWPORT = { width: 1440, height: 900 };
 
 const GROUPS = {
-  '01-intro': 'Intro & Overview',
+  '01-intro': 'Intro and Overview',
   '02-platform': 'Platform',
   '03-organization': 'Organization',
-  '04-data-carbon': 'Data & Carbon',
+  '04-data-carbon': 'Data and Carbon',
   '05-analytics': 'Analytics',
-  '06-product-lca': 'Product & LCA',
-  '07-ai-automation': 'AI & Automation',
-  '08-security-ops': 'Security & Ops',
-  '09-infra-demo': 'Infrastructure & Demo',
+  '06-product-lca': 'Product and LCA',
+  '07-ai-automation': 'AI and Automation',
+  '08-security-ops': 'Security and Ops',
+  '09-infra-demo': 'Infrastructure and Demo',
 };
 
 /** @type {{ group: string, file: string, title: string, url: string, auth?: boolean }[]} */

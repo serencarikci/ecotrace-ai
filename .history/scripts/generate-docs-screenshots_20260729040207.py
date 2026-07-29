@@ -165,7 +165,7 @@ p{{margin:0;font-size:17px;line-height:1.65;color:#5c6b73;max-width:64ch}}
   <h1>{esc(title)}</h1>
   <p>{esc(blurb)}</p>
   {chips}
-  <p class="foot">v0.7.3 · {esc(nav)}</p>
+  <p class="foot">v0.7.1 · {esc(nav)}</p>
 </article>
 </body></html>"""
 
@@ -197,11 +197,11 @@ h1{{margin:0 0 8px;font-size:30px;letter-spacing:-.03em;color:#0f2a1f}}
 .row span{{color:#5c6b73}}
 </style></head><body>
 <aside class="side">
-  <div class="logo">EcoTrace AI<div class="ver">v0.7.3</div></div>
+  <div class="logo">EcoTrace AI<div class="ver">v0.7.1</div></div>
   {nav_html}
 </aside>
 <div class="main">
-  <header class="top"><span class="name">EcoTrace AI</span><span class="badge">v0.7.3</span><span class="spacer"></span><span style="color:#5c6b73;font-size:14px">EcoTrace Demo Industries</span></header>
+  <header class="top"><span class="name">EcoTrace AI</span><span class="badge">v0.7.1</span><span class="spacer"></span><span style="color:#5c6b73;font-size:14px">EcoTrace Demo Industries</span></header>
   <main class="content">
     <p class="eyebrow">EcoTrace AI</p>
     <h1>{esc(title)}</h1>

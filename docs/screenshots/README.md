@@ -8,7 +8,7 @@ Regenerate (API on `:8000`, web on `:4200`, Playwright available):
 NODE_PATH=/tmp/ecotrace-shots/node_modules node scripts/capture-real-screenshots.cjs
 ```
 
-## Intro & Overview
+## Intro and Overview
 
 ### Sign In
 
@@ -62,7 +62,7 @@ NODE_PATH=/tmp/ecotrace-shots/node_modules node scripts/capture-real-screenshots
 
 ![Operational Assets](03-organization/05-operational-assets.png)
 
-## Data & Carbon
+## Data and Carbon
 
 ### Activity Data Management
 
@@ -98,7 +98,7 @@ NODE_PATH=/tmp/ecotrace-shots/node_modules node scripts/capture-real-screenshots
 
 ![Scenario Analysis](05-analytics/03-scenario-analysis.png)
 
-## Product & LCA
+## Product and LCA
 
 ### Product Management
 
@@ -128,7 +128,7 @@ NODE_PATH=/tmp/ecotrace-shots/node_modules node scripts/capture-real-screenshots
 
 ![Digital Product Passport (DPP)](06-product-lca/07-dpp.png)
 
-## AI & Automation
+## AI and Automation
 
 ### AI Sustainability Copilot
 
@@ -182,7 +182,7 @@ NODE_PATH=/tmp/ecotrace-shots/node_modules node scripts/capture-real-screenshots
 
 ![Regulatory Intelligence](07-ai-automation/13-regulatory.png)
 
-## Security & Ops
+## Security and Ops
 
 ### System Security
 
@@ -192,7 +192,7 @@ NODE_PATH=/tmp/ecotrace-shots/node_modules node scripts/capture-real-screenshots
 
 ![System Monitoring and Operations](08-security-ops/02-system-monitoring.png)
 
-## Infrastructure & Demo
+## Infrastructure and Demo
 
 ### API Infrastructure
 
