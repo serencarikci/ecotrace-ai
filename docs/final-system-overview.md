@@ -11,3 +11,5 @@ EcoTrace AI (v0.7.3) is a completed portfolio / production-conscious reference p
 7. Agents, automation, anomalies, forecasts, ops hardening
 
 **Project status:** Complete (v0.7.3).
+
+**Planned (specification only):** CBAM/SKDM bounded context — see [cbam.md](cbam.md). Not implemented in application code.

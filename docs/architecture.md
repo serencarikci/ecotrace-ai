@@ -164,3 +164,7 @@ flowchart TB
 ```
 
 Agent execution: prompt → injection check → allowlisted tools → read results or pending approvals → audited rationale (no hidden CoT).
+
+## Planned extension — CBAM / SKDM (not implemented)
+
+CBAM will be added as an **isolated bounded context** (`modules/cbam`, UI `features/cbam`) without relabeling corporate carbon inventory, LCA, or PCF results as CBAM embedded emissions. Specs and ADRs live under [cbam.md](cbam.md) and [adr/](adr/).
