@@ -16,7 +16,11 @@ Rules:
 - Unauthorized / cross-tenant access follows the existing **404 non-disclosure** policy.
 - See also [api-conventions.md](../api-conventions.md).
 
-**Not implemented** — proposal only.
+**Phase 1 implemented endpoint (foundation only):**
+
+`GET /api/v1/cbam/organizations/{organizationId}/module-status`
+
+Confirms module registration and authorization. Explicitly reports that domain functionality and calculations are **not** implemented and that **no compliance claim** is made. All other resource groups below remain proposal-only.
 
 ## Cross-cutting API rules
 

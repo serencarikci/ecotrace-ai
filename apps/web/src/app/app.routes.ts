@@ -1,5 +1,11 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, roleGuard } from './core/guards/auth.guard';
+import {
+  authGuard,
+  guestGuard,
+  organizationContextGuard,
+  roleGuard,
+} from './core/guards/auth.guard';
+import { CBAM_VIEW_ROLES } from './core/services/roles.util';
 
 export const routes: Routes = [
   {
@@ -10,8 +16,7 @@ export const routes: Routes = [
   {
     path: 'login',
     canActivate: [guestGuard],
-    loadComponent: () =>
-      import('./features/auth/login.component').then((m) => m.LoginComponent),
+    loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'unauthorized',
@@ -429,6 +434,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'cbam',
+        canActivate: [authGuard, organizationContextGuard, roleGuard(...CBAM_VIEW_ROLES)],
+        loadComponent: () =>
+          import('./features/cbam/cbam-shell.component').then((m) => m.CbamShellComponent),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/profile.component').then((m) => m.ProfileComponent),
@@ -715,9 +726,7 @@ export const routes: Routes = [
       {
         path: 'automation/:id/executions',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.AutomationExecutionsComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.AutomationExecutionsComponent),
       },
       {
         path: 'agents',
@@ -732,16 +741,12 @@ export const routes: Routes = [
       {
         path: 'agent-executions',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.AgentExecutionsComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.AgentExecutionsComponent),
       },
       {
         path: 'agent-executions/:id',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.AgentExecutionDetailComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.AgentExecutionDetailComponent),
       },
       {
         path: 'agent-approvals',
@@ -781,9 +786,7 @@ export const routes: Routes = [
       {
         path: 'forecasts/:id/results',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.ForecastResultsComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.ForecastResultsComponent),
       },
       {
         path: 'data-quality',
@@ -793,9 +796,7 @@ export const routes: Routes = [
       {
         path: 'data-quality/:id',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.DataQualityDetailComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.DataQualityDetailComponent),
       },
       {
         path: 'alerts',
@@ -815,37 +816,27 @@ export const routes: Routes = [
       {
         path: 'notification-settings',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.NotificationSettingsComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.NotificationSettingsComponent),
       },
       {
         path: 'scheduled-reports',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.ScheduledReportsComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.ScheduledReportsComponent),
       },
       {
         path: 'scheduled-reports/new',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.ScheduledReportFormComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.ScheduledReportFormComponent),
       },
       {
         path: 'scheduled-reports/:id',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.ScheduledReportFormComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.ScheduledReportFormComponent),
       },
       {
         path: 'generated-reports',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.GeneratedReportsComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.GeneratedReportsComponent),
       },
       {
         path: 'generated-reports/:id',
@@ -857,9 +848,7 @@ export const routes: Routes = [
       {
         path: 'supplier-monitoring',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.SupplierMonitoringComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.SupplierMonitoringComponent),
       },
       {
         path: 'supplier-monitoring/:supplierId',
@@ -876,9 +865,7 @@ export const routes: Routes = [
       {
         path: 'regulatory-intelligence/:id',
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.RegulatoryDetailComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.RegulatoryDetailComponent),
       },
       {
         path: 'regulatory-assessments',
@@ -899,9 +886,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['system_admin'] },
         loadComponent: () =>
-          import('./features/ops/ops-pages.component').then(
-            (m) => m.SystemOperationsComponent,
-          ),
+          import('./features/ops/ops-pages.component').then((m) => m.SystemOperationsComponent),
       },
       {
         path: 'system/health',

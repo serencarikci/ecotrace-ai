@@ -1,0 +1,53 @@
+.cbam-shell {
+  max-width: 42rem;
+}
+
+.cbam-header {
+  margin-bottom: 1.25rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--et-moss);
+}
+
+.status-line {
+  margin: 0;
+  color: var(--et-ink-muted, #5c6b63);
+}
+
+.status-error {
+  color: var(--et-danger, #8b2e2e);
+}
+
+.status-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--et-border);
+}
+
+.status-kicker {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--et-moss);
+}
+
+.status-message {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.status-facts {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--et-ink-muted, #5c6b63);
+  line-height: 1.5;
+}

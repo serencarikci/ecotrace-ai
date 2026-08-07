@@ -33,3 +33,16 @@ export const roleGuard = (...roles: string[]): CanActivateFn => {
     return router.createUrlTree(['/unauthorized']);
   };
 };
+
+/** Requires an authenticated session with a selected organization context. */
+export const organizationContextGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isAuthenticated()) {
+    return router.createUrlTree(['/login']);
+  }
+  if (!auth.currentOrganizationId()) {
+    return router.createUrlTree(['/app/organizations']);
+  }
+  return true;
+};

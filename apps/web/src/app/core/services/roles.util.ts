@@ -42,22 +42,32 @@ export function canManageReferenceData(roles: string[]): boolean {
   return hasAny(roles, ROLE_SYSTEM_ADMIN);
 }
 
-export function canManageFactorPreferences(roles: string[]): boolean {
+/** CBAM / SKDM view capability — baseline roles matching backend cbam:view. */
+export function canViewCbam(roles: string[]): boolean {
   return hasAny(
     roles,
     ROLE_SYSTEM_ADMIN,
     ROLE_ORGANIZATION_ADMIN,
     ROLE_SUSTAINABILITY_MANAGER,
+    ROLE_ANALYST,
+    ROLE_VIEWER,
   );
 }
 
+export const CBAM_VIEW_ROLES = [
+  ROLE_SYSTEM_ADMIN,
+  ROLE_ORGANIZATION_ADMIN,
+  ROLE_SUSTAINABILITY_MANAGER,
+  ROLE_ANALYST,
+  ROLE_VIEWER,
+] as const;
+
+export function canManageFactorPreferences(roles: string[]): boolean {
+  return hasAny(roles, ROLE_SYSTEM_ADMIN, ROLE_ORGANIZATION_ADMIN, ROLE_SUSTAINABILITY_MANAGER);
+}
+
 export function canCalculateInventory(roles: string[]): boolean {
-  return hasAny(
-    roles,
-    ROLE_SYSTEM_ADMIN,
-    ROLE_ORGANIZATION_ADMIN,
-    ROLE_SUSTAINABILITY_MANAGER,
-  );
+  return hasAny(roles, ROLE_SYSTEM_ADMIN, ROLE_ORGANIZATION_ADMIN, ROLE_SUSTAINABILITY_MANAGER);
 }
 
 export function canApproveInventory(roles: string[]): boolean {

@@ -1,0 +1,25 @@
+<section class="page cbam-shell">
+  <header class="cbam-header">
+    <p class="eyebrow">EcoTrace AI</p>
+    <h1 class="page-title">{{ title }}</h1>
+    <p class="page-subtitle">
+      {{ organizationName() }} için SKDM (CBAM) modül temeli hazırlanıyor.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <p class="status-line">Modül durumu yükleniyor…</p>
+  } @else if (error()) {
+    <p class="status-line status-error" role="alert">{{ error() }}</p>
+  } @else if (status()) {
+    <div class="status-panel">
+      <p class="status-kicker">Modül temeli</p>
+      <p class="status-message">{{ status()!.message }}</p>
+      <ul class="status-facts">
+        <li>Hesaplama ve raporlama işlevleri henüz uygulanmadı.</li>
+        <li>Bu ekran bir uyumluluk veya doğrulama iddiası içermez.</li>
+        <li>Durum: {{ status()!.status }}</li>
+      </ul>
+    </div>
+  }
+</section>

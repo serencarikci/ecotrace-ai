@@ -1,18 +1,33 @@
 # CBAM / SKDM — Bounded Context (Specification)
 
-**Status:** Specification only — not implemented  
-**Code namespace:** `cbam`  
-**UI label (TR):** SKDM  
-**Proposed backend:** `apps/api/src/ecotrace/modules/cbam/`  
-**Proposed frontend:** `apps/web/src/app/features/cbam/`
+**Status:** Phase 1 foundation implemented — **no CBAM domain calculation**
 
-EcoTrace AI does **not** currently contain a CBAM/SKDM module. This document set defines an isolated bounded context to be added inside the existing modular monolith without relabeling corporate carbon accounting, LCA, or PCF as CBAM.
+| Field | Value |
+|-------|--------|
+| Code namespace | `cbam` |
+| UI label (TR) | SKDM |
+| Backend | `apps/api/src/ecotrace/modules/cbam/` |
+| Frontend | `apps/web/src/app/features/cbam/` |
+| Phase 1 route | `GET /api/v1/cbam/organizations/{organizationId}/module-status` |
 
-## Non-goals (current phase)
+This document set defines an isolated CBAM/SKDM bounded context inside the existing modular monolith without relabeling corporate carbon accounting, LCA, or PCF as CBAM.
 
-- No application code, migrations, seeds, APIs, or UI routes
+## Implementation status (Phase 1)
+
+| Area | Status |
+|------|--------|
+| Module package + router registration | Implemented |
+| Permission vocabulary + org-scoped helpers | Implemented (baseline roles; no declarant/verifier) |
+| Architecture forbidden-import test | Implemented |
+| Angular SKDM shell + nav | Implemented |
+| Domain entities / migrations / calculations | **Not implemented** |
+| Idempotency store (D-040) | **BLOCKED_DECISION** — not implemented in Phase 1 |
+
+## Non-goals (still apply)
+
 - No invented CN codes, production routes, emission factors, or regulatory formulas
 - No reuse of LCA/PCF/Scope engines as CBAM calculation results
+- No domain tables or Alembic migrations in Phase 1
 
 ## Document index
 

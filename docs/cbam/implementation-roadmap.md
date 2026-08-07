@@ -48,6 +48,21 @@ Does **not** re-implement identity, tenancy, Decimal math utilities, audit, or g
 | Acceptance | no LCA/carbon imports; routes preferably not public until phase 2 |
 | Out of scope | domain tables, calculations, inventing roles beyond baseline helpers |
 
+### Phase 1 implementation status
+
+| Deliverable | Status |
+|-------------|--------|
+| `apps/api/src/ecotrace/modules/cbam/` package | Done |
+| `GET /api/v1/cbam/organizations/{organizationId}/module-status` | Done (foundation status only; not a calculation/compliance endpoint) |
+| CBAM permission vocabulary + `require_cbam_*` helpers | Done (baseline EcoTrace roles; D-019/D-038 roles not invented) |
+| Architecture forbidden-import test | Done |
+| Frontend `features/cbam` SKDM shell + `/app/cbam` | Done |
+| Feature flag | Not added (repository has no standard feature-flag mechanism) |
+| Idempotency DB table / retention / replay (D-040) | **BLOCKED_DECISION** — deferred; no Phase 1 REQUIRED mutating op yet |
+| Domain tables / migrations / calculations | Out of scope (not started) |
+
+Later phases remain incomplete.
+
 ## Phase 2 — Foundation aggregates
 
 | Item | Content |

@@ -1,10 +1,5 @@
 <mat-sidenav-container class="shell">
-  <mat-sidenav
-    class="sidenav"
-    [mode]="'side'"
-    [opened]="sidenavOpen()"
-    fixedInViewport
-  >
+  <mat-sidenav class="sidenav" [mode]="'side'" [opened]="sidenavOpen()" fixedInViewport>
     <div class="sidenav-brand">
       <div class="sidenav-brand-name">EcoTrace AI</div>
       <div class="sidenav-brand-version">v{{ appVersion }}</div>
@@ -70,6 +65,11 @@
       <div class="nav-section">Reporting</div>
       <a mat-list-item routerLink="/app/reports" routerLinkActive="active">Report Center</a>
 
+      @if (showCbam()) {
+        <div class="nav-section">SKDM</div>
+        <a mat-list-item routerLink="/app/cbam" routerLinkActive="active">SKDM</a>
+      }
+
       <div class="nav-section">Product Sustainability</div>
       <a mat-list-item routerLink="/app/products" routerLinkActive="active">Products</a>
       <a mat-list-item routerLink="/app/product-batches" routerLinkActive="active"
@@ -127,10 +127,7 @@
       @if (showSystemAdmin()) {
         <div class="nav-section">System Administration</div>
         <a mat-list-item routerLink="/app/reference-data/units" routerLinkActive="active">Units</a>
-        <a
-          mat-list-item
-          routerLink="/app/reference-data/activity-types"
-          routerLinkActive="active"
+        <a mat-list-item routerLink="/app/reference-data/activity-types" routerLinkActive="active"
           >Activity Types</a
         >
         <a mat-list-item routerLink="/app/system/operations" routerLinkActive="active"
@@ -149,7 +146,12 @@
 
   <mat-sidenav-content>
     <mat-toolbar class="topbar">
-      <button mat-icon-button type="button" aria-label="Toggle navigation" (click)="toggleSidenav()">
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Toggle navigation"
+        (click)="toggleSidenav()"
+      >
         <mat-icon>menu</mat-icon>
       </button>
       <span class="app-name">EcoTrace AI</span>
