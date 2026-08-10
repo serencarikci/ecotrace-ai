@@ -1,91 +1,126 @@
 from __future__ import annotations
 
 import uuid
-from types import SimpleNamespace
-from unittest.mock import MagicMock
 
 import pytest
+from sqlalchemy import select
 
-from ecotrace.core.constants import (
-    ROLE_ANALYST,
-    ROLE_ORGANIZATION_ADMIN,
-    ROLE_SYSTEM_ADMIN,
-    ROLE_VIEWER,
-)
+from ecotrace.core.constants import ROLE_ORGANIZATION_ADMIN, ROLE_SYSTEM_ADMIN, ROLE_VIEWER
 from ecotrace.core.exceptions import AuthorizationError, NotFoundError
-from ecotrace.modules.cbam.application import permissions as cbam_permissions
+from ecotrace.db.seed import DEMO_ORG_SLUG
 from ecotrace.modules.cbam.application.permissions import (
-    CBAM_APPROVE,
-    CBAM_CALCULATE,
-    CBAM_PERMISSION_ROLE_MAP,
+    CBAM_ENFORCED_PERMISSIONS,
     CBAM_PERMISSION_VOCABULARY,
     CBAM_VIEW,
-    require_cbam_approve,
-    require_cbam_permission,
+    require_cbam_configure,
     require_cbam_view,
 )
+from ecotrace.modules.identity.infrastructure.models import User
+from ecotrace.modules.organizations.infrastructure.models import Organization
 
 
-def _user(*role_codes: str):
-    roles = [SimpleNamespace(code=code) for code in role_codes]
-    return SimpleNamespace(id=uuid.uuid4(), roles=roles)
+def test_phase2_enforced_permissions_include_view_and_configure() -> None:
+    from ecotrace.modules.cbam.application.permissions import CBAM_CONFIGURE
+
+    assert CBAM_ENFORCED_PERMISSIONS == (CBAM_VIEW, CBAM_CONFIGURE)
+    assert CBAM_VIEW in CBAM_PERMISSION_VOCABULARY
+    assert CBAM_CONFIGURE in CBAM_PERMISSION_VOCABULARY
+    assert "cbam:approve" in CBAM_PERMISSION_VOCABULARY
 
 
-def test_permission_vocabulary_contains_expected_capabilities() -> None:
-    expected = {
-        "cbam:view",
-        "cbam:configure",
-        "cbam:data:write",
-        "cbam:data:review",
-        "cbam:calculate",
-        "cbam:approve",
-        "cbam:lock",
-        "cbam:report",
-        "cbam:evidence:view",
-        "cbam:evidence:write",
-        "cbam:audit:view",
-    }
-    assert set(CBAM_PERMISSION_VOCABULARY) == expected
-    assert set(CBAM_PERMISSION_ROLE_MAP) == expected
-    assert ROLE_VIEWER in CBAM_PERMISSION_ROLE_MAP[CBAM_VIEW]
-    assert ROLE_VIEWER not in CBAM_PERMISSION_ROLE_MAP[CBAM_APPROVE]
-    assert ROLE_ANALYST in CBAM_PERMISSION_ROLE_MAP[CBAM_CALCULATE]
-    assert ROLE_ORGANIZATION_ADMIN in CBAM_PERMISSION_ROLE_MAP[CBAM_APPROVE]
+def test_require_cbam_view_allows_viewer_member(seeded_db) -> None:
+    org = seeded_db.execute(
+        select(Organization).where(Organization.slug == DEMO_ORG_SLUG)
+    ).scalar_one()
+    user = seeded_db.execute(
+        select(User).where(User.normalized_email == "viewer@ecotrace.dev")
+    ).scalar_one()
+    codes = require_cbam_view(seeded_db, user, org.id)
+    assert ROLE_VIEWER in codes
 
 
-def test_require_cbam_view_system_admin_bypasses_membership_query() -> None:
-    user = _user(ROLE_SYSTEM_ADMIN)
-    db = MagicMock()
-    codes = require_cbam_view(db, user, uuid.uuid4())  # type: ignore[arg-type]
-    assert ROLE_SYSTEM_ADMIN in codes
-    db.execute.assert_not_called()
+def test_require_cbam_view_allows_org_admin_member(seeded_db) -> None:
+    org = seeded_db.execute(
+        select(Organization).where(Organization.slug == DEMO_ORG_SLUG)
+    ).scalar_one()
+    user = seeded_db.execute(
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
+    ).scalar_one()
+    codes = require_cbam_view(seeded_db, user, org.id)
+    assert ROLE_ORGANIZATION_ADMIN in codes
 
 
-def test_require_cbam_permission_unknown_raises() -> None:
-    user = _user(ROLE_ANALYST)
-    with pytest.raises(ValueError, match="Unknown CBAM permission"):
-        require_cbam_permission(MagicMock(), user, uuid.uuid4(), "cbam:unknown")  # type: ignore[arg-type]
-
-
-def test_require_cbam_approve_rejects_insufficient_role(monkeypatch: pytest.MonkeyPatch) -> None:
-    user = _user(ROLE_VIEWER)
-    monkeypatch.setattr(
-        cbam_permissions,
-        "require_org_roles",
-        lambda *_a, **_k: (_ for _ in ()).throw(AuthorizationError()),
+def test_require_cbam_view_rejects_non_member_with_not_found(seeded_db) -> None:
+    user = seeded_db.execute(
+        select(User).where(User.normalized_email == "viewer@ecotrace.dev")
+    ).scalar_one()
+    other = Organization(
+        id=uuid.uuid4(),
+        name="CBAM Permission Isolation Org",
+        slug="cbam-permission-isolation",
+        country_code="US",
+        timezone="UTC",
+        is_active=True,
     )
-    with pytest.raises(AuthorizationError):
-        require_cbam_approve(MagicMock(), user, uuid.uuid4())  # type: ignore[arg-type]
-
-
-def test_require_cbam_view_propagates_not_found_for_non_member(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    user = _user(ROLE_ANALYST)
-    monkeypatch.setattr(
-        cbam_permissions,
-        "require_org_roles",
-        lambda *_a, **_k: (_ for _ in ()).throw(NotFoundError("Organization not found.")),
-    )
+    seeded_db.add(other)
+    seeded_db.flush()
     with pytest.raises(NotFoundError):
-        require_cbam_view(MagicMock(), user, uuid.uuid4())  # type: ignore[arg-type]
+        require_cbam_view(seeded_db, user, other.id)
+
+
+def test_require_cbam_view_system_admin_allowed_without_membership_row(seeded_db) -> None:
+    admin = seeded_db.execute(
+        select(User).where(User.normalized_email == "admin@ecotrace.dev")
+    ).scalar_one()
+    foreign = Organization(
+        id=uuid.uuid4(),
+        name="CBAM Admin Access Org",
+        slug="cbam-admin-access-org",
+        country_code="DE",
+        timezone="UTC",
+        is_active=True,
+    )
+    seeded_db.add(foreign)
+    seeded_db.flush()
+    codes = require_cbam_view(seeded_db, admin, foreign.id)
+    assert ROLE_SYSTEM_ADMIN in codes
+
+
+def test_require_cbam_configure_allows_org_admin_rejects_viewer(seeded_db) -> None:
+    org = seeded_db.execute(
+        select(Organization).where(Organization.slug == DEMO_ORG_SLUG)
+    ).scalar_one()
+    viewer = seeded_db.execute(
+        select(User).where(User.normalized_email == "viewer@ecotrace.dev")
+    ).scalar_one()
+    org_admin = seeded_db.execute(
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
+    ).scalar_one()
+
+    require_cbam_view(seeded_db, viewer, org.id)
+
+    with pytest.raises(AuthorizationError) as rejected:
+        require_cbam_configure(seeded_db, viewer, org.id)
+    assert rejected.value.status_code == 403
+    assert rejected.value.code == "AUTHORIZATION_ERROR"
+
+    codes = require_cbam_configure(seeded_db, org_admin, org.id)
+    assert ROLE_ORGANIZATION_ADMIN in codes
+
+
+def test_require_cbam_configure_cross_tenant_returns_not_found(seeded_db) -> None:
+    org_admin = seeded_db.execute(
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
+    ).scalar_one()
+    other = Organization(
+        id=uuid.uuid4(),
+        name="CBAM Configure Isolation Org",
+        slug="cbam-configure-isolation",
+        country_code="US",
+        timezone="UTC",
+        is_active=True,
+    )
+    seeded_db.add(other)
+    seeded_db.flush()
+    with pytest.raises(NotFoundError):
+        require_cbam_configure(seeded_db, org_admin, other.id)

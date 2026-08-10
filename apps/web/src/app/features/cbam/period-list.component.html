@@ -1,0 +1,64 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">Reporting Periods</h1>
+      <p class="page-subtitle">Reporting period bindings and CBAM workflow status.</p>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (canConfigure) {
+    <form class="surface-card form-grid" [formGroup]="createForm" (ngSubmit)="create()">
+      <mat-form-field appearance="outline">
+        <mat-label>Reporting Period</mat-label>
+        <mat-select formControlName="reportingPeriodId">
+          @for (period of periods(); track period.id) {
+            <mat-option [value]="period.id">{{ period.code }} — {{ period.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit">Add Draft Binding</button>
+      </div>
+    </form>
+  }
+
+  <div class="surface-card table-wrap">
+    @if (loading()) {
+      <div class="loading-state"><mat-spinner diameter="36" /></div>
+    } @else {
+      <table mat-table [dataSource]="items()" class="full-width">
+        <ng-container matColumnDef="reportingPeriodId">
+          <th mat-header-cell *matHeaderCellDef>Period</th>
+          <td mat-cell *matCellDef="let row">{{ row.reportingPeriodId }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">{{ row.status }}</td>
+        </ng-container>
+        <ng-container matColumnDef="revisionNumber">
+          <th mat-header-cell *matHeaderCellDef>Revision</th>
+          <td mat-cell *matCellDef="let row">{{ row.revisionNumber }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">
+            <a mat-button [routerLink]="['/app/cbam/periods', row.id]">View</a>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+      <mat-paginator
+        [length]="totalItems()"
+        [pageIndex]="page() - 1"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="onPage($event)"
+      />
+    }
+  </div>
+</section>

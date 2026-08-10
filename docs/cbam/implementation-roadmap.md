@@ -54,8 +54,10 @@ Does **not** re-implement identity, tenancy, Decimal math utilities, audit, or g
 |-------------|--------|
 | `apps/api/src/ecotrace/modules/cbam/` package | Done |
 | `GET /api/v1/cbam/organizations/{organizationId}/module-status` | Done (foundation status only; not a calculation/compliance endpoint) |
-| CBAM permission vocabulary + `require_cbam_*` helpers | Done (baseline EcoTrace roles; D-019/D-038 roles not invented) |
-| Architecture forbidden-import test | Done |
+| Enforced `cbam:view` + `require_cbam_view` | Done (baseline EcoTrace roles; D-019/D-038 roles not invented) |
+| `require_cbam_configure` | Kept for real role-mapping denial tests; no configure HTTP endpoint |
+| Future `cbam:*` vocabulary constants | Documented; other speculative helpers not shipped |
+| Architecture forbidden-import test | Done (scans `modules/cbam` + `api/v1/cbam.py`; parent/relative import forms) |
 | Frontend `features/cbam` SKDM shell + `/app/cbam` | Done |
 | Feature flag | Not added (repository has no standard feature-flag mechanism) |
 | Idempotency DB table / retention / replay (D-040) | **BLOCKED_DECISION** — deferred; no Phase 1 REQUIRED mutating op yet |
@@ -65,18 +67,96 @@ Later phases remain incomplete.
 
 ## Phase 2 — Foundation aggregates
 
+**Status: Implemented (with explicit skips)**
+
 | Item | Content |
 |------|---------|
 | Goal | Installation profiles (cardinality per D-041 pilot constraint), **temporal product-profile versions**, period bindings, evidence links |
-| Reusable | facilities, reporting_periods, products refs |
-| New | `cbam_installation_profiles`, `cbam_product_profile_versions`, `cbam_reporting_period_bindings`, `cbam_evidence_links` |
-| Evidence | D-042: extract shared port **or** CBAM-owned evidence service (pattern from `attachment_service`, not internal import) |
-| BE | CRUD; `draft→data_collection` only for periods; **do not activate** final approve/lock (D-030) |
-| FE | installation-scoped setup; periods dashboard shell |
+| Reusable | facilities, reporting_periods, products refs (ports/adapters) |
+| New | `cbam_installation_profiles`, `cbam_product_profile_versions`, `cbam_reporting_period_bindings` |
+| Evidence | **Skipped** — D-042 unresolved; `cbam_evidence_links` not created |
+| BE | CRUD; `draft→data_collection` only for periods; approve/lock fail-closed (D-030) |
+| FE | installations + periods under SKDM; **no** product-profile / CN UI |
 | Acceptance | no columns on `products`/`facilities`; CBAM lock fields on binding only |
-| Out of scope | CN content, calculations |
+| Out of scope | CN content, calculations, evidence |
 
-## Phase 3 — Reference data versioning (structure only)
+## Phase 3 — Basic data-collection foundation (**implemented**)
+
+> Product delivery of Phase 3 is **data-collection capture** (production / activity / purchased inputs).  
+> Historical roadmap text below for “reference data versioning” remains a later catalog milestone (formerly Phase 3; still before CN content inventing).
+
+| Item | Content |
+|------|---------|
+| Goal | Capture production, activity, and purchased-input quantities under period bindings |
+| New | `cbam_production_records`, `cbam_activity_records`, `cbam_activity_properties`, `cbam_purchased_input_records` |
+| Migration | `0009_cbam_data_collection` |
+| BE | CRUD/archive; catalogs for activity types/units; no factors/calc |
+| FE | Period detail tabs: Üretim / Faaliyet / Satın alınan girdiler |
+| Acceptance | org isolation; primary/default/unknown; purchased≠consumed; no calculation |
+| Out of scope | allocation, factors, Excel, report, CN, evidence |
+
+## Phase 4A — Allocation foundation (**implemented**)
+
+| Item | Content |
+|------|---------|
+| Goal | Explicit quantity allocation of shared activity/purchased inputs to product/installation scope |
+| New | `cbam_allocation_rules`, `cbam_allocation_results` |
+| Migration | `0010_cbam_allocation_foundation` |
+| Methods | `DIRECT_ASSIGNMENT`, `PRODUCTION_QUANTITY_RATIO`, `MANUAL_RATIO` |
+| BE | rule CRUD/activate/archive; allocate activity/purchased; recalculate; Decimal-safe math |
+| FE | Period detail tab: **Alokasyon** |
+| Acceptance | ratio/quantity persistence; consumed_quantity for purchased; no emission calc |
+| Out of scope | emission factors, CO2e, Excel/report, CN, shipment, customer/export allocation |
+
+## Phase 4B — Factor resolution foundation (**implemented**)
+
+| Item | Content |
+|------|---------|
+| Goal | Deterministic selection of primary vs default factor/property values |
+| New | `cbam_reference_sources`, `cbam_factor_definitions`, `cbam_factor_values`, `cbam_factor_resolutions` |
+| Migration | `0011_cbam_factor_resolution` |
+| BE | catalog CRUD for org values; resolve activity/purchased/allocation; history |
+| FE | Period detail tab: **Faktörler** |
+| Acceptance | precedence, ambiguity, validity, units; no emission multiplication |
+
+## Phase 5 — Minimal calculation engine (**implemented**)
+
+| Item | Content |
+|------|---------|
+| Goal | Explicit multiply of source quantity × already-resolved factor when units compatible |
+| New | `cbam_calculation_definitions`, `cbam_calculation_runs`, `cbam_calculation_results` |
+| Migration | `0012_cbam_minimal_calculation` |
+| Formula | `MULTIPLY_ACTIVITY_BY_FACTOR` only (`multiply-activity-by-factor-v1`) |
+| BE | create/execute run; persist results; partial completion; recalculate |
+| FE | Period detail tab: **Hesaplama** |
+| Acceptance | Decimal-safe; block unresolved/ambiguous/incompatible; no official Excel/CN |
+| Out of scope | CO2e invent, automatic external factor import, official workbook, CN, shipment |
+
+## Phase 6 — Excel mapping & SKDM summary (**implemented**)
+
+| Item | Content |
+|------|---------|
+| Goal | Map Phase 5 outputs into Excel + internal SKDM period summary with traceability |
+| New | `cbam_export_templates`, `cbam_export_mappings`, `cbam_export_runs`, `cbam_export_artifacts` |
+| Migration | `0013_cbam_excel_export` |
+| Template | Internal `ECOTRACE_SKDM_INTERNAL` only; official mapping **BLOCKED** |
+| BE | readiness, workbook copy/populate, formula preservation, manifest, summary |
+| FE | Period detail tab: **Rapor / Excel** |
+| Acceptance | formulas preserved; blocked ≠ 0; tenant isolation; no second calc engine |
+| Out of scope | official EU template, CN, shipment, evidence, certificate/financial liability |
+
+## Phase 7 — Final MVP audit & release readiness (**implemented**)
+
+| Item | Content |
+|------|---------|
+| Goal | Audit/harden Phase 2–6; freeze scope; classify release readiness |
+| New capability | None (stabilization only) |
+| Hardening | Excel formula-injection neutralization; 409 UX; E2E positive/negative suites |
+| Docs | current-scope, mvp-workflow, limitations, open questions, release-readiness |
+| Classification | **READY_FOR_DOMAIN_VALIDATION** |
+| Out of scope | New formulas, official workbook invent, CN/shipment/evidence/finance |
+
+### Later — Reference data versioning (structure only; formerly numbered Phase 3)
 
 | Item | Content |
 |------|---------|

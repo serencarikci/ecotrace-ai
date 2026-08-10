@@ -3,22 +3,35 @@
     <p class="eyebrow">EcoTrace AI</p>
     <h1 class="page-title">{{ title }}</h1>
     <p class="page-subtitle">
-      {{ organizationName() }} için SKDM (CBAM) modül temeli hazırlanıyor.
+      SKDM tools are available for {{ organizationName() }}.
     </p>
   </header>
 
+  <nav class="cbam-quick-links" aria-label="SKDM navigation">
+    <a routerLink="/app/cbam/installations">Installations</a>
+    <a routerLink="/app/cbam/periods">Reporting Periods</a>
+  </nav>
+
   @if (loading()) {
-    <p class="status-line">Modül durumu yükleniyor…</p>
+    <p class="status-line">Loading module status…</p>
   } @else if (error()) {
     <p class="status-line status-error" role="alert">{{ error() }}</p>
   } @else if (status()) {
     <div class="status-panel">
-      <p class="status-kicker">Modül temeli</p>
+      <p class="status-kicker">Module status</p>
       <p class="status-message">{{ status()!.message }}</p>
       <ul class="status-facts">
-        <li>Hesaplama ve raporlama işlevleri henüz uygulanmadı.</li>
-        <li>Bu ekran bir uyumluluk veya doğrulama iddiası içermez.</li>
-        <li>Durum: {{ status()!.status }}</li>
+        <li>Installation and reporting period screens are available. There is no CN/product profile form yet.</li>
+        <li>
+          Basic calculation and internal SKDM Excel/report export are available. Official CBAM workbook
+          mapping and official submission are not available (BLOCKED).
+        </li>
+        <li>
+          Status: ready for domain-expert checks (READY_FOR_DOMAIN_VALIDATION).
+          Not ready for production or regulatory use.
+        </li>
+        <li>This screen does not claim compliance or certification.</li>
+        <li>Status code: {{ status()!.status }}</li>
       </ul>
     </div>
   }

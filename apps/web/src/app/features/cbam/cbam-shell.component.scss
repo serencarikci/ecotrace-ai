@@ -6,6 +6,17 @@
   margin-bottom: 1.25rem;
 }
 
+.cbam-quick-links {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  a {
+    color: var(--et-moss);
+    text-decoration: underline;
+  }
+}
+
 .eyebrow {
   margin: 0 0 0.55rem;
   font-size: 0.75rem;

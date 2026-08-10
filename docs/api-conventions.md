@@ -109,4 +109,4 @@ Deliberate **bounded-context-first** exception to the organization-first layout 
 - Unauthorized or cross-tenant access follows the existing **404 non-disclosure** policy.
 - This exception does **not** change existing non-CBAM endpoint conventions.
 
-**Phase 1:** `GET /api/v1/cbam/organizations/{organizationId}/module-status` is registered. It reports foundation availability only; CBAM domain calculation/reporting is **not** implemented.
+**Phase 1–7:** `/api/v1/cbam/organizations/{organizationId}/...` includes module-status, foundation aggregates, data-collection records, quantity allocation, factor/property resolution, minimal calculation runs/results (`MULTIPLY_ACTIVITY_BY_FACTOR`), and Phase 6 export readiness / internal XLSX / SKDM period summary / artifact download. Phase 7 freezes MVP scope after audit (`status=mvp_ready_for_domain_validation`, classification READY_FOR_DOMAIN_VALIDATION). `enforcedPermissions` includes `cbam:view` and `cbam:configure`. Official CBAM workbook mapping, regulatory submission, automatic external factor import, CN, shipment, and certificate/financial liability are **not** implemented.

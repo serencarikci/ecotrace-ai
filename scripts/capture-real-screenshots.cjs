@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * Capture REAL EcoTrace AI UI screenshots into docs/screenshots/.
- * Requires: web+api up, Playwright in NODE_PATH (e.g. /tmp/ecotrace-shots/node_modules).
- */
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');

@@ -440,6 +440,42 @@ export const routes: Routes = [
           import('./features/cbam/cbam-shell.component').then((m) => m.CbamShellComponent),
       },
       {
+        path: 'cbam/installations',
+        canActivate: [authGuard, organizationContextGuard, roleGuard(...CBAM_VIEW_ROLES)],
+        loadComponent: () =>
+          import('./features/cbam/installation-list.component').then(
+            (m) => m.CbamInstallationListComponent,
+          ),
+      },
+      {
+        path: 'cbam/installations/new',
+        canActivate: [authGuard, organizationContextGuard, roleGuard(...CBAM_VIEW_ROLES)],
+        loadComponent: () =>
+          import('./features/cbam/installation-form.component').then(
+            (m) => m.CbamInstallationFormComponent,
+          ),
+      },
+      {
+        path: 'cbam/installations/:installationId',
+        canActivate: [authGuard, organizationContextGuard, roleGuard(...CBAM_VIEW_ROLES)],
+        loadComponent: () =>
+          import('./features/cbam/installation-detail.component').then(
+            (m) => m.CbamInstallationDetailComponent,
+          ),
+      },
+      {
+        path: 'cbam/periods',
+        canActivate: [authGuard, organizationContextGuard, roleGuard(...CBAM_VIEW_ROLES)],
+        loadComponent: () =>
+          import('./features/cbam/period-list.component').then((m) => m.CbamPeriodListComponent),
+      },
+      {
+        path: 'cbam/periods/:bindingId',
+        canActivate: [authGuard, organizationContextGuard, roleGuard(...CBAM_VIEW_ROLES)],
+        loadComponent: () =>
+          import('./features/cbam/period-detail.component').then((m) => m.CbamPeriodDetailComponent),
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/profile.component').then((m) => m.ProfileComponent),

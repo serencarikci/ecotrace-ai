@@ -34,7 +34,7 @@ export const roleGuard = (...roles: string[]): CanActivateFn => {
   };
 };
 
-/** Requires an authenticated session with a selected organization context. */
+
 export const organizationContextGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

@@ -1,10 +1,12 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CbamApiService, CbamModuleStatus } from './cbam-api.service';
 
 @Component({
   selector: 'app-cbam-shell',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './cbam-shell.component.html',
   styleUrl: './cbam-shell.component.scss',
 })
@@ -33,7 +35,7 @@ export class CbamShellComponent implements OnInit {
       },
       error: () => {
         this.error.set(
-          'SKDM modül durumu alınamadı. Oturum ve organizasyon erişiminizi kontrol edin.',
+          'Could not load SKDM module status. Check your session and organization access.',
         );
         this.loading.set(false);
       },

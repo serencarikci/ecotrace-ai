@@ -1,0 +1,1011 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">Reporting Period Details</h1>
+      <p class="page-subtitle">
+        Data collection, allocation, factor resolution, basic calculation, and internal SKDM Excel/summary
+        export (official CBAM workbook / submission is BLOCKED).
+      </p>
+    </div>
+    <a mat-stroked-button routerLink="/app/cbam/periods">Back</a>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p>Loading…</p>
+  }
+
+  @if (!loading() && item(); as row) {
+    <div class="surface-card detail-block">
+      <p><strong>Status:</strong> {{ row.status }}</p>
+      <p><strong>Reporting Period:</strong> {{ row.reportingPeriodId }}</p>
+      <p><strong>Revision:</strong> {{ row.revisionNumber }}</p>
+      <p><strong>Version:</strong> {{ row.rowVersion }}</p>
+      <p class="muted">
+        Approve/lock, official CBAM submission, and financial liability are not available.
+        Internal SKDM Excel/summary export uses Phase 5 calculation results.
+        Official workbook mapping is BLOCKED.
+      </p>
+    </div>
+
+    @if (canConfigure) {
+      <div class="actions">
+        @if (row.status === 'draft') {
+          <button mat-flat-button color="primary" type="button" (click)="openDataCollection()">
+            Open Data Collection
+          </button>
+          <button mat-stroked-button type="button" (click)="archive()">Archive</button>
+        }
+      </div>
+    }
+
+    <mat-tab-group class="collection-tabs" animationDuration="0ms">
+      <mat-tab label="Production">
+        <div class="tab-panel">
+          @if (productionRecords().length === 0) {
+            <p class="empty-state">No production data has been added for this period.</p>
+          } @else {
+            <table mat-table [dataSource]="productionRecords()" class="full-width">
+              <ng-container matColumnDef="installation">
+                <th mat-header-cell *matHeaderCellDef>Installation</th>
+                <td mat-cell *matCellDef="let r">{{ installationLabel(r.installationProfileId) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Quantity</th>
+                <td mat-cell *matCellDef="let r">{{ r.quantity }}</td>
+              </ng-container>
+              <ng-container matColumnDef="unit">
+                <th mat-header-cell *matHeaderCellDef>Unit</th>
+                <td mat-cell *matCellDef="let r">{{ r.unit }}</td>
+              </ng-container>
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Date</th>
+                <td mat-cell *matCellDef="let r">{{ r.productionDate || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r">{{ r.status }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.status === 'active') {
+                    <button mat-button type="button" (click)="archiveProduction(r)">Archive</button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="productionColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: productionColumns"></tr>
+            </table>
+          }
+
+          @if (canMutateData) {
+            <form class="surface-card form-grid" [formGroup]="productionForm" (ngSubmit)="submitProduction()">
+              <h3>Add production</h3>
+              <mat-form-field appearance="outline">
+                <mat-label>Installation</mat-label>
+                <mat-select formControlName="installationProfileId">
+                  @for (inst of installations(); track inst.id) {
+                    <mat-option [value]="inst.id">{{ inst.code }} — {{ inst.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Quantity</mat-label>
+                <input matInput formControlName="quantity" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <mat-select formControlName="unit">
+                  @for (u of units(); track u.code) {
+                    <mat-option [value]="u.code">{{ u.code }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Date</mat-label>
+                <input matInput type="date" formControlName="productionDate" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Notes</mat-label>
+                <input matInput formControlName="notes" />
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit">Save</button>
+            </form>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Activities">
+        <div class="tab-panel">
+          @if (activityRecords().length === 0) {
+            <p class="empty-state">No activity data has been added for this period.</p>
+          } @else {
+            <table mat-table [dataSource]="activityRecords()" class="full-width">
+              <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Type</th>
+                <td mat-cell *matCellDef="let r">{{ r.activityType }}</td>
+              </ng-container>
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Quantity</th>
+                <td mat-cell *matCellDef="let r">{{ r.quantity }}</td>
+              </ng-container>
+              <ng-container matColumnDef="unit">
+                <th mat-header-cell *matHeaderCellDef>Unit</th>
+                <td mat-cell *matCellDef="let r">{{ r.unit }}</td>
+              </ng-container>
+              <ng-container matColumnDef="dataSource">
+                <th mat-header-cell *matHeaderCellDef>Data Source</th>
+                <td mat-cell *matCellDef="let r">{{ r.dataSourceType }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r">{{ r.status }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.status === 'active') {
+                    <button mat-button type="button" (click)="archiveActivity(r)">Archive</button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="activityColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: activityColumns"></tr>
+            </table>
+          }
+
+          @if (canMutateData) {
+            <form class="surface-card form-grid" [formGroup]="activityForm" (ngSubmit)="submitActivity()">
+              <h3>Add activity</h3>
+              <mat-form-field appearance="outline">
+                <mat-label>Installation</mat-label>
+                <mat-select formControlName="installationProfileId">
+                  @for (inst of installations(); track inst.id) {
+                    <mat-option [value]="inst.id">{{ inst.code }} — {{ inst.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Activity Type</mat-label>
+                <mat-select formControlName="activityType">
+                  @for (t of activityTypes(); track t.code) {
+                    <mat-option [value]="t.code">{{ t.displayName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Quantity</mat-label>
+                <input matInput formControlName="quantity" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <mat-select formControlName="unit">
+                  @for (u of units(); track u.code) {
+                    <mat-option [value]="u.code">{{ u.code }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label
+                  [matTooltip]="
+                    'Primary Data: Real data measured by your company or given by your supplier. Default Reference: A standard value used when primary data is not available.'
+                  "
+                  >Data Source</mat-label
+                >
+                <mat-select formControlName="dataSourceType">
+                  <mat-option value="PRIMARY">Primary Data</mat-option>
+                  <mat-option value="DEFAULT_REFERENCE">Default Reference</mat-option>
+                  <mat-option value="UNKNOWN">Unknown</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Source Reference</mat-label>
+                <input matInput formControlName="sourceReference" />
+              </mat-form-field>
+              @if (activityForm.controls.dataSourceType.value === 'PRIMARY') {
+                <mat-form-field appearance="outline">
+                  <mat-label>Measurement Method</mat-label>
+                  <input matInput formControlName="measurementMethod" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Supplier</mat-label>
+                  <input matInput formControlName="supplierName" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Certificate Reference</mat-label>
+                  <input matInput formControlName="certificateReference" />
+                </mat-form-field>
+              }
+              <mat-form-field appearance="outline">
+                <mat-label>Notes</mat-label>
+                <input matInput formControlName="notes" />
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit">Save</button>
+            </form>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Purchased Inputs">
+        <div class="tab-panel">
+          @if (purchasedInputs().length === 0) {
+            <p class="empty-state">No purchased inputs have been added for this period.</p>
+          } @else {
+            <table mat-table [dataSource]="purchasedInputs()" class="full-width">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Input</th>
+                <td mat-cell *matCellDef="let r">{{ r.inputName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Purchased Quantity</th>
+                <td mat-cell *matCellDef="let r">{{ r.quantity }} {{ r.unit }}</td>
+              </ng-container>
+              <ng-container matColumnDef="consumed">
+                <th mat-header-cell *matHeaderCellDef>Consumed Quantity</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ r.consumedQuantity || '—' }} {{ r.consumedUnit || '' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="embedded">
+                <th mat-header-cell *matHeaderCellDef>Supplier Embedded Emissions</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ r.embeddedEmissionValue || '—' }} {{ r.embeddedEmissionUnit || '' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r">{{ r.status }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.status === 'active') {
+                    <button mat-button type="button" (click)="archivePurchased(r)">Archive</button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="purchasedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: purchasedColumns"></tr>
+            </table>
+          }
+
+          @if (canMutateData) {
+            <form class="surface-card form-grid" [formGroup]="purchasedForm" (ngSubmit)="submitPurchased()">
+              <h3>Add purchased input</h3>
+              <p class="help-text">
+                Purchased Quantity is the total amount bought.
+                Consumed Quantity is the amount used in this reporting period.
+                Stock is not calculated.
+              </p>
+              <mat-form-field appearance="outline">
+                <mat-label>Installation</mat-label>
+                <mat-select formControlName="installationProfileId">
+                  @for (inst of installations(); track inst.id) {
+                    <mat-option [value]="inst.id">{{ inst.code }} — {{ inst.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Input Name</mat-label>
+                <input matInput formControlName="inputName" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Supplier</mat-label>
+                <input matInput formControlName="supplierName" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Purchased Quantity</mat-label>
+                <input matInput formControlName="quantity" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <mat-select formControlName="unit">
+                  @for (u of units(); track u.code) {
+                    <mat-option [value]="u.code">{{ u.code }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Consumed Quantity</mat-label>
+                <input matInput formControlName="consumedQuantity" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Consumed Unit</mat-label>
+                <mat-select formControlName="consumedUnit">
+                  <mat-option value="">—</mat-option>
+                  @for (u of units(); track u.code) {
+                    <mat-option [value]="u.code">{{ u.code }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Embedded Emissions (supplier)</mat-label>
+                <input matInput formControlName="embeddedEmissionValue" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Embedded Emission Unit</mat-label>
+                <input matInput formControlName="embeddedEmissionUnit" placeholder="e.g. tCO2e/t" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Embedded Emission Source</mat-label>
+                <mat-select formControlName="embeddedEmissionSourceType">
+                  <mat-option value="NOT_PROVIDED">Not Provided</mat-option>
+                  <mat-option value="PRIMARY">Primary (supplier)</mat-option>
+                  <mat-option value="DEFAULT_REFERENCE">Default Reference</mat-option>
+                  <mat-option value="UNKNOWN">Unknown</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Notes</mat-label>
+                <input matInput formControlName="notes" />
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit">Save</button>
+            </form>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Allocation">
+        <div class="tab-panel">
+          <p class="help-text">
+            Allocation shows how much of a shared amount belongs to this product.
+            This screen does not calculate emissions.
+          </p>
+
+          @if (allocationRules().length === 0) {
+            <p class="empty-state">No allocation rules have been added for this period.</p>
+          } @else {
+            <table mat-table [dataSource]="allocationRules()" class="full-width">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let r">{{ r.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="method">
+                <th mat-header-cell *matHeaderCellDef>Method</th>
+                <td mat-cell *matCellDef="let r">{{ r.allocationMethod }}</td>
+              </ng-container>
+              <ng-container matColumnDef="ratio">
+                <th mat-header-cell *matHeaderCellDef>Allocation Ratio</th>
+                <td mat-cell *matCellDef="let r">{{ formatRatioPercent(r.allocationRatio) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r">{{ r.status }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.status === 'DRAFT') {
+                    <button mat-button type="button" (click)="activateAllocationRule(r)">
+                      Activate
+                    </button>
+                  }
+                  @if (canMutateData && r.status !== 'ARCHIVED') {
+                    <button mat-button type="button" (click)="archiveAllocationRule(r)">
+                      Archive
+                    </button>
+                  }
+                  @if (canMutateData && r.status === 'ACTIVE') {
+                    <button mat-button type="button" (click)="allocateSelectedActivity(r)">
+                      Allocate Activity
+                    </button>
+                    <button mat-button type="button" (click)="allocateSelectedPurchased(r)">
+                      Allocate Input
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="allocationRuleColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: allocationRuleColumns"></tr>
+            </table>
+          }
+
+          <h3>Allocation Results</h3>
+          @if (allocationResults().length === 0) {
+            <p class="empty-state">No allocation results yet.</p>
+          } @else {
+            <table mat-table [dataSource]="allocationResults()" class="full-width">
+              <ng-container matColumnDef="sourceType">
+                <th mat-header-cell *matHeaderCellDef>Source Type</th>
+                <td mat-cell *matCellDef="let r">{{ r.sourceType }}</td>
+              </ng-container>
+              <ng-container matColumnDef="sourceQuantity">
+                <th mat-header-cell *matHeaderCellDef>Source Quantity</th>
+                <td mat-cell *matCellDef="let r">{{ r.sourceQuantity }} {{ r.sourceUnit }}</td>
+              </ng-container>
+              <ng-container matColumnDef="method">
+                <th mat-header-cell *matHeaderCellDef>Method</th>
+                <td mat-cell *matCellDef="let r">{{ r.allocationMethod }}</td>
+              </ng-container>
+              <ng-container matColumnDef="ratio">
+                <th mat-header-cell *matHeaderCellDef>Allocation Ratio</th>
+                <td mat-cell *matCellDef="let r">{{ formatRatioPercent(r.allocationRatio) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="allocated">
+                <th mat-header-cell *matHeaderCellDef>Allocated Quantity</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ r.allocatedQuantity }} {{ r.allocatedUnit }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="rule">
+                <th mat-header-cell *matHeaderCellDef>Rule</th>
+                <td mat-cell *matCellDef="let r">{{ ruleLabel(r.allocationRuleId) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="created">
+                <th mat-header-cell *matHeaderCellDef>Created Date</th>
+                <td mat-cell *matCellDef="let r">{{ r.createdAt | date: 'short' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.isCurrent) {
+                    <button mat-button type="button" (click)="recalculateResult(r)">
+                      Recalculate
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="allocationResultColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: allocationResultColumns"></tr>
+            </table>
+          }
+
+          @if (canMutateData) {
+            <form class="surface-card form-grid" [formGroup]="allocationForm" (ngSubmit)="submitAllocationRule()">
+              <h3>New allocation rule</h3>
+              <mat-form-field appearance="outline">
+                <mat-label>Installation</mat-label>
+                <mat-select formControlName="installationProfileId">
+                  @for (i of installations(); track i.id) {
+                    <mat-option [value]="i.id">{{ i.code }} — {{ i.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Method</mat-label>
+                <mat-select formControlName="allocationMethod">
+                  <mat-option value="DIRECT_ASSIGNMENT">Direct Assignment</mat-option>
+                  <mat-option value="PRODUCTION_QUANTITY_RATIO">Production Quantity Ratio</mat-option>
+                  <mat-option value="MANUAL_RATIO">Manual Ratio</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <input matInput formControlName="description" />
+              </mat-form-field>
+
+              @if (allocationMethod === 'DIRECT_ASSIGNMENT') {
+                <p class="help-text">
+                  Direct assignment means the full source amount belongs to the selected scope.
+                  The ratio is always 100%. Nothing is guessed automatically.
+                </p>
+              }
+
+              @if (allocationMethod === 'PRODUCTION_QUANTITY_RATIO') {
+                <p class="help-text">
+                  Uses the target production quantity divided by the total base production quantity.
+                </p>
+                <mat-form-field appearance="outline">
+                  <mat-label>Target Production</mat-label>
+                  <mat-select formControlName="numeratorProductionRecordId">
+                    @for (p of productionRecords(); track p.id) {
+                      <mat-option [value]="p.id">{{ p.quantity }} {{ p.unit }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Total Base Production</mat-label>
+                  <mat-select formControlName="denominatorProductionRecordId">
+                    @for (p of productionRecords(); track p.id) {
+                      <mat-option [value]="p.id">{{ p.quantity }} {{ p.unit }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                @if (productionRatioPreview(); as preview) {
+                  <div class="preview-block">
+                    <p>Target Production: {{ preview.target }}</p>
+                    <p>Total Base Production: {{ preview.base }}</p>
+                    <p>Allocation Ratio: {{ preview.ratioPct }}</p>
+                  </div>
+                }
+              }
+
+              @if (allocationMethod === 'MANUAL_RATIO') {
+                <p class="help-text">
+                  Enter the ratio and explain why you use it.
+                  This does not mean legal approval.
+                </p>
+                <mat-form-field appearance="outline">
+                  <mat-label>Allocation Ratio (0–1)</mat-label>
+                  <input matInput formControlName="allocationRatio" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Reason</mat-label>
+                  <input matInput formControlName="rationale" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Source Reference</mat-label>
+                  <input matInput formControlName="sourceReference" />
+                </mat-form-field>
+              }
+
+              <mat-form-field appearance="outline">
+                <mat-label>Activity for Allocation</mat-label>
+                <mat-select formControlName="allocateActivityRecordId">
+                  <mat-option value="">—</mat-option>
+                  @for (a of activityRecords(); track a.id) {
+                    <mat-option [value]="a.id">
+                      {{ a.activityType }} — {{ a.quantity }} {{ a.unit }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Purchased Input for Allocation</mat-label>
+                <mat-select formControlName="allocatePurchasedInputId">
+                  <mat-option value="">—</mat-option>
+                  @for (p of purchasedInputs(); track p.id) {
+                    <mat-option [value]="p.id">
+                      {{ p.inputName }} — consumed: {{ p.consumedQuantity || 'none' }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-flat-button color="primary" type="submit">Save Rule</button>
+            </form>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Factors">
+        <div class="tab-panel">
+          <p class="help-text">
+            Factor resolution chooses which primary or default value a later calculation will use.
+            It does not multiply emissions or create a CO2e result.
+          </p>
+
+          @if (factorResolutions().length === 0) {
+            <p class="empty-state">No factor resolutions have been added for this period.</p>
+          } @else {
+            <table mat-table [dataSource]="factorResolutions()" class="full-width">
+              <ng-container matColumnDef="source">
+                <th mat-header-cell *matHeaderCellDef>Source</th>
+                <td mat-cell *matCellDef="let r">{{ r.sourceType }}</td>
+              </ng-container>
+              <ng-container matColumnDef="activity">
+                <th mat-header-cell *matHeaderCellDef>Activity / Input</th>
+                <td mat-cell *matCellDef="let r">{{ sourceLabel(r.sourceType, r.sourceId) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="factor">
+                <th mat-header-cell *matHeaderCellDef>Factor / Property</th>
+                <td mat-cell *matCellDef="let r">{{ factorDefinitionCode(r.factorDefinitionId) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="dataSource">
+                <th mat-header-cell *matHeaderCellDef>Data Source</th>
+                <td mat-cell *matCellDef="let r">{{ r.sourcePrecedence || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Resolution Status</th>
+                <td mat-cell *matCellDef="let r">{{ resolutionStatusLabel(r.resolutionStatus) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef>Selected Value</th>
+                <td mat-cell *matCellDef="let r">{{ r.selectedValue || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="unit">
+                <th mat-header-cell *matHeaderCellDef>Unit</th>
+                <td mat-cell *matCellDef="let r">{{ r.selectedUnit || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="reference">
+                <th mat-header-cell *matHeaderCellDef>Reference</th>
+                <td mat-cell *matCellDef="let r">{{ r.resolutionReason }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Action</th>
+                <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.isCurrent) {
+                    <button mat-button type="button" (click)="reresolve(r)">Resolve Again</button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="factorColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: factorColumns"></tr>
+            </table>
+          }
+
+          <h3>Default Reference Values</h3>
+          <p class="help-text">
+            These are saved default candidates. They are not official approvals.
+          </p>
+          @if (defaultFactorValues().length === 0) {
+            <p class="empty-state">No default reference values are defined.</p>
+          } @else {
+            <ul>
+              @for (v of defaultFactorValues(); track v.id) {
+                <li>
+                  {{ v.activityType || 'general' }} — {{ v.numericValue }} {{ v.unit }}
+                  ({{ v.validFrom || '?' }} → {{ v.validUntil || '?' }}) — {{ v.status }}
+                </li>
+              }
+            </ul>
+          }
+
+          @if (canMutateData) {
+            <form
+              class="surface-card form-grid"
+              [formGroup]="primaryPropertyForm"
+              (ngSubmit)="submitPrimaryProperty()"
+            >
+              <h3>Add primary property</h3>
+              <p class="help-text">
+                Primary Data is real data measured by your company or given by your supplier.
+              </p>
+              <mat-form-field appearance="outline">
+                <mat-label>Activity Record</mat-label>
+                <mat-select formControlName="activityRecordId">
+                  @for (a of activityRecords(); track a.id) {
+                    <mat-option [value]="a.id">
+                      {{ a.activityType }} — {{ a.quantity }} {{ a.unit }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Property</mat-label>
+                <mat-select formControlName="propertyCode">
+                  <mat-option value="NET_CALORIFIC_VALUE">NET_CALORIFIC_VALUE</mat-option>
+                  <mat-option value="GROSS_CALORIFIC_VALUE">GROSS_CALORIFIC_VALUE</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Value</mat-label>
+                <input matInput formControlName="numericValue" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <input matInput formControlName="unit" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Certificate / Source</mat-label>
+                <input matInput formControlName="sourceReference" />
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit">Save Primary Value</button>
+            </form>
+
+            <form class="surface-card form-grid" [formGroup]="resolveForm" (ngSubmit)="resolveSelected()">
+              <h3>Resolve factor</h3>
+              <mat-form-field appearance="outline">
+                <mat-label>Factor Definition</mat-label>
+                <mat-select formControlName="factorDefinitionCode">
+                  @for (d of factorDefinitions(); track d.id) {
+                    <mat-option [value]="d.code">{{ d.code }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Activity</mat-label>
+                <mat-select formControlName="activityRecordId">
+                  <mat-option value="">—</mat-option>
+                  @for (a of activityRecords(); track a.id) {
+                    <mat-option [value]="a.id">{{ a.activityType }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Purchased Input</mat-label>
+                <mat-select formControlName="purchasedInputId">
+                  <mat-option value="">—</mat-option>
+                  @for (p of purchasedInputs(); track p.id) {
+                    <mat-option [value]="p.id">{{ p.inputName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Allocation Result</mat-label>
+                <mat-select formControlName="allocationResultId">
+                  <mat-option value="">—</mat-option>
+                  @for (r of allocationResults(); track r.id) {
+                    <mat-option [value]="r.id">
+                      {{ r.allocatedQuantity }} {{ r.allocatedUnit }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit">Resolve</button>
+            </form>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Calculation">
+        <div class="tab-panel">
+          <p class="help-text">
+            Basic calculation: source quantity × resolved factor (only when units match).
+            This is not a final CBAM emission report or a certificate.
+          </p>
+
+          @if (canMutateData) {
+            <div class="actions">
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                (click)="startAndExecuteCalculation()"
+              >
+                Calculate
+              </button>
+            </div>
+          }
+
+          @if (selectedRun(); as run) {
+            <div class="surface-card detail-block">
+              <h3>Calculation Run Summary</h3>
+              <p><strong>Status:</strong> {{ run.status }}</p>
+              <p>
+                Total records:
+                {{ run.calculatedCount + run.blockedCount + run.invalidCount }} · Calculated:
+                {{ run.calculatedCount }} · Blocked: {{ run.blockedCount }} · Invalid:
+                {{ run.invalidCount }}
+              </p>
+              <p>
+                Primary factors: {{ run.primaryFactorCount }} · Default factors:
+                {{ run.defaultFactorCount }}
+              </p>
+              @if (run.sameUnitTotal && run.sameUnitTotalUnit) {
+                <p>
+                  <strong>Total Calculated Value:</strong>
+                  {{ run.sameUnitTotal }} {{ run.sameUnitTotalUnit }}
+                </p>
+              }
+              @if (run.errorSummary) {
+                <p class="error-text">{{ run.errorSummary }}</p>
+              }
+            </div>
+          } @else {
+            <p class="empty-state">No calculation run has been started for this period.</p>
+          }
+
+          @if (calculationRuns().length > 1) {
+            <h3>Previous runs</h3>
+            <ul>
+              @for (r of calculationRuns(); track r.id) {
+                <li>
+                  <button mat-button type="button" (click)="selectCalculationRun(r)">
+                    {{ r.status }} — {{ r.calculatedCount }} calculated
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+
+          @if (calculationResults().length === 0) {
+            <p class="empty-state">No calculation results to show.</p>
+          } @else {
+            <table mat-table [dataSource]="calculationResults()" class="full-width">
+              <ng-container matColumnDef="source">
+                <th mat-header-cell *matHeaderCellDef>Source</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ sourceLabel(r.sourceType, r.sourceId) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Quantity</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ r.sourceQuantity || '—' }} {{ r.sourceUnit || '' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="factor">
+                <th mat-header-cell *matHeaderCellDef>Resolved Factor</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ r.factorValue || '—' }} {{ r.factorUnit || '' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="factorSource">
+                <th mat-header-cell *matHeaderCellDef>Factor Source</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ factorSourceLabel(r.factorResolutionStatus) }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="result">
+                <th mat-header-cell *matHeaderCellDef>Result</th>
+                <td mat-cell *matCellDef="let r">{{ r.resultValue || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="unit">
+                <th mat-header-cell *matHeaderCellDef>Unit</th>
+                <td mat-cell *matCellDef="let r">{{ r.resultUnit || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r">{{ calculationStatusLabel(r.status) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="error">
+                <th mat-header-cell *matHeaderCellDef>Error / Block Reason</th>
+                <td mat-cell *matCellDef="let r">{{ r.errorMessage || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Action</th>
+                <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.isCurrent) {
+                    <button mat-button type="button" (click)="recalculateCalculationResult(r)">
+                      Recalculate
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="calculationResultColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: calculationResultColumns"></tr>
+            </table>
+          }
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Report / Excel">
+        <div class="tab-panel">
+          <p class="help-text">
+            SKDM Period Summary and internal development Excel template.
+            This is not an official CBAM submission.
+            Official workbook mapping is BLOCKED.
+          </p>
+
+          @if (exportReadiness(); as readiness) {
+            <div class="surface-card detail-block">
+              <h3>Readiness Status</h3>
+              <p>
+                <strong>Status:</strong>
+                {{ readinessStatusLabel(readiness.status) }}
+              </p>
+              @if (readiness.officialMappingBlocked) {
+                <p class="muted">Official CBAM workbook mapping: BLOCKED</p>
+              }
+              <table class="full-width readiness-table">
+                <thead>
+                  <tr>
+                    <th>Check</th>
+                    <th>Status</th>
+                    <th>Message</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (check of readiness.checks; track check.code) {
+                    <tr>
+                      <td>{{ check.label }}</td>
+                      <td>{{ readinessCheckLabel(check.status) }}</td>
+                      <td>{{ check.message }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              @if (readiness.warnings.length > 0) {
+                <h4>Warnings</h4>
+                <ul>
+                  @for (w of readiness.warnings; track w) {
+                    <li>{{ w }}</li>
+                  }
+                </ul>
+              }
+            </div>
+          } @else {
+            <p class="empty-state">Loading readiness status…</p>
+          }
+
+          @if (periodSummary(); as summary) {
+            <div class="surface-card detail-block">
+              <h3>{{ summary.title }}</h3>
+              <p class="muted">{{ summary.disclaimer }}</p>
+              <p>
+                Period: {{ summary.reportingPeriodCode }} · Readiness:
+                {{ readinessStatusLabel(summary.readinessStatus) }}
+              </p>
+              <ul>
+                @for (entry of summaryMetricEntries(); track entry[0]) {
+                  <li>{{ entry[0] }}: {{ entry[1] }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <div class="surface-card detail-block">
+            <h3>Excel Template</h3>
+            @if (exportTemplates().length === 0) {
+              <p class="empty-state">No active internal template found.</p>
+            } @else {
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Template</mat-label>
+                <mat-select
+                  [value]="selectedTemplateId()"
+                  (selectionChange)="onTemplateSelected($event.value)"
+                >
+                  @for (t of exportTemplates(); track t.id) {
+                    <mat-option [value]="t.id">
+                      {{ t.name }} ({{ t.code }} v{{ t.version }}) —
+                      {{ t.templateType }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              @if (selectedTemplate(); as tpl) {
+                <p>
+                  Template Version: {{ tpl.version }} · Mapping: {{ tpl.mappingVersion }} · Checksum:
+                  {{ tpl.checksum.slice(0, 12) }}…
+                </p>
+                <p class="muted">
+                  INTERNAL DEVELOPMENT TEMPLATE — NOT AN OFFICIAL CBAM SUBMISSION FORMAT
+                </p>
+              }
+            }
+
+            @if (canConfigure) {
+              <div class="actions">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  data-export-excel
+                  [disabled]="exportBusy() || !canGenerateExport()"
+                  (click)="generateExport()"
+                >
+                  Generate Excel
+                </button>
+              </div>
+            } @else {
+              <p class="muted">You need configure permission to create Excel files.</p>
+            }
+          </div>
+
+          <h3>Export History</h3>
+          @if (exportRuns().length === 0) {
+            <p class="empty-state">No exports yet.</p>
+          } @else {
+            <table mat-table [dataSource]="exportRuns()" class="full-width">
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Created Date</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ (r.completedAt || r.startedAt) | date: 'medium' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="template">
+                <th mat-header-cell *matHeaderCellDef>Template Version</th>
+                <td mat-cell *matCellDef="let r">
+                  v{{ r.templateVersion }} / map {{ r.mappingVersion }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="calc">
+                <th mat-header-cell *matHeaderCellDef>Calculation</th>
+                <td mat-cell *matCellDef="let r">{{ r.calculationRunId || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r">{{ r.status }}</td>
+              </ng-container>
+              <ng-container matColumnDef="checksum">
+                <th mat-header-cell *matHeaderCellDef>Checksum</th>
+                <td mat-cell *matCellDef="let r">
+                  {{ r.inputChecksum ? r.inputChecksum.slice(0, 12) + '…' : '—' }}
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Download</th>
+                <td mat-cell *matCellDef="let r">
+                  <button mat-button type="button" (click)="downloadLatestXlsx(r)">
+                    Download
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="exportHistoryColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: exportHistoryColumns"></tr>
+            </table>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</section>

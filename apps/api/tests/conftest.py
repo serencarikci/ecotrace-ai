@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import os
 from collections.abc import Generator
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+
 os.environ.setdefault('APP_ENV', 'test')
 os.environ.setdefault('APP_DEBUG', 'true')
 os.environ['APP_VERSION'] = '0.7.1'
@@ -30,6 +33,7 @@ os.environ.setdefault('AI_LLM_PROVIDER', 'local_grounded')
 os.environ.setdefault('AI_EMBEDDING_PROVIDER', 'local_hash')
 import ecotrace.modules.activity_data.infrastructure.models
 import ecotrace.modules.carbon_inventory.infrastructure.models
+import ecotrace.modules.cbam.infrastructure.models
 import ecotrace.modules.data_imports.infrastructure.models
 import ecotrace.modules.digital_product_passport.infrastructure.models
 import ecotrace.modules.emission_factors.infrastructure.models
@@ -53,6 +57,14 @@ from ecotrace.core.database import get_db, init_db
 from ecotrace.db.base import Base
 from ecotrace.db.seed import run_seed
 from ecotrace.main import create_app
+from ecotrace.modules.cbam.application.calculation_service import (
+    ensure_platform_calculation_definitions,
+)
+from ecotrace.modules.cbam.application.export_template_service import (
+    ensure_internal_export_template,
+)
+from ecotrace.modules.cbam.application.factor_catalog_seed import ensure_platform_factor_catalog
+
 
 def _admin_database_url() -> str:
     return 'postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5433/postgres'
@@ -67,7 +79,7 @@ def _ensure_test_database() -> None:
 
 def _truncate_all(engine: Engine) -> None:
     with engine.begin() as conn:
-        tables = ', '.join((f'"{t.name}"' for t in reversed(Base.metadata.sorted_tables)))
+        tables = ', '.join(f'"{t.name}"' for t in reversed(Base.metadata.sorted_tables))
         if tables:
             conn.execute(text(f'TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE'))
 
@@ -115,6 +127,10 @@ def client(engine: Engine) -> Generator[TestClient, None, None]:
         seed_session = session_factory()
         try:
             run_seed(seed_session)
+            ensure_platform_factor_catalog(seed_session)
+            ensure_platform_calculation_definitions(seed_session)
+            ensure_internal_export_template(seed_session)
+            seed_session.commit()
         finally:
             seed_session.close()
         yield test_client
@@ -126,6 +142,10 @@ def seeded_db(engine: Engine) -> Generator[Session, None, None]:
     session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
     session = session_factory()
     run_seed(session)
+    ensure_platform_factor_catalog(session)
+    ensure_platform_calculation_definitions(session)
+    ensure_internal_export_template(session)
+    session.commit()
     try:
         yield session
     finally:

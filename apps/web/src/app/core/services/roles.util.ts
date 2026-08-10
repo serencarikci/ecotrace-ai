@@ -42,7 +42,7 @@ export function canManageReferenceData(roles: string[]): boolean {
   return hasAny(roles, ROLE_SYSTEM_ADMIN);
 }
 
-/** CBAM / SKDM view capability — baseline roles matching backend cbam:view. */
+
 export function canViewCbam(roles: string[]): boolean {
   return hasAny(
     roles,
@@ -54,12 +54,28 @@ export function canViewCbam(roles: string[]): boolean {
   );
 }
 
+
+export function canConfigureCbam(roles: string[]): boolean {
+  return hasAny(
+    roles,
+    ROLE_SYSTEM_ADMIN,
+    ROLE_ORGANIZATION_ADMIN,
+    ROLE_SUSTAINABILITY_MANAGER,
+  );
+}
+
 export const CBAM_VIEW_ROLES = [
   ROLE_SYSTEM_ADMIN,
   ROLE_ORGANIZATION_ADMIN,
   ROLE_SUSTAINABILITY_MANAGER,
   ROLE_ANALYST,
   ROLE_VIEWER,
+] as const;
+
+export const CBAM_CONFIGURE_ROLES = [
+  ROLE_SYSTEM_ADMIN,
+  ROLE_ORGANIZATION_ADMIN,
+  ROLE_SUSTAINABILITY_MANAGER,
 ] as const;
 
 export function canManageFactorPreferences(roles: string[]): boolean {

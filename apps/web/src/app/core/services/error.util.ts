@@ -5,7 +5,13 @@ export function extractApiErrorMessage(error: unknown, fallback = 'Something wen
   if (error instanceof HttpErrorResponse) {
     const body = error.error as ApiErrorBody | null;
     if (body?.error?.message) {
+      if (error.status === 409) {
+        return 'This record was changed by another user. Please refresh the page and try again.';
+      }
       return body.error.message;
+    }
+    if (error.status === 409) {
+      return 'This record was changed by another user. Please refresh the page and try again.';
     }
     if (typeof error.error === 'string' && error.error.trim()) {
       return error.error;

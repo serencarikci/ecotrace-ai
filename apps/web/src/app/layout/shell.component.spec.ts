@@ -8,6 +8,7 @@ import { of } from 'rxjs';
 import { ShellComponent } from './shell.component';
 import { AuthService } from '../core/services/auth.service';
 import { MeResponse } from '../core/models/api.models';
+import { APP_VERSION } from '../core/version';
 
 describe('ShellComponent role-based navigation', () => {
   async function setup(roles: string[]): Promise<ComponentFixture<ShellComponent>> {
@@ -68,7 +69,7 @@ describe('ShellComponent role-based navigation', () => {
     expect(text).toContain('Activity Data');
     expect(text).toContain('Carbon Accounting');
     expect(text).toContain('Carbon Inventories');
-    expect(text).toContain('v0.7.3');
+    expect(text).toContain(`v${APP_VERSION}`);
     expect(text).toContain('Intelligence');
     expect(text).toContain('AI Agents');
     expect(text).toContain('Health');
@@ -84,5 +85,20 @@ describe('ShellComponent role-based navigation', () => {
     expect(text).toContain('Sustainability Copilot');
     expect(text).toContain('Anomalies');
     expect(text).toContain('Automation Rules');
+  });
+
+  it('shows SKDM navigation for authorized CBAM view roles', async () => {
+    const fixture = await setup(['viewer']);
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('SKDM');
+    expect(text).toContain('Installations');
+    expect(text).toContain('Reporting Periods');
+  });
+
+  it('hides SKDM navigation when user has no CBAM view role', async () => {
+    const fixture = await setup([]);
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).not.toContain('SKDM');
+    expect(text).not.toContain('Installations');
   });
 });

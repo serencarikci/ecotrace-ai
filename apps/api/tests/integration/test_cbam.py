@@ -36,18 +36,21 @@ def test_cbam_module_status_authorized_org_admin(client: TestClient) -> None:
     body = response.json()
     assert body["module"] == "cbam"
     assert body["uiLabelTr"] == "SKDM"
-    assert body["status"] == "foundation_available"
+    assert body["status"] == "mvp_ready_for_domain_validation"
     assert body["foundationAvailable"] is True
-    assert body["domainFunctionalityImplemented"] is False
+    assert body["domainFunctionalityImplemented"] is True
     assert body["complianceClaim"] is False
-    assert body["calculationImplemented"] is False
+    assert body["calculationImplemented"] is True
+    assert body["reportingImplemented"] is True
     assert body["message"] == FOUNDATION_MESSAGE
-    assert "cbam:view" in body["permissionsDefined"]
-    # No compliance / calculation claims in contract
+    assert body["enforcedPermissions"] == ["cbam:view", "cbam:configure"]
+    assert "permissionsDefined" not in body
+    assert "permissionVocabulary" not in body
     lowered = str(body).lower()
     assert "compliant" not in lowered
-    assert "see calculated" not in lowered
-    assert body["calculationImplemented"] is False
+    assert "blocked" in body["message"].lower()
+    assert "ready_for_domain_validation" in body["message"].lower()
+    assert "not implemented" in body["message"].lower()
 
 
 def test_cbam_module_status_viewer_allowed(client: TestClient) -> None:
@@ -55,11 +58,11 @@ def test_cbam_module_status_viewer_allowed(client: TestClient) -> None:
     org_id = current_org_id(client, token)
     response = client.get(_status_url(org_id), headers=auth_headers(token))
     assert response.status_code == 200
+    assert response.json()["enforcedPermissions"] == ["cbam:view", "cbam:configure"]
 
 
 def test_cbam_module_status_system_admin(client: TestClient) -> None:
     token = api_login(client, "admin@ecotrace.dev", "EcoTraceAdmin!2024")
-    # System admin may not have membership listing; use demo org by slug via org list
     orgs = client.get("/api/v1/organizations", headers=auth_headers(token))
     assert orgs.status_code == 200
     org_id = orgs.json()["items"][0]["id"]
