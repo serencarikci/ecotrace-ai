@@ -57,3 +57,7 @@ coverage/
 tmp/
 temp/
 *.tmp
+# Local editor history backups (do not track)
+.history/
+# Local validation / agent scratch outputs
+.tmp-validation/
