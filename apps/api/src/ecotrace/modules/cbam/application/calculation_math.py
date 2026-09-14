@@ -9,18 +9,16 @@ from ecotrace.modules.cbam.application.catalogs import (
     units_exactly_compatible,
 )
 
-RESULT_SCALE = Decimal('0.00000001')
-FORMULA_VERSION = 'multiply-activity-by-factor-v1'
-CALCULATION_TYPE_MULTIPLY = 'MULTIPLY_ACTIVITY_BY_FACTOR'
-ENGINE_VERSION = 'minimal-calculation-v1'
+RESULT_SCALE = Decimal("0.00000001")
+FORMULA_VERSION = "multiply-activity-by-factor-v1"
+CALCULATION_TYPE_MULTIPLY = "MULTIPLY_ACTIVITY_BY_FACTOR"
+ENGINE_VERSION = "minimal-calculation-v1"
 
 # Stationary combustion (Phase 1 domain math; Phase 3 orchestration + typed result).
-CALCULATION_TYPE_STATIONARY_COMBUSTION_CO2 = 'STATIONARY_COMBUSTION_CO2_V1'
+CALCULATION_TYPE_STATIONARY_COMBUSTION_CO2 = "STATIONARY_COMBUSTION_CO2_V1"
 
 # Purchased electricity indirect emissions (Phase 8A).
-CALCULATION_TYPE_PURCHASED_ELECTRICITY_INDIRECT = (
-    'PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1'
-)
+CALCULATION_TYPE_PURCHASED_ELECTRICITY_INDIRECT = "PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1"
 
 
 def quantize_result(value: Decimal) -> Decimal:
@@ -46,24 +44,24 @@ def multiply_activity_by_factor(
     if activity_quantity <= 0:
         return MultiplyOutcome(
             ok=False,
-            error_code='INVALID_INPUT',
-            error_message='Source quantity must be greater than zero.',
+            error_code="INVALID_INPUT",
+            error_message="Source quantity must be greater than zero.",
         )
     if factor_value <= 0:
         return MultiplyOutcome(
             ok=False,
-            error_code='INVALID_INPUT',
-            error_message='Factor value must be greater than zero.',
+            error_code="INVALID_INPUT",
+            error_message="Factor value must be greater than zero.",
         )
 
     parts = get_emission_intensity_parts(factor_unit)
     if parts is None:
         return MultiplyOutcome(
             ok=False,
-            error_code='UNSUPPORTED_FORMULA',
+            error_code="UNSUPPORTED_FORMULA",
             error_message=(
-                f'Factor unit {factor_unit!r} is not an explicit intensity unit '
-                f'(expected like kgCO2e/kWh).'
+                f"Factor unit {factor_unit!r} is not an explicit intensity unit "
+                f"(expected like kgCO2e/kWh)."
             ),
         )
     result_unit, per_unit = parts
@@ -71,20 +69,20 @@ def multiply_activity_by_factor(
     if not units_exactly_compatible(activity_unit, per_unit):
         return MultiplyOutcome(
             ok=False,
-            error_code='INCOMPATIBLE_UNIT',
+            error_code="INCOMPATIBLE_UNIT",
             error_message=(
-                f'Source unit {activity_unit!r} is incompatible with factor denominator '
-                f'{per_unit!r} (no density/calorific/GWP invent).'
+                f"Source unit {activity_unit!r} is incompatible with factor denominator "
+                f"{per_unit!r} (no density/calorific/GWP invent)."
             ),
         )
 
     activity_canon = convert_to_canonical(activity_quantity, activity_unit)
-    per_canon = convert_to_canonical(Decimal('1'), per_unit)
+    per_canon = convert_to_canonical(Decimal("1"), per_unit)
     if activity_canon is None or per_canon is None or per_canon == 0:
         return MultiplyOutcome(
             ok=False,
-            error_code='INCOMPATIBLE_UNIT',
-            error_message='Unable to normalize source and factor denominator units.',
+            error_code="INCOMPATIBLE_UNIT",
+            error_message="Unable to normalize source and factor denominator units.",
         )
 
     activity_in_per_unit = activity_canon / per_canon

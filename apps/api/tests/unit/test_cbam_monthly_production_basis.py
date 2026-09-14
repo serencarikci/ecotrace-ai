@@ -46,7 +46,7 @@ def _org(db):
 
 def _admin(db):
     return db.execute(
-        select(User).where(User.normalized_email == 'orgadmin@ecotrace.dev')
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
     ).scalar_one()
 
 
@@ -60,18 +60,18 @@ def _setup_quarter(db, admin, org, *, start=date(2030, 1, 1), end=date(2030, 3, 
         org.id,
         InstallationCreate(
             facility_id=facility.id,
-            code=f'MPB-{uuid.uuid4().hex[:8]}',
-            name='MPB Installation',
+            code=f"MPB-{uuid.uuid4().hex[:8]}",
+            name="MPB Installation",
         ),
     )
     period = ReportingPeriod(
         organization_id=org.id,
-        code=f'MPB-{uuid.uuid4().hex[:6]}',
-        name='MPB Period',
-        period_type='custom',
+        code=f"MPB-{uuid.uuid4().hex[:6]}",
+        name="MPB Period",
+        period_type="custom",
         start_date=start,
         end_date=end,
-        status='open',
+        status="open",
     )
     db.add(period)
     db.flush()
@@ -107,16 +107,16 @@ def test_create_valid_month_and_share(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2030, 1, 1),
-            total_production_quantity=Decimal('506'),
-            cbam_quantity=Decimal('39.34'),
-            quantity_unit='t',
+            total_production_quantity=Decimal("506"),
+            cbam_quantity=Decimal("39.34"),
+            quantity_unit="t",
         ),
     )
-    assert created.status == 'READY'
-    assert created.cbam_share == (Decimal('39.34') / Decimal('506')).quantize(
-        Decimal('0.000000000001')
+    assert created.status == "READY"
+    assert created.cbam_share == (Decimal("39.34") / Decimal("506")).quantize(
+        Decimal("0.000000000001")
     )
-    assert created.normalized_total_production_tonnes == Decimal('506')
+    assert created.normalized_total_production_tonnes == Decimal("506")
     assert created.issue_codes == []
 
 
@@ -126,8 +126,8 @@ def test_duplicate_month_rejected(seeded_db) -> None:
     binding, _inst, _ = _setup_quarter(seeded_db, admin, org)
     payload = MonthlyProductionBasisCreate(
         month_start=date(2030, 2, 1),
-        total_production_quantity=Decimal('100'),
-        cbam_quantity=Decimal('10'),
+        total_production_quantity=Decimal("100"),
+        cbam_quantity=Decimal("10"),
     )
     monthly_production_basis_service.create_monthly_production_basis(
         seeded_db, admin, org.id, binding.id, payload
@@ -136,7 +136,7 @@ def test_duplicate_month_rejected(seeded_db) -> None:
         monthly_production_basis_service.create_monthly_production_basis(
             seeded_db, admin, org.id, binding.id, payload
         )
-    assert exc.value.details[0]['code'] == 'MONTHLY_PRODUCTION_BASIS_DUPLICATE'
+    assert exc.value.details[0]["code"] == "MONTHLY_PRODUCTION_BASIS_DUPLICATE"
 
 
 def test_cross_org_and_outside_month(seeded_db) -> None:
@@ -151,8 +151,8 @@ def test_cross_org_and_outside_month(seeded_db) -> None:
             binding.id,
             MonthlyProductionBasisCreate(
                 month_start=date(2030, 1, 1),
-                total_production_quantity=Decimal('1'),
-                cbam_quantity=Decimal('1'),
+                total_production_quantity=Decimal("1"),
+                cbam_quantity=Decimal("1"),
             ),
         )
     with pytest.raises(BusinessRuleError) as exc:
@@ -163,11 +163,11 @@ def test_cross_org_and_outside_month(seeded_db) -> None:
             binding.id,
             MonthlyProductionBasisCreate(
                 month_start=date(2030, 4, 1),
-                total_production_quantity=Decimal('1'),
-                cbam_quantity=Decimal('1'),
+                total_production_quantity=Decimal("1"),
+                cbam_quantity=Decimal("1"),
             ),
         )
-    assert exc.value.details[0]['code'] == 'MONTH_OUTSIDE_REPORTING_PERIOD'
+    assert exc.value.details[0]["code"] == "MONTH_OUTSIDE_REPORTING_PERIOD"
 
 
 def test_decimal_unit_and_rules(seeded_db) -> None:
@@ -181,13 +181,13 @@ def test_decimal_unit_and_rules(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2030, 1, 1),
-            total_production_quantity=Decimal('506000'),
-            cbam_quantity=Decimal('39340'),
-            quantity_unit='kg',
+            total_production_quantity=Decimal("506000"),
+            cbam_quantity=Decimal("39340"),
+            quantity_unit="kg",
         ),
     )
-    assert kg_row.normalized_total_production_tonnes == Decimal('506')
-    assert kg_row.normalized_cbam_quantity_tonnes == Decimal('39.34')
+    assert kg_row.normalized_total_production_tonnes == Decimal("506")
+    assert kg_row.normalized_cbam_quantity_tonnes == Decimal("39.34")
 
     with pytest.raises(ValidationAppError) as vol:
         monthly_production_basis_service.create_monthly_production_basis(
@@ -197,12 +197,12 @@ def test_decimal_unit_and_rules(seeded_db) -> None:
             binding.id,
             MonthlyProductionBasisCreate(
                 month_start=date(2030, 2, 1),
-                total_production_quantity=Decimal('1'),
-                cbam_quantity=Decimal('1'),
-                quantity_unit='Sm3',
+                total_production_quantity=Decimal("1"),
+                cbam_quantity=Decimal("1"),
+                quantity_unit="Sm3",
             ),
         )
-    assert vol.value.details[0]['code'] == 'INCOMPATIBLE_PRODUCTION_UNIT'
+    assert vol.value.details[0]["code"] == "INCOMPATIBLE_PRODUCTION_UNIT"
 
     with pytest.raises(BusinessRuleError) as gt:
         monthly_production_basis_service.create_monthly_production_basis(
@@ -212,11 +212,11 @@ def test_decimal_unit_and_rules(seeded_db) -> None:
             binding.id,
             MonthlyProductionBasisCreate(
                 month_start=date(2030, 2, 1),
-                total_production_quantity=Decimal('10'),
-                cbam_quantity=Decimal('11'),
+                total_production_quantity=Decimal("10"),
+                cbam_quantity=Decimal("11"),
             ),
         )
-    assert gt.value.details[0]['code'] == 'CBAM_QUANTITY_EXCEEDS_TOTAL'
+    assert gt.value.details[0]["code"] == "CBAM_QUANTITY_EXCEEDS_TOTAL"
 
     with pytest.raises(BusinessRuleError) as zero_d:
         monthly_production_basis_service.create_monthly_production_basis(
@@ -226,11 +226,11 @@ def test_decimal_unit_and_rules(seeded_db) -> None:
             binding.id,
             MonthlyProductionBasisCreate(
                 month_start=date(2030, 2, 1),
-                total_production_quantity=Decimal('0'),
-                cbam_quantity=Decimal('1'),
+                total_production_quantity=Decimal("0"),
+                cbam_quantity=Decimal("1"),
             ),
         )
-    assert zero_d.value.details[0]['code'] == 'TOTAL_PRODUCTION_MUST_BE_POSITIVE'
+    assert zero_d.value.details[0]["code"] == "TOTAL_PRODUCTION_MUST_BE_POSITIVE"
 
     zero_e = monthly_production_basis_service.create_monthly_production_basis(
         seeded_db,
@@ -239,12 +239,12 @@ def test_decimal_unit_and_rules(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2030, 2, 1),
-            total_production_quantity=Decimal('100'),
-            cbam_quantity=Decimal('0'),
+            total_production_quantity=Decimal("100"),
+            cbam_quantity=Decimal("0"),
         ),
     )
-    assert zero_e.status == 'READY'
-    assert zero_e.cbam_share == Decimal('0').quantize(Decimal('0.000000000001'))
+    assert zero_e.status == "READY"
+    assert zero_e.cbam_share == Decimal("0").quantize(Decimal("0.000000000001"))
 
 
 def test_incomplete_draft_and_summary_missing(seeded_db) -> None:
@@ -258,12 +258,12 @@ def test_incomplete_draft_and_summary_missing(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2030, 1, 1),
-            total_production_quantity=Decimal('100'),
+            total_production_quantity=Decimal("100"),
             cbam_quantity=None,
         ),
     )
-    assert incomplete.status == 'INCOMPLETE'
-    assert 'CBAM_QUANTITY_REQUIRED' in incomplete.issue_codes
+    assert incomplete.status == "INCOMPLETE"
+    assert "CBAM_QUANTITY_REQUIRED" in incomplete.issue_codes
 
     summary = monthly_production_basis_service.get_monthly_production_basis_summary(
         seeded_db, admin, org.id, binding.id
@@ -272,9 +272,9 @@ def test_incomplete_draft_and_summary_missing(seeded_db) -> None:
     assert summary.incomplete_month_count == 1
     assert summary.missing_month_count == 2
     assert summary.allocation_basis_ready is False
-    assert 'MONTHLY_PRODUCTION_BASIS_MISSING' in summary.blocking_issue_codes
-    assert 'sum(E)/sum(D)' not in str(summary.model_dump())
-    assert not hasattr(summary, 'period_wide_cbam_share')
+    assert "MONTHLY_PRODUCTION_BASIS_MISSING" in summary.blocking_issue_codes
+    assert "sum(E)/sum(D)" not in str(summary.model_dump())
+    assert not hasattr(summary, "period_wide_cbam_share")
 
 
 def test_summary_never_exposes_period_ratio_field(seeded_db) -> None:
@@ -282,9 +282,9 @@ def test_summary_never_exposes_period_ratio_field(seeded_db) -> None:
     admin = _admin(seeded_db)
     binding, _inst, _ = _setup_quarter(seeded_db, admin, org)
     for month, d, e in (
-        (date(2030, 1, 1), '506', '39.34'),
-        (date(2030, 2, 1), '421', '29.69'),
-        (date(2030, 3, 1), '337', '34.56'),
+        (date(2030, 1, 1), "506", "39.34"),
+        (date(2030, 2, 1), "421", "29.69"),
+        (date(2030, 3, 1), "337", "34.56"),
     ):
         monthly_production_basis_service.create_monthly_production_basis(
             seeded_db,
@@ -301,8 +301,8 @@ def test_summary_never_exposes_period_ratio_field(seeded_db) -> None:
         seeded_db, admin, org.id, binding.id
     )
     dumped = summary.model_dump()
-    assert 'allocationShare' not in dumped
-    assert 'periodWideShare' not in dumped
+    assert "allocationShare" not in dumped
+    assert "periodWideShare" not in dumped
     assert summary.completed_month_count == 3
     assert summary.allocation_basis_ready is True
 
@@ -319,8 +319,8 @@ def test_production_reconciliation_exact_and_mismatch(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2030, 1, 1),
-            total_production_quantity=Decimal('100'),
-            cbam_quantity=Decimal('40'),
+            total_production_quantity=Decimal("100"),
+            cbam_quantity=Decimal("40"),
         ),
     )
     production_record_service.create_production_record(
@@ -332,16 +332,16 @@ def test_production_reconciliation_exact_and_mismatch(seeded_db) -> None:
             installation_profile_id=installation.id,
             product_profile_version_id=profile.id,
             production_date=date(2030, 1, 15),
-            quantity=Decimal('40'),
-            unit='t',
+            quantity=Decimal("40"),
+            unit="t",
         ),
     )
     summary = monthly_production_basis_service.get_monthly_production_basis_summary(
         seeded_db, admin, org.id, binding.id
     )
     jan = next(r for r in summary.production_reconciliation if r.month_start == date(2030, 1, 1))
-    assert jan.reconciliation_status == 'EXACT_MATCH'
-    assert jan.difference_tonnes == Decimal('0')
+    assert jan.reconciliation_status == "EXACT_MATCH"
+    assert jan.difference_tonnes == Decimal("0")
 
     # Patch E without touching production → mismatch; E not overwritten.
     row = monthly_production_basis_service.list_monthly_production_basis(
@@ -352,16 +352,16 @@ def test_production_reconciliation_exact_and_mismatch(seeded_db) -> None:
         admin,
         org.id,
         row.id,
-        MonthlyProductionBasisUpdate(row_version=row.row_version, cbam_quantity=Decimal('41')),
+        MonthlyProductionBasisUpdate(row_version=row.row_version, cbam_quantity=Decimal("41")),
     )
-    assert updated.cbam_quantity == Decimal('41')
+    assert updated.cbam_quantity == Decimal("41")
     summary2 = monthly_production_basis_service.get_monthly_production_basis_summary(
         seeded_db, admin, org.id, binding.id
     )
     jan2 = next(r for r in summary2.production_reconciliation if r.month_start == date(2030, 1, 1))
-    assert jan2.reconciliation_status == 'MISMATCH'
-    assert jan2.difference_tonnes == Decimal('1')
-    assert jan2.explicit_cbam_quantity_tonnes == Decimal('41')
+    assert jan2.reconciliation_status == "MISMATCH"
+    assert jan2.difference_tonnes == Decimal("1")
+    assert jan2.explicit_cbam_quantity_tonnes == Decimal("41")
 
 
 def test_undated_production_reconciliation_unavailable(seeded_db) -> None:
@@ -376,8 +376,8 @@ def test_undated_production_reconciliation_unavailable(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2030, 1, 1),
-            total_production_quantity=Decimal('100'),
-            cbam_quantity=Decimal('10'),
+            total_production_quantity=Decimal("100"),
+            cbam_quantity=Decimal("10"),
         ),
     )
     production_record_service.create_production_record(
@@ -389,14 +389,14 @@ def test_undated_production_reconciliation_unavailable(seeded_db) -> None:
             installation_profile_id=installation.id,
             product_profile_version_id=profile.id,
             production_date=None,
-            quantity=Decimal('10'),
-            unit='t',
+            quantity=Decimal("10"),
+            unit="t",
         ),
     )
     summary = monthly_production_basis_service.get_monthly_production_basis_summary(
         seeded_db, admin, org.id, binding.id
     )
-    assert all(r.reconciliation_status == 'UNAVAILABLE' for r in summary.production_reconciliation)
+    assert all(r.reconciliation_status == "UNAVAILABLE" for r in summary.production_reconciliation)
 
 
 def test_combustion_date_compatibility(seeded_db) -> None:
@@ -420,10 +420,10 @@ def test_combustion_date_compatibility(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='NATURAL_GAS',
-            quantity=Decimal('100'),
-            unit='Sm3',
-            data_source_type='PRIMARY',
+            activity_type="NATURAL_GAS",
+            quantity=Decimal("100"),
+            unit="Sm3",
+            data_source_type="PRIMARY",
             activity_date=None,
         ),
     )
@@ -434,21 +434,21 @@ def test_combustion_date_compatibility(seeded_db) -> None:
             organization_id=org.id,
             reporting_period_binding_id=binding.id,
             activity_record_id=undated.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             reference_date=date(2024, 1, 15),
-            density_value=Decimal('0.67'),
-            density_unit='kg/Sm3',
+            density_value=Decimal("0.67"),
+            density_unit="kg/Sm3",
             requested_by_user_id=admin.id,
             client_request_id=uuid.uuid4(),
-            request_fingerprint='mpb-undated',
+            request_fingerprint="mpb-undated",
         ),
         commit=True,
     )
     summary = monthly_production_basis_service.get_monthly_production_basis_summary(
         seeded_db, admin, org.id, binding.id
     )
-    assert summary.combustion_compatibility_status == 'BLOCKED'
-    assert 'COMBUSTION_ACTIVITY_DATE_REQUIRED' in summary.combustion_compatibility_issue_codes
+    assert summary.combustion_compatibility_status == "BLOCKED"
+    assert "COMBUSTION_ACTIVITY_DATE_REQUIRED" in summary.combustion_compatibility_issue_codes
 
     dated = activity_record_service.create_activity_record(
         seeded_db,
@@ -457,10 +457,10 @@ def test_combustion_date_compatibility(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='NATURAL_GAS',
-            quantity=Decimal('100'),
-            unit='Sm3',
-            data_source_type='PRIMARY',
+            activity_type="NATURAL_GAS",
+            quantity=Decimal("100"),
+            unit="Sm3",
+            data_source_type="PRIMARY",
             activity_date=date(2024, 2, 10),
         ),
     )
@@ -471,13 +471,13 @@ def test_combustion_date_compatibility(seeded_db) -> None:
             organization_id=org.id,
             reporting_period_binding_id=binding.id,
             activity_record_id=dated.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             reference_date=date(2024, 2, 10),
-            density_value=Decimal('0.67'),
-            density_unit='kg/Sm3',
+            density_value=Decimal("0.67"),
+            density_unit="kg/Sm3",
             requested_by_user_id=admin.id,
             client_request_id=uuid.uuid4(),
-            request_fingerprint='mpb-dated',
+            request_fingerprint="mpb-dated",
         ),
         commit=True,
     )
@@ -489,24 +489,19 @@ def test_combustion_date_compatibility(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2024, 2, 1),
-            total_production_quantity=Decimal('100'),
-            cbam_quantity=Decimal('10'),
+            total_production_quantity=Decimal("100"),
+            cbam_quantity=Decimal("10"),
         ),
     )
     summary2 = monthly_production_basis_service.get_monthly_production_basis_summary(
         seeded_db, admin, org.id, binding.id
     )
-    dated_item = next(
-        i for i in summary2.combustion_items if i.activity_record_id == dated.id
-    )
+    dated_item = next(i for i in summary2.combustion_items if i.activity_record_id == dated.id)
     assert dated_item.month_start == date(2024, 2, 1)
-    assert dated_item.status == 'READY'
-    undated_item = next(
-        i for i in summary2.combustion_items if i.activity_record_id == undated.id
-    )
-    assert undated_item.status == 'BLOCKED'
-    assert 'COMBUSTION_ACTIVITY_DATE_REQUIRED' in undated_item.issue_codes
-
+    assert dated_item.status == "READY"
+    undated_item = next(i for i in summary2.combustion_items if i.activity_record_id == undated.id)
+    assert undated_item.status == "BLOCKED"
+    assert "COMBUSTION_ACTIVITY_DATE_REQUIRED" in undated_item.issue_codes
 
 
 def test_delete_and_non_canonical_month(seeded_db) -> None:
@@ -521,8 +516,8 @@ def test_delete_and_non_canonical_month(seeded_db) -> None:
             binding.id,
             MonthlyProductionBasisCreate(
                 month_start=date(2030, 1, 15),
-                total_production_quantity=Decimal('1'),
-                cbam_quantity=Decimal('1'),
+                total_production_quantity=Decimal("1"),
+                cbam_quantity=Decimal("1"),
             ),
         )
     created = monthly_production_basis_service.create_monthly_production_basis(
@@ -532,8 +527,8 @@ def test_delete_and_non_canonical_month(seeded_db) -> None:
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2030, 1, 1),
-            total_production_quantity=Decimal('1'),
-            cbam_quantity=Decimal('1'),
+            total_production_quantity=Decimal("1"),
+            cbam_quantity=Decimal("1"),
         ),
     )
     monthly_production_basis_service.delete_monthly_production_basis(
@@ -546,7 +541,7 @@ def test_delete_and_non_canonical_month(seeded_db) -> None:
 
 
 def test_monthly_prod_basis_migration_round_trip(seeded_db) -> None:
-    seeded_db.execute(text('DROP TABLE IF EXISTS cbam_monthly_production_basis CASCADE'))
+    seeded_db.execute(text("DROP TABLE IF EXISTS cbam_monthly_production_basis CASCADE"))
     seeded_db.flush()
 
     def upgrade() -> None:
@@ -580,7 +575,7 @@ CREATE TABLE cbam_monthly_production_basis (
         seeded_db.flush()
 
     def downgrade() -> None:
-        seeded_db.execute(text('DROP TABLE IF EXISTS cbam_monthly_production_basis CASCADE'))
+        seeded_db.execute(text("DROP TABLE IF EXISTS cbam_monthly_production_basis CASCADE"))
         seeded_db.flush()
 
     upgrade()

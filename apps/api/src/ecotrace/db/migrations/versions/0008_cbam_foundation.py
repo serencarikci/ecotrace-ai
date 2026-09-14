@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0008_cbam_foundation'
-down_revision: str | None = '0007_intelligence'
+revision: str = "0008_cbam_foundation"
+down_revision: str | None = "0007_intelligence"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -48,16 +48,15 @@ CREATE TABLE cbam_installation_profiles (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_installation_profiles_organization_id '
-        'ON cbam_installation_profiles (organization_id)'
+        "CREATE INDEX ix_cbam_installation_profiles_organization_id "
+        "ON cbam_installation_profiles (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_installation_profiles_facility_id '
-        'ON cbam_installation_profiles (facility_id)'
+        "CREATE INDEX ix_cbam_installation_profiles_facility_id "
+        "ON cbam_installation_profiles (facility_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_installation_profiles_status '
-        'ON cbam_installation_profiles (status)'
+        "CREATE INDEX ix_cbam_installation_profiles_status ON cbam_installation_profiles (status)"
     )
     op.execute(
         """
@@ -106,16 +105,16 @@ CREATE TABLE cbam_reporting_period_bindings (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_reporting_period_bindings_organization_id '
-        'ON cbam_reporting_period_bindings (organization_id)'
+        "CREATE INDEX ix_cbam_reporting_period_bindings_organization_id "
+        "ON cbam_reporting_period_bindings (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_reporting_period_bindings_reporting_period_id '
-        'ON cbam_reporting_period_bindings (reporting_period_id)'
+        "CREATE INDEX ix_cbam_reporting_period_bindings_reporting_period_id "
+        "ON cbam_reporting_period_bindings (reporting_period_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_reporting_period_bindings_status '
-        'ON cbam_reporting_period_bindings (status)'
+        "CREATE INDEX ix_cbam_reporting_period_bindings_status "
+        "ON cbam_reporting_period_bindings (status)"
     )
 
     op.execute(
@@ -157,20 +156,20 @@ CREATE TABLE cbam_product_profile_versions (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_product_profile_versions_organization_id '
-        'ON cbam_product_profile_versions (organization_id)'
+        "CREATE INDEX ix_cbam_product_profile_versions_organization_id "
+        "ON cbam_product_profile_versions (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_product_profile_versions_product_id '
-        'ON cbam_product_profile_versions (product_id)'
+        "CREATE INDEX ix_cbam_product_profile_versions_product_id "
+        "ON cbam_product_profile_versions (product_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_product_profile_versions_status '
-        'ON cbam_product_profile_versions (status)'
+        "CREATE INDEX ix_cbam_product_profile_versions_status "
+        "ON cbam_product_profile_versions (status)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_product_profile_versions')
-    op.execute('DROP TABLE IF EXISTS cbam_reporting_period_bindings')
-    op.execute('DROP TABLE IF EXISTS cbam_installation_profiles')
+    op.execute("DROP TABLE IF EXISTS cbam_product_profile_versions")
+    op.execute("DROP TABLE IF EXISTS cbam_reporting_period_bindings")
+    op.execute("DROP TABLE IF EXISTS cbam_installation_profiles")

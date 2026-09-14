@@ -16,11 +16,11 @@ from ecotrace.modules.cbam.application.catalogs import (
     mass_to_kg,
 )
 
-CALCULATION_TYPE_STATIONARY_COMBUSTION_CO2 = 'STATIONARY_COMBUSTION_CO2_V1'
-FORMULA_VERSION_STATIONARY_COMBUSTION_CO2 = 'stationary-combustion-co2-v1'
-RESULT_UNIT_TCO2 = 'tCO2'
+CALCULATION_TYPE_STATIONARY_COMBUSTION_CO2 = "STATIONARY_COMBUSTION_CO2_V1"
+FORMULA_VERSION_STATIONARY_COMBUSTION_CO2 = "stationary-combustion-co2-v1"
+RESULT_UNIT_TCO2 = "tCO2"
 
-InputBasis = Literal['VOLUME', 'MASS']
+InputBasis = Literal["VOLUME", "MASS"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,20 +103,20 @@ def _fail(code: str, message: str) -> StationaryCombustionOutcome:
 
 def _provenance_dict(provenance: ParameterProvenance) -> dict[str, str | None]:
     return {
-        'source_document': provenance.source_document,
-        'source_table': provenance.source_table,
-        'dataset_version': provenance.dataset_version,
-        'source_reference': provenance.source_reference,
+        "source_document": provenance.source_document,
+        "source_table": provenance.source_table,
+        "dataset_version": provenance.dataset_version,
+        "source_reference": provenance.source_reference,
     }
 
 
 def _require_provenance(provenance: ParameterProvenance, *, field: str) -> str | None:
     if not provenance.source_document.strip():
-        return f'{field} source_document is required.'
+        return f"{field} source_document is required."
     if not provenance.source_table.strip():
-        return f'{field} source_table is required.'
+        return f"{field} source_table is required."
     if not provenance.dataset_version.strip():
-        return f'{field} dataset_version is required.'
+        return f"{field} dataset_version is required."
     return None
 
 
@@ -130,9 +130,9 @@ def _validate_parameter(
     if provenance_error:
         return provenance_error
     if param.value <= 0:
-        return f'{field} must be greater than zero.'
+        return f"{field} must be greater than zero."
     if param.unit not in allowed_units:
-        return f'{field} unit {param.unit!r} is incompatible.'
+        return f"{field} unit {param.unit!r} is incompatible."
     return None
 
 
@@ -140,89 +140,89 @@ def calculate_stationary_combustion_co2(
     inputs: StationaryCombustionInputs,
 ) -> StationaryCombustionOutcome:
     if not inputs.fuel_code.strip():
-        return _fail('INVALID_INPUT', 'fuel_code is required.')
+        return _fail("INVALID_INPUT", "fuel_code is required.")
     if not inputs.fuel_name.strip():
-        return _fail('INVALID_INPUT', 'fuel_name is required.')
+        return _fail("INVALID_INPUT", "fuel_name is required.")
     if inputs.activity_quantity < 0:
-        return _fail('INVALID_INPUT', 'Activity quantity cannot be negative.')
+        return _fail("INVALID_INPUT", "Activity quantity cannot be negative.")
 
-    if inputs.input_basis == 'VOLUME':
+    if inputs.input_basis == "VOLUME":
         if inputs.activity_unit not in VOLUME_ACTIVITY_UNITS:
             return _fail(
-                'INCOMPATIBLE_UNIT',
-                f'Activity unit {inputs.activity_unit!r} is incompatible with VOLUME basis.',
+                "INCOMPATIBLE_UNIT",
+                f"Activity unit {inputs.activity_unit!r} is incompatible with VOLUME basis.",
             )
         if inputs.density is None:
             return _fail(
-                'INVALID_INPUT',
-                'Density is required when input_basis is VOLUME.',
+                "INVALID_INPUT",
+                "Density is required when input_basis is VOLUME.",
             )
         expected_density_unit = density_unit_for_volume(inputs.activity_unit)
         density_error = _validate_parameter(
             inputs.density,
-            field='density',
+            field="density",
             allowed_units=frozenset({expected_density_unit} if expected_density_unit else set()),
         )
         if density_error:
-            code = 'INCOMPATIBLE_UNIT' if 'incompatible' in density_error else 'INVALID_INPUT'
+            code = "INCOMPATIBLE_UNIT" if "incompatible" in density_error else "INVALID_INPUT"
             return _fail(code, density_error)
         if expected_density_unit and inputs.density.unit != expected_density_unit:
             return _fail(
-                'INCOMPATIBLE_UNIT',
+                "INCOMPATIBLE_UNIT",
                 (
-                    f'Density unit {inputs.density.unit!r} is incompatible with '
-                    f'activity unit {inputs.activity_unit!r} '
-                    f'(expected {expected_density_unit!r}).'
+                    f"Density unit {inputs.density.unit!r} is incompatible with "
+                    f"activity unit {inputs.activity_unit!r} "
+                    f"(expected {expected_density_unit!r})."
                 ),
             )
-    elif inputs.input_basis == 'MASS':
+    elif inputs.input_basis == "MASS":
         if inputs.activity_unit not in MASS_ACTIVITY_UNITS:
             return _fail(
-                'INCOMPATIBLE_UNIT',
-                f'Activity unit {inputs.activity_unit!r} is incompatible with MASS basis.',
+                "INCOMPATIBLE_UNIT",
+                f"Activity unit {inputs.activity_unit!r} is incompatible with MASS basis.",
             )
         if inputs.density is not None:
             return _fail(
-                'INVALID_INPUT',
-                'Density must not be supplied when input_basis is MASS.',
+                "INVALID_INPUT",
+                "Density must not be supplied when input_basis is MASS.",
             )
     else:
-        return _fail('INVALID_INPUT', f'Unsupported input_basis: {inputs.input_basis!r}.')
+        return _fail("INVALID_INPUT", f"Unsupported input_basis: {inputs.input_basis!r}.")
 
     ncv_error = _validate_parameter(
         inputs.net_calorific_value,
-        field='net_calorific_value',
+        field="net_calorific_value",
         allowed_units=NCV_UNITS,
     )
     if ncv_error:
-        code = 'INCOMPATIBLE_UNIT' if 'incompatible' in ncv_error else 'INVALID_INPUT'
+        code = "INCOMPATIBLE_UNIT" if "incompatible" in ncv_error else "INVALID_INPUT"
         return _fail(code, ncv_error)
 
     ef_error = _validate_parameter(
         inputs.co2_emission_factor,
-        field='co2_emission_factor',
+        field="co2_emission_factor",
         allowed_units=CO2_EF_ENERGY_UNITS,
     )
     if ef_error:
-        code = 'INCOMPATIBLE_UNIT' if 'incompatible' in ef_error else 'INVALID_INPUT'
+        code = "INCOMPATIBLE_UNIT" if "incompatible" in ef_error else "INVALID_INPUT"
         return _fail(code, ef_error)
 
     oxidation_prov_error = _require_provenance(
         inputs.oxidation_factor_provenance,
-        field='oxidation_factor',
+        field="oxidation_factor",
     )
     if oxidation_prov_error:
-        return _fail('INVALID_INPUT', oxidation_prov_error)
+        return _fail("INVALID_INPUT", oxidation_prov_error)
     if inputs.oxidation_factor < 0:
-        return _fail('INVALID_INPUT', 'Oxidation factor cannot be negative.')
+        return _fail("INVALID_INPUT", "Oxidation factor cannot be negative.")
 
     if inputs.activity_quantity == 0:
         derived = StationaryCombustionDerived(
-            fuel_mass_kg=Decimal('0'),
-            fuel_mass_gg=Decimal('0'),
-            energy_content_tj=Decimal('0'),
-            co2_emissions_kg=Decimal('0'),
-            co2_emissions_tonnes=Decimal('0'),
+            fuel_mass_kg=Decimal("0"),
+            fuel_mass_gg=Decimal("0"),
+            energy_content_tj=Decimal("0"),
+            co2_emissions_kg=Decimal("0"),
+            co2_emissions_tonnes=Decimal("0"),
         )
         quantized = quantize_result(derived.co2_emissions_tonnes)
         snapshot = _build_snapshot(inputs, derived, quantized)
@@ -234,15 +234,15 @@ def calculate_stationary_combustion_co2(
             snapshot=snapshot,
         )
 
-    if inputs.input_basis == 'VOLUME':
+    if inputs.input_basis == "VOLUME":
         assert inputs.density is not None
         fuel_mass_kg = inputs.activity_quantity * inputs.density.value
     else:
         converted = mass_to_kg(inputs.activity_quantity, inputs.activity_unit)
         if converted is None:
             return _fail(
-                'INCOMPATIBLE_UNIT',
-                f'Unable to convert mass unit {inputs.activity_unit!r} to kg.',
+                "INCOMPATIBLE_UNIT",
+                f"Unable to convert mass unit {inputs.activity_unit!r} to kg.",
             )
         fuel_mass_kg = converted
 
@@ -299,11 +299,11 @@ def _build_snapshot(
         oxidation_factor=str(inputs.oxidation_factor),
         oxidation_factor_provenance=_provenance_dict(inputs.oxidation_factor_provenance),
         derived={
-            'fuel_mass_kg': str(derived.fuel_mass_kg),
-            'fuel_mass_gg': str(derived.fuel_mass_gg),
-            'energy_content_tj': str(derived.energy_content_tj),
-            'co2_emissions_kg': str(derived.co2_emissions_kg),
-            'co2_emissions_tonnes': str(derived.co2_emissions_tonnes),
+            "fuel_mass_kg": str(derived.fuel_mass_kg),
+            "fuel_mass_gg": str(derived.fuel_mass_gg),
+            "energy_content_tj": str(derived.energy_content_tj),
+            "co2_emissions_kg": str(derived.co2_emissions_kg),
+            "co2_emissions_tonnes": str(derived.co2_emissions_tonnes),
         },
         result_value_quantized=str(quantized_result),
         result_unit=RESULT_UNIT_TCO2,

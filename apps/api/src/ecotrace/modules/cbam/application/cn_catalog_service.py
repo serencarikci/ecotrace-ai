@@ -29,7 +29,7 @@ from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
 
 def normalize_cn_code(value: str) -> str:
-    return value.strip().replace(' ', '')
+    return value.strip().replace(" ", "")
 
 
 class CnCodeDatasetResponse(CamelModel):
@@ -101,36 +101,42 @@ def _code_to_response(code: CbamCnCode, dataset: CbamCnCodeDataset) -> CnCodeRes
         dataset_code=dataset.dataset_code,
         dataset_version=dataset.dataset_version,
         content_checksum=dataset.content_checksum,
-        field_applicability=FieldApplicability.from_raw(
-            field_applicability_for_cn(code)
-        ),
+        field_applicability=FieldApplicability.from_raw(field_applicability_for_cn(code)),
     )
 
 
 def get_active_cn_dataset(db: Session) -> CbamCnCodeDataset:
-    row = db.execute(
-        select(CbamCnCodeDataset)
-        .where(
-            CbamCnCodeDataset.status == 'ACTIVE',
-            CbamCnCodeDataset.dataset_code == 'CBAM_SEE_CN_CODES',
-        )
-        .order_by(CbamCnCodeDataset.valid_from.desc(), CbamCnCodeDataset.dataset_version.desc())
-    ).scalars().first()
-    if row is None:
-        ensure_platform_cn_catalog(db)
-        row = db.execute(
+    row = (
+        db.execute(
             select(CbamCnCodeDataset)
             .where(
-                CbamCnCodeDataset.status == 'ACTIVE',
-                CbamCnCodeDataset.dataset_code == 'CBAM_SEE_CN_CODES',
+                CbamCnCodeDataset.status == "ACTIVE",
+                CbamCnCodeDataset.dataset_code == "CBAM_SEE_CN_CODES",
             )
-            .order_by(
-                CbamCnCodeDataset.valid_from.desc(),
-                CbamCnCodeDataset.dataset_version.desc(),
-            )
-        ).scalars().first()
+            .order_by(CbamCnCodeDataset.valid_from.desc(), CbamCnCodeDataset.dataset_version.desc())
+        )
+        .scalars()
+        .first()
+    )
     if row is None:
-        raise NotFoundError('Active CN-code dataset not found.')
+        ensure_platform_cn_catalog(db)
+        row = (
+            db.execute(
+                select(CbamCnCodeDataset)
+                .where(
+                    CbamCnCodeDataset.status == "ACTIVE",
+                    CbamCnCodeDataset.dataset_code == "CBAM_SEE_CN_CODES",
+                )
+                .order_by(
+                    CbamCnCodeDataset.valid_from.desc(),
+                    CbamCnCodeDataset.dataset_version.desc(),
+                )
+            )
+            .scalars()
+            .first()
+        )
+    if row is None:
+        raise NotFoundError("Active CN-code dataset not found.")
     return row
 
 
@@ -149,15 +155,15 @@ def list_cn_codes(
     dataset = get_active_cn_dataset(db)
     stmt = select(CbamCnCode).where(CbamCnCode.dataset_id == dataset.id)
     if not include_inactive:
-        stmt = stmt.where(CbamCnCode.status == 'ACTIVE')
+        stmt = stmt.where(CbamCnCode.status == "ACTIVE")
     if sector:
         stmt = stmt.where(CbamCnCode.cbam_sector == sector.strip())
     if q:
-        needle = f'%{q.strip()}%'
+        needle = f"%{q.strip()}%"
         normalized_q = normalize_cn_code(q)
         stmt = stmt.where(
             or_(
-                CbamCnCode.normalized_code.ilike(f'%{normalized_q}%'),
+                CbamCnCode.normalized_code.ilike(f"%{normalized_q}%"),
                 CbamCnCode.display_code.ilike(needle),
                 CbamCnCode.description_en.ilike(needle),
                 CbamCnCode.cn_key.ilike(needle),
@@ -190,10 +196,10 @@ def get_cn_code(
     require_cbam_view(db, user, organization_id)
     code = db.get(CbamCnCode, cn_code_id)
     if code is None:
-        raise NotFoundError('CN code not found.')
+        raise NotFoundError("CN code not found.")
     dataset = db.get(CbamCnCodeDataset, code.dataset_id)
     if dataset is None:
-        raise NotFoundError('CN code dataset not found.')
+        raise NotFoundError("CN code dataset not found.")
     return _code_to_response(code, dataset)
 
 
@@ -215,16 +221,16 @@ def resolve_cn_code(
         ),
     )
     if not allow_inactive:
-        stmt = stmt.where(CbamCnCode.status == 'ACTIVE')
+        stmt = stmt.where(CbamCnCode.status == "ACTIVE")
     rows = list(db.execute(stmt).scalars().all())
     if not rows:
-        raise NotFoundError('CN code not found.')
+        raise NotFoundError("CN code not found.")
     # Same logical code via display vs normalized is fine if one row.
     unique_ids = {row.id for row in rows}
     if len(unique_ids) > 1:
         raise BusinessRuleError(
-            'More than one CN code matches this value. Choose a more specific code.',
-            details=[{'code': 'AMBIGUOUS_CN_CODE'}],
+            "More than one CN code matches this value. Choose a more specific code.",
+            details=[{"code": "AMBIGUOUS_CN_CODE"}],
         )
     return rows[0]
 
@@ -242,7 +248,7 @@ def list_controlled_list_values(
             .where(
                 CbamCnControlledListValue.dataset_id == active_dataset.id,
                 CbamCnControlledListValue.list_code == list_code,
-                CbamCnControlledListValue.status == 'ACTIVE',
+                CbamCnControlledListValue.status == "ACTIVE",
             )
             .order_by(
                 CbamCnControlledListValue.sort_order.asc(),
@@ -264,5 +270,5 @@ def list_controlled_list_values(
 
 
 def sector_special_parameters() -> dict[str, Any]:
-    raw = load_cn_catalog_seed_payload().get('sectorSpecialParameters', {})
+    raw = load_cn_catalog_seed_payload().get("sectorSpecialParameters", {})
     return raw if isinstance(raw, dict) else {}

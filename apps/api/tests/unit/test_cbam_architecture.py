@@ -207,7 +207,5 @@ def test_application_layer_allows_reference_application_services(tmp_path: Path)
 
 def test_infrastructure_adapters_may_call_foreign_application_services() -> None:
     assert APPLICATION_FORBIDDEN_INFRASTRUCTURE_PREFIXES
-    findings = find_forbidden_imports_in_tree(
-        roots=(CBAM_PACKAGE_ROOT / "infrastructure",)
-    )
+    findings = find_forbidden_imports_in_tree(roots=(CBAM_PACKAGE_ROOT / "infrastructure",))
     assert findings == [], "\n".join(format_findings(findings))

@@ -61,26 +61,26 @@ def _to_template(row: CbamExportTemplate) -> ExportTemplateResponse:
         description=row.description,
         activated_at=row.activated_at,
         archived_at=row.archived_at,
-        official_mapping_blocked=row.template_type != 'INTERNAL_SKDM',
+        official_mapping_blocked=row.template_type != "INTERNAL_SKDM",
     )
 
 
 def mapping_checksum(mappings: list[CbamExportMapping]) -> str:
     payload = [
         {
-            'mappingCode': m.mapping_code,
-            'sourceType': m.source_type,
-            'sourcePath': m.source_path,
-            'worksheet': m.worksheet_name,
-            'destinationType': m.destination_type,
-            'destinationReference': m.destination_reference,
-            'valueType': m.value_type,
-            'required': m.required,
-            'transformation': m.transformation_code,
+            "mappingCode": m.mapping_code,
+            "sourceType": m.source_type,
+            "sourcePath": m.source_path,
+            "worksheet": m.worksheet_name,
+            "destinationType": m.destination_type,
+            "destinationReference": m.destination_reference,
+            "valueType": m.value_type,
+            "required": m.required,
+            "transformation": m.transformation_code,
         }
         for m in sorted(mappings, key=lambda x: x.mapping_code)
     ]
-    raw = json.dumps(payload, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
 
 
@@ -98,26 +98,26 @@ def ensure_internal_export_template(db: Session) -> CbamExportTemplate:
             path, checksum = write_internal_template_file()
             existing.storage_uri = relative_uri(path)
             existing.checksum = checksum
-        if existing.status == 'DRAFT':
-            existing.status = 'ACTIVE'
+        if existing.status == "DRAFT":
+            existing.status = "ACTIVE"
             existing.activated_at = datetime.now(UTC)
     else:
         path, checksum = write_internal_template_file()
         uri = relative_uri(path)
         existing = CbamExportTemplate(
-            id=uuid.UUID('d1000000-0000-4000-8000-000000000001'),
+            id=uuid.UUID("d1000000-0000-4000-8000-000000000001"),
             organization_id=None,
             code=INTERNAL_TEMPLATE_CODE,
-            name='EcoTrace SKDM Internal Development Template',
-            template_type='INTERNAL_SKDM',
+            name="EcoTrace SKDM Internal Development Template",
+            template_type="INTERNAL_SKDM",
             version=INTERNAL_TEMPLATE_VERSION,
             mapping_version=INTERNAL_MAPPING_VERSION,
             storage_uri=uri,
             checksum=checksum,
-            status='ACTIVE',
+            status="ACTIVE",
             description=(
-                'INTERNAL DEVELOPMENT TEMPLATE. NOT AN OFFICIAL CBAM SUBMISSION FORMAT. '
-                'Official CBAM workbook mapping is BLOCKED pending domain-expert delivery.'
+                "INTERNAL DEVELOPMENT TEMPLATE. NOT AN OFFICIAL CBAM SUBMISSION FORMAT. "
+                "Official CBAM workbook mapping is BLOCKED pending domain-expert delivery."
             ),
             activated_at=datetime.now(UTC),
         )
@@ -130,7 +130,7 @@ def ensure_internal_export_template(db: Session) -> CbamExportTemplate:
     wb = load_workbook(path)
     missing = [name for name in SHEETS if name not in wb.sheetnames]
     if missing:
-        raise ValidationAppError(f'Internal template missing sheets: {missing}')
+        raise ValidationAppError(f"Internal template missing sheets: {missing}")
 
     existing_codes = {
         m.mapping_code
@@ -139,24 +139,24 @@ def ensure_internal_export_template(db: Session) -> CbamExportTemplate:
         ).scalars()
     }
     for spec in internal_mapping_specs():
-        code = str(spec['mapping_code'])
+        code = str(spec["mapping_code"])
         if code in existing_codes:
             continue
         db.add(
             CbamExportMapping(
                 export_template_id=existing.id,
                 mapping_code=code,
-                source_type=str(spec['source_type']),
-                source_path=str(spec['source_path']),
-                worksheet_name=str(spec['worksheet_name']),
-                destination_type=str(spec['destination_type']),
-                destination_reference=str(spec['destination_reference']),
-                value_type=str(spec['value_type']),
-                required=bool(spec['required']),
-                transformation_code=str(spec['transformation_code'])
-                if spec.get('transformation_code')
+                source_type=str(spec["source_type"]),
+                source_path=str(spec["source_path"]),
+                worksheet_name=str(spec["worksheet_name"]),
+                destination_type=str(spec["destination_type"]),
+                destination_reference=str(spec["destination_reference"]),
+                value_type=str(spec["value_type"]),
+                required=bool(spec["required"]),
+                transformation_code=str(spec["transformation_code"])
+                if spec.get("transformation_code")
                 else None,
-                notes=str(spec.get('notes') or ''),
+                notes=str(spec.get("notes") or ""),
             )
         )
     db.flush()
@@ -178,7 +178,7 @@ def list_export_templates(
             CbamExportTemplate.organization_id.is_(None),
             CbamExportTemplate.organization_id == organization_id,
         ),
-        CbamExportTemplate.status != 'ARCHIVED',
+        CbamExportTemplate.status != "ARCHIVED",
     )
     total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
     rows = list(
@@ -216,7 +216,7 @@ def get_export_template(
         )
     ).scalar_one_or_none()
     if row is None:
-        raise NotFoundError('Export template not found.')
+        raise NotFoundError("Export template not found.")
     return _to_template(row)
 
 
@@ -228,7 +228,7 @@ def get_active_template_for_org(
         row = db.execute(
             select(CbamExportTemplate).where(
                 CbamExportTemplate.id == template_id,
-                CbamExportTemplate.status == 'ACTIVE',
+                CbamExportTemplate.status == "ACTIVE",
                 or_(
                     CbamExportTemplate.organization_id.is_(None),
                     CbamExportTemplate.organization_id == organization_id,
@@ -236,20 +236,20 @@ def get_active_template_for_org(
             )
         ).scalar_one_or_none()
         if row is None:
-            raise NotFoundError('Active export template not found.')
+            raise NotFoundError("Active export template not found.")
         return row
     row = db.execute(
         select(CbamExportTemplate)
         .where(
-            CbamExportTemplate.status == 'ACTIVE',
-            CbamExportTemplate.template_type == 'INTERNAL_SKDM',
+            CbamExportTemplate.status == "ACTIVE",
+            CbamExportTemplate.template_type == "INTERNAL_SKDM",
             CbamExportTemplate.organization_id.is_(None),
         )
         .order_by(CbamExportTemplate.activated_at.desc().nulls_last())
         .limit(1)
     ).scalar_one_or_none()
     if row is None:
-        raise ValidationAppError('No active internal export template is available.')
+        raise ValidationAppError("No active internal export template is available.")
     return row
 
 
@@ -266,10 +266,10 @@ def list_template_mappings(db: Session, template_id: uuid.UUID) -> list[CbamExpo
 def verify_template_file(template: CbamExportTemplate) -> Path:
     path = resolve_uri(template.storage_uri)
     if not path.is_file():
-        raise ValidationAppError('Export template file is missing.')
-    if path.suffix.lower() != '.xlsx':
-        raise ValidationAppError('Only .xlsx templates are supported (.xlsm rejected).')
+        raise ValidationAppError("Export template file is missing.")
+    if path.suffix.lower() != ".xlsx":
+        raise ValidationAppError("Only .xlsx templates are supported (.xlsm rejected).")
     checksum = sha256_file(path)
     if checksum != template.checksum:
-        raise ValidationAppError('Export template checksum mismatch.')
+        raise ValidationAppError("Export template checksum mismatch.")
     return path

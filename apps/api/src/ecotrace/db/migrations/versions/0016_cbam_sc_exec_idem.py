@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0016_cbam_sc_exec_idem'
-down_revision: str | None = '0015_cbam_sc_calc_result'
+revision: str = "0016_cbam_sc_exec_idem"
+down_revision: str | None = "0015_cbam_sc_calc_result"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -35,14 +35,14 @@ WHERE client_request_id IS NOT NULL
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_results_client_request_id '
-        'ON cbam_stationary_combustion_results (client_request_id)'
+        "CREATE INDEX ix_cbam_sc_results_client_request_id "
+        "ON cbam_stationary_combustion_results (client_request_id)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP INDEX IF EXISTS ix_cbam_sc_results_client_request_id')
-    op.execute('DROP INDEX IF EXISTS uq_cbam_sc_result_org_binding_client_request')
+    op.execute("DROP INDEX IF EXISTS ix_cbam_sc_results_client_request_id")
+    op.execute("DROP INDEX IF EXISTS uq_cbam_sc_result_org_binding_client_request")
     op.execute(
         """
 ALTER TABLE cbam_stationary_combustion_results

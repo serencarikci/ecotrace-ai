@@ -12,8 +12,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0027_cbam_pee_rollup'
-down_revision: str | None = '0026_cbam_purchased_precursor'
+revision: str = "0027_cbam_pee_rollup"
+down_revision: str | None = "0026_cbam_purchased_precursor"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

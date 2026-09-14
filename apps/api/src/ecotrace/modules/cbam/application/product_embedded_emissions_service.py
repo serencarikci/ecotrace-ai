@@ -159,7 +159,7 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate, to_camel
 
-ReadinessStatus = Literal['READY', 'NOT_READY']
+ReadinessStatus = Literal["READY", "NOT_READY"]
 
 # Binding-scoped drafts are bounded in practice; the workbook itself caps process and
 # precursor slots at 20 each.
@@ -175,7 +175,7 @@ class ProductEmbeddedEmissionsExecuteRequest(CamelModel):
         alias_generator=to_camel,
         populate_by_name=True,
         from_attributes=True,
-        extra='forbid',
+        extra="forbid",
     )
 
     client_request_id: uuid.UUID
@@ -412,8 +412,8 @@ class _RollupContext:
 def _validate_methodology_code(methodology_code: str) -> str:
     if methodology_code not in SUPPORTED_METHODOLOGY_CODES:
         raise BusinessRuleError(
-            f'Unsupported product embedded-emissions methodology: {methodology_code}',
-            details=[{'code': CODE_METHODOLOGY_UNSUPPORTED, 'methodologyCode': methodology_code}],
+            f"Unsupported product embedded-emissions methodology: {methodology_code}",
+            details=[{"code": CODE_METHODOLOGY_UNSUPPORTED, "methodologyCode": methodology_code}],
         )
     return methodology_code
 
@@ -445,8 +445,8 @@ def _gather_internal_flows(
                 continue
             if consumer_profile_id == supplier_profile_id:
                 raise BusinessRuleError(
-                    'A process cannot consume its own CBAM product output.',
-                    details=[{'code': CODE_INTERNAL_PRODUCT_FLOW_SELF_REFERENCE}],
+                    "A process cannot consume its own CBAM product output.",
+                    details=[{"code": CODE_INTERNAL_PRODUCT_FLOW_SELF_REFERENCE}],
                 )
             if use.quantity_tonnes is None:
                 continue
@@ -482,7 +482,7 @@ def _same_decimal(left: Decimal | None, right: Decimal | None) -> bool:
 
 
 def _profile_linkable(profile: CbamProductProfileVersion) -> bool:
-    return profile.classification_ready and profile.status in ('active', 'superseded')
+    return profile.classification_ready and profile.status in ("active", "superseded")
 
 
 def _resolve_context(
@@ -546,7 +546,9 @@ def _resolve_context(
     precursors = list_purchased_precursors(
         db, user, organization_id, binding_id, page=1, page_size=_MAX_ROWS
     ).items
-    uses_by_profile: dict[uuid.UUID, list[tuple[PurchasedPrecursorResponse, PrecursorProductUseResponse]]] = {}
+    uses_by_profile: dict[
+        uuid.UUID, list[tuple[PurchasedPrecursorResponse, PrecursorProductUseResponse]]
+    ] = {}
     for precursor in precursors:
         for use in precursor.distribution.product_uses:
             uses_by_profile.setdefault(use.target_product_profile_version_id, []).append(
@@ -571,7 +573,7 @@ def _resolve_context(
         select(CbamProductionRecord).where(
             CbamProductionRecord.organization_id == organization_id,
             CbamProductionRecord.reporting_period_binding_id == binding_id,
-            CbamProductionRecord.status == 'active',
+            CbamProductionRecord.status == "active",
         )
     ).scalars():
         if record.product_profile_version_id is None:
@@ -682,9 +684,7 @@ def _resolve_context(
             waste_gas_attributed=(
                 (process.waste_gas.attributed_tco2 or ZERO) if process is not None else ZERO
             ),
-            dea_direct=(
-                dea_row.final_allocated_fossil_co2_tonnes if dea_row is not None else None
-            ),
+            dea_direct=(dea_row.final_allocated_fossil_co2_tonnes if dea_row is not None else None),
             iea_indirect=(
                 iea_row.final_allocated_indirect_emissions_tco2e if iea_row is not None else None
             ),
@@ -713,7 +713,7 @@ def _resolve_context(
                 product_id=profile.product_id if profile is not None else None,
                 cn_normalized_code=profile.cn_normalized_code if profile is not None else None,
                 process_id=process.id if process is not None else None,
-                status='READY' if not product_blocking else 'NOT_READY',
+                status="READY" if not product_blocking else "NOT_READY",
                 blocking_issue_codes=product_blocking,
                 informational_codes=_dedupe(product_informational),
                 denominator_tonnes=denominator,
@@ -761,7 +761,7 @@ def _resolve_context(
                     profiles[profile_id].cn_normalized_code if profile_id in profiles else None
                 ),
                 process_id=None,
-                status='NOT_READY',
+                status="NOT_READY",
                 blocking_issue_codes=[CODE_PROCESS_MISSING_FOR_PRODUCT],
                 informational_codes=[],
                 denominator_tonnes=None,
@@ -777,8 +777,8 @@ def _resolve_context(
         internal_flows = _gather_internal_flows(eligible)
     except BusinessRuleError as exc:
         for detail in exc.details or []:
-            if isinstance(detail, dict) and detail.get('code'):
-                blocking.append(str(detail['code']))
+            if isinstance(detail, dict) and detail.get("code"):
+                blocking.append(str(detail["code"]))
         if CODE_INTERNAL_PRODUCT_FLOW_SELF_REFERENCE not in blocking:
             blocking.append(CODE_INTERNAL_PRODUCT_FLOW_SELF_REFERENCE)
         internal_flows = []
@@ -865,7 +865,9 @@ def _compute_products_v1(context: _RollupContext) -> list[_ComputedProduct]:
 
 def _compute_products_v2(context: _RollupContext) -> list[_ComputedProduct]:
     flows = _gather_internal_flows(context.eligible)
-    own_by_profile: dict[uuid.UUID, tuple[_ProductCandidate, Decimal, Decimal, list[PrecursorContribution]]] = {}
+    own_by_profile: dict[
+        uuid.UUID, tuple[_ProductCandidate, Decimal, Decimal, list[PrecursorContribution]]
+    ] = {}
     v2_inputs: list[ProductV2Input] = []
 
     for candidate in context.eligible:
@@ -919,8 +921,8 @@ def _compute_products_v2(context: _RollupContext) -> list[_ComputedProduct]:
         )
     except LeontiefError as exc:
         raise BusinessRuleError(
-            'Internal product-flow Leontief system cannot be solved.',
-            details=[{'code': exc.code}],
+            "Internal product-flow Leontief system cannot be solved.",
+            details=[{"code": exc.code}],
         ) from exc
 
     computed: list[_ComputedProduct] = []
@@ -964,9 +966,7 @@ def _compute_products_v2(context: _RollupContext) -> list[_ComputedProduct]:
     return computed
 
 
-def _compute_products(
-    context: _RollupContext, *, methodology_code: str
-) -> list[_ComputedProduct]:
+def _compute_products(context: _RollupContext, *, methodology_code: str) -> list[_ComputedProduct]:
     if methodology_code == METHODOLOGY_CODE_V2:
         return _compute_products_v2(context)
     return _compute_products_v1(context)
@@ -998,9 +998,7 @@ def _build_fingerprint(
     flows_by_consumer: dict[uuid.UUID, list[_InternalFlowCandidate]] = {}
     if is_v2:
         for flow in _gather_internal_flows(context.eligible):
-            flows_by_consumer.setdefault(flow.consumer_product_profile_version_id, []).append(
-                flow
-            )
+            flows_by_consumer.setdefault(flow.consumer_product_profile_version_id, []).append(flow)
 
     products: list[ProductFingerprint] = []
     for candidate in context.eligible:
@@ -1138,8 +1136,8 @@ def _set_current_pointer(
             updated_at=now,
         )
         .on_conflict_do_update(
-            constraint='uq_cbam_pee_current_org_binding_method',
-            set_={'current_result_id': result_id, 'updated_at': now},
+            constraint="uq_cbam_pee_current_org_binding_method",
+            set_={"current_result_id": result_id, "updated_at": now},
         )
     )
     db.execute(stmt)
@@ -1161,9 +1159,7 @@ def _find_by_client_request(
     ).scalar_one_or_none()
 
 
-def _product_rows(
-    db: Session, result_id: uuid.UUID
-) -> list[CbamProductEmbeddedEmissionsProduct]:
+def _product_rows(db: Session, result_id: uuid.UUID) -> list[CbamProductEmbeddedEmissionsProduct]:
     return list(
         db.execute(
             select(CbamProductEmbeddedEmissionsProduct)
@@ -1342,7 +1338,9 @@ def compute_product_embedded_emissions_stale_reasons(
         if is_v2:
             if (
                 live.has_exported_electricity != snapshot.has_exported_electricity
-                or not _same_decimal(live.exported_electricity_mwh, snapshot.exported_electricity_mwh)
+                or not _same_decimal(
+                    live.exported_electricity_mwh, snapshot.exported_electricity_mwh
+                )
                 or not _same_decimal(
                     live.exported_electricity_emission_factor,
                     snapshot.exported_electricity_emission_factor,
@@ -1396,9 +1394,7 @@ def get_product_embedded_emissions_readiness(
 ) -> ProductEmbeddedEmissionsReadiness:
     require_cbam_view(db, user, organization_id)
     methodology_code = _validate_methodology_code(methodology_code)
-    ctx = _resolve_context(
-        db, user, organization_id, binding_id, methodology_code=methodology_code
-    )
+    ctx = _resolve_context(db, user, organization_id, binding_id, methodology_code=methodology_code)
     pointer = _current_pointer(
         db,
         organization_id=organization_id,
@@ -1419,7 +1415,7 @@ def get_product_embedded_emissions_readiness(
     return ProductEmbeddedEmissionsReadiness(
         reporting_period_binding_id=binding_id,
         methodology_code=methodology_code,
-        status='READY' if ready else 'NOT_READY',
+        status="READY" if ready else "NOT_READY",
         rollup_ready=ready,
         blocking_issue_codes=ctx.blocking,
         informational_codes=ctx.informational,
@@ -1428,9 +1424,7 @@ def get_product_embedded_emissions_readiness(
         indirect_emissions_allocation_result_id=ctx.iea_result_id,
         indirect_emissions_allocation_stale=ctx.iea_stale,
         eligible_product_count=len(ctx.eligible),
-        blocked_product_count=sum(
-            1 for row in ctx.product_readiness if row.status == 'NOT_READY'
-        ),
+        blocked_product_count=sum(1 for row in ctx.product_readiness if row.status == "NOT_READY"),
         precursor_contribution_count=sum(len(c.contributions) for c in ctx.eligible),
         products=ctx.product_readiness,
         current_result_id=current_id,
@@ -1487,13 +1481,11 @@ def execute_product_embedded_emissions(
     export_code, export_note = exported_electricity_note_for(methodology_code)
     internal_code, internal_note = internal_precursor_note_for(methodology_code)
 
-    ctx = _resolve_context(
-        db, user, organization_id, binding_id, methodology_code=methodology_code
-    )
+    ctx = _resolve_context(db, user, organization_id, binding_id, methodology_code=methodology_code)
     if ctx.blocking:
         raise BusinessRuleError(
-            'Product embedded-emissions roll-up is not ready.',
-            details=[{'code': code} for code in ctx.blocking],
+            "Product embedded-emissions roll-up is not ready.",
+            details=[{"code": code} for code in ctx.blocking],
         )
 
     fingerprint = _build_fingerprint(
@@ -1511,8 +1503,8 @@ def execute_product_embedded_emissions(
     if existing is not None:
         if existing.request_fingerprint != fingerprint:
             raise ConflictError(
-                'This client request id was already used with different inputs.',
-                details=[{'code': 'IDEMPOTENCY_KEY_REUSED'}],
+                "This client request id was already used with different inputs.",
+                details=[{"code": "IDEMPOTENCY_KEY_REUSED"}],
             )
         return _execution_response(existing, idempotent_replay=True)
 
@@ -1524,9 +1516,7 @@ def execute_product_embedded_emissions(
     internal_count = sum(len(c.internal_contributions) for c in computed)
 
     # Supplier process lookup for internal contribution persistence.
-    supplier_by_profile = {
-        candidate.profile.id: candidate.process for candidate in ctx.eligible
-    }
+    supplier_by_profile = {candidate.profile.id: candidate.process for candidate in ctx.eligible}
 
     result_id = uuid.uuid4()
     result = CbamProductEmbeddedEmissionsResult(
@@ -1560,12 +1550,12 @@ def execute_product_embedded_emissions(
         iea_result_id=ctx.iea_result_id,
         informational_codes_json=list(ctx.informational),
         notes_json={
-            'gwpEquivalence': GWP_EQUIVALENCE_NOTE,
-            'denominator': DENOMINATOR_NOTE,
-            'exportedElectricity': export_note,
-            'exportedElectricityCode': export_code,
-            'internalPrecursors': internal_note,
-            'internalPrecursorsCode': internal_code,
+            "gwpEquivalence": GWP_EQUIVALENCE_NOTE,
+            "denominator": DENOMINATOR_NOTE,
+            "exportedElectricity": export_note,
+            "exportedElectricityCode": export_code,
+            "internalPrecursors": internal_note,
+            "internalPrecursorsCode": internal_code,
         },
         created_by_user_id=user.id,
     )
@@ -1577,33 +1567,33 @@ def execute_product_embedded_emissions(
             candidate = item.candidate
             product_row_id = uuid.uuid4()
             components: dict[str, Any] = {
-                'ownDirect': {
-                    'deaDirectTco2': str(item.dea_direct),
-                    'heatAttributedTco2e': str(candidate.heat_attributed),
-                    'wasteGasAttributedTco2e': str(candidate.waste_gas_attributed),
-                    'exportedElectricityDirectTco2e': str(item.exported_electricity_direct_tco2e),
-                    'formula': 'T54 + T58 + T62 + T72',
+                "ownDirect": {
+                    "deaDirectTco2": str(item.dea_direct),
+                    "heatAttributedTco2e": str(candidate.heat_attributed),
+                    "wasteGasAttributedTco2e": str(candidate.waste_gas_attributed),
+                    "exportedElectricityDirectTco2e": str(item.exported_electricity_direct_tco2e),
+                    "formula": "T54 + T58 + T62 + T72",
                 },
-                'ownIndirect': {
-                    'ieaIndirectTco2e': str(item.iea_indirect),
-                    'formula': 'T66 via current IEA product row',
+                "ownIndirect": {
+                    "ieaIndirectTco2e": str(item.iea_indirect),
+                    "formula": "T66 via current IEA product row",
                 },
-                'precursors': {
-                    'directTco2e': str(item.totals.precursor_direct_tco2e),
-                    'indirectTco2e': str(item.totals.precursor_indirect_tco2e),
-                    'formula': 'Σ productUseTonnes × precursorSpecific',
+                "precursors": {
+                    "directTco2e": str(item.totals.precursor_direct_tco2e),
+                    "indirectTco2e": str(item.totals.precursor_indirect_tco2e),
+                    "formula": "Σ productUseTonnes × precursorSpecific",
                 },
-                'denominator': {
-                    'tonnes': str(candidate.denominator_tonnes),
-                    'source': 'PROCESS_PRODUCED_QUANTITY',
-                    'note': DENOMINATOR_NOTE,
+                "denominator": {
+                    "tonnes": str(candidate.denominator_tonnes),
+                    "source": "PROCESS_PRODUCED_QUANTITY",
+                    "note": DENOMINATOR_NOTE,
                 },
             }
             if is_v2:
-                components['internal'] = {
-                    'directTco2e': str(item.internal_direct_tco2e),
-                    'indirectTco2e': str(item.internal_indirect_tco2e),
-                    'formula': 'Σ qty × supplierSEE via (I-A)^-1',
+                components["internal"] = {
+                    "directTco2e": str(item.internal_direct_tco2e),
+                    "indirectTco2e": str(item.internal_indirect_tco2e),
+                    "formula": "Σ qty × supplierSEE via (I-A)^-1",
                 }
             db.add(
                 CbamProductEmbeddedEmissionsProduct(
@@ -1652,9 +1642,7 @@ def execute_product_embedded_emissions(
                     own_direct_tco2e=quantize_result(item.totals.own_direct_tco2e),
                     own_indirect_tco2e=quantize_result(item.totals.own_indirect_tco2e),
                     precursor_direct_tco2e=quantize_result(item.totals.precursor_direct_tco2e),
-                    precursor_indirect_tco2e=quantize_result(
-                        item.totals.precursor_indirect_tco2e
-                    ),
+                    precursor_indirect_tco2e=quantize_result(item.totals.precursor_indirect_tco2e),
                     internal_direct_tco2e=quantize_result(item.internal_direct_tco2e),
                     internal_indirect_tco2e=quantize_result(item.internal_indirect_tco2e),
                     total_direct_tco2e=quantize_result(item.totals.total_direct_tco2e),
@@ -1673,17 +1661,15 @@ def execute_product_embedded_emissions(
                     dea_source_unit=DEA_SOURCE_UNIT_TCO2,
                     components_json=components,
                     provenance_json={
-                        'processId': str(candidate.process.id),
-                        'processRowVersion': candidate.process.row_version,
-                        'deaResultId': str(candidate.dea_row.result_id),
-                        'deaProductAllocationId': str(candidate.dea_row.id),
-                        'ieaResultId': str(candidate.iea_row.result_id),
-                        'ieaProductAllocationId': str(candidate.iea_row.id),
-                        'productionRecordIds': [
-                            str(x) for x in candidate.production_record_ids
-                        ],
-                        'informationalCodes': candidate.informational,
-                        'methodologyCode': methodology_code,
+                        "processId": str(candidate.process.id),
+                        "processRowVersion": candidate.process.row_version,
+                        "deaResultId": str(candidate.dea_row.result_id),
+                        "deaProductAllocationId": str(candidate.dea_row.id),
+                        "ieaResultId": str(candidate.iea_row.result_id),
+                        "ieaProductAllocationId": str(candidate.iea_row.id),
+                        "productionRecordIds": [str(x) for x in candidate.production_record_ids],
+                        "informationalCodes": candidate.informational,
+                        "methodologyCode": methodology_code,
                     },
                 )
             )
@@ -1743,8 +1729,8 @@ def execute_product_embedded_emissions(
                 )
                 if use_meta is None:
                     raise BusinessRuleError(
-                        'Internal product-use metadata missing during persistence.',
-                        details=[{'code': CODE_INTERNAL_PRODUCT_FLOW_INVALID}],
+                        "Internal product-use metadata missing during persistence.",
+                        details=[{"code": CODE_INTERNAL_PRODUCT_FLOW_INVALID}],
                     )
                 db.add(
                     CbamProductEmbeddedEmissionsInternalContribution(
@@ -1793,17 +1779,17 @@ def execute_product_embedded_emissions(
         )
         write_audit_log(
             db,
-            action='cbam.product_embedded_emissions.executed',
+            action="cbam.product_embedded_emissions.executed",
             actor_user_id=user.id,
             organization_id=organization_id,
-            entity_type='cbam_product_embedded_emissions_results',
+            entity_type="cbam_product_embedded_emissions_results",
             entity_id=str(result_id),
             request_id=request_id,
             ip_address=ip_address,
             user_agent=user_agent,
             metadata={
-                'clientRequestId': str(payload.client_request_id),
-                'methodologyCode': methodology_code,
+                "clientRequestId": str(payload.client_request_id),
+                "methodologyCode": methodology_code,
             },
         )
         db.commit()
@@ -1819,16 +1805,15 @@ def execute_product_embedded_emissions(
         )
         if winner is None:
             raise ConflictError(
-                'Product embedded-emissions persistence conflict.',
-                details=[{'code': 'PRODUCT_EMBEDDED_EMISSIONS_RESULT_CONFLICT'}],
+                "Product embedded-emissions persistence conflict.",
+                details=[{"code": "PRODUCT_EMBEDDED_EMISSIONS_RESULT_CONFLICT"}],
             ) from None
         if winner.request_fingerprint != fingerprint:
             raise ConflictError(
-                'This client request id was already used with different inputs.',
-                details=[{'code': 'IDEMPOTENCY_KEY_REUSED'}],
+                "This client request id was already used with different inputs.",
+                details=[{"code": "IDEMPOTENCY_KEY_REUSED"}],
             ) from None
         return _execution_response(winner, idempotent_replay=True)
-
 
 
 def list_product_embedded_emissions_results(
@@ -1918,86 +1903,84 @@ def list_product_embedded_emissions_results(
 
 def _product_payload(row: CbamProductEmbeddedEmissionsProduct) -> dict[str, Any]:
     return {
-        'productId': str(row.product_id),
-        'productProfileVersionId': str(row.product_profile_version_id),
-        'profileVersion': row.profile_version,
-        'cnNormalizedCode': row.cn_normalized_code,
-        'cnDisplayCode': row.cn_display_code,
-        'productName': row.product_name,
-        'processId': str(row.process_id),
-        'processRowVersion': row.process_row_version,
-        'processProducedQuantity': str(row.process_produced_quantity),
-        'processProducedQuantityUnit': row.process_produced_quantity_unit,
-        'denominatorTonnes': str(row.denominator_tonnes),
-        'productionRecordCount': row.production_record_count,
-        'productionRecordsTonnes': (
+        "productId": str(row.product_id),
+        "productProfileVersionId": str(row.product_profile_version_id),
+        "profileVersion": row.profile_version,
+        "cnNormalizedCode": row.cn_normalized_code,
+        "cnDisplayCode": row.cn_display_code,
+        "productName": row.product_name,
+        "processId": str(row.process_id),
+        "processRowVersion": row.process_row_version,
+        "processProducedQuantity": str(row.process_produced_quantity),
+        "processProducedQuantityUnit": row.process_produced_quantity_unit,
+        "denominatorTonnes": str(row.denominator_tonnes),
+        "productionRecordCount": row.production_record_count,
+        "productionRecordsTonnes": (
             str(row.production_records_tonnes)
             if row.production_records_tonnes is not None
             else None
         ),
-        'productionRecordIds': row.production_record_ids,
-        'deaResultId': str(row.dea_result_id),
-        'deaProductAllocationId': (
+        "productionRecordIds": row.production_record_ids,
+        "deaResultId": str(row.dea_result_id),
+        "deaProductAllocationId": (
             str(row.dea_product_allocation_id)
             if row.dea_product_allocation_id is not None
             else None
         ),
-        'deaDirectTco2': str(row.dea_direct_tco2),
-        'ieaResultId': str(row.iea_result_id),
-        'ieaProductAllocationId': (
+        "deaDirectTco2": str(row.dea_direct_tco2),
+        "ieaResultId": str(row.iea_result_id),
+        "ieaProductAllocationId": (
             str(row.iea_product_allocation_id)
             if row.iea_product_allocation_id is not None
             else None
         ),
-        'ieaIndirectTco2e': str(row.iea_indirect_tco2e),
-        'hasMeasurableHeat': row.has_measurable_heat,
-        'heatAttributedTco2e': str(row.heat_attributed_tco2e),
-        'hasWasteGas': row.has_waste_gas,
-        'wasteGasAttributedTco2e': str(row.waste_gas_attributed_tco2e),
-        'exportedElectricityDirectTco2e': str(row.exported_electricity_direct_tco2e),
-        'exportedElectricityNoteCode': row.exported_electricity_note_code,
-        'hasExportedElectricity': row.has_exported_electricity,
-        'exportedElectricityMwh': (
-            str(row.exported_electricity_mwh)
-            if row.exported_electricity_mwh is not None
-            else None
+        "ieaIndirectTco2e": str(row.iea_indirect_tco2e),
+        "hasMeasurableHeat": row.has_measurable_heat,
+        "heatAttributedTco2e": str(row.heat_attributed_tco2e),
+        "hasWasteGas": row.has_waste_gas,
+        "wasteGasAttributedTco2e": str(row.waste_gas_attributed_tco2e),
+        "exportedElectricityDirectTco2e": str(row.exported_electricity_direct_tco2e),
+        "exportedElectricityNoteCode": row.exported_electricity_note_code,
+        "hasExportedElectricity": row.has_exported_electricity,
+        "exportedElectricityMwh": (
+            str(row.exported_electricity_mwh) if row.exported_electricity_mwh is not None else None
         ),
-        'exportedElectricityEmissionFactor': (
+        "exportedElectricityEmissionFactor": (
             str(row.exported_electricity_emission_factor)
             if row.exported_electricity_emission_factor is not None
             else None
         ),
-        'ownDirectTco2eRaw': str(row.own_direct_tco2e_raw),
-        'ownIndirectTco2eRaw': str(row.own_indirect_tco2e_raw),
-        'precursorDirectTco2eRaw': str(row.precursor_direct_tco2e_raw),
-        'precursorIndirectTco2eRaw': str(row.precursor_indirect_tco2e_raw),
-        'internalDirectTco2eRaw': str(row.internal_direct_tco2e_raw),
-        'internalIndirectTco2eRaw': str(row.internal_indirect_tco2e_raw),
-        'totalDirectTco2eRaw': str(row.total_direct_tco2e_raw),
-        'totalIndirectTco2eRaw': str(row.total_indirect_tco2e_raw),
-        'totalEmbeddedTco2eRaw': str(row.total_embedded_tco2e_raw),
-        'ownDirectTco2e': str(row.own_direct_tco2e),
-        'ownIndirectTco2e': str(row.own_indirect_tco2e),
-        'precursorDirectTco2e': str(row.precursor_direct_tco2e),
-        'precursorIndirectTco2e': str(row.precursor_indirect_tco2e),
-        'internalDirectTco2e': str(row.internal_direct_tco2e),
-        'internalIndirectTco2e': str(row.internal_indirect_tco2e),
-        'totalDirectTco2e': str(row.total_direct_tco2e),
-        'totalIndirectTco2e': str(row.total_indirect_tco2e),
-        'totalEmbeddedTco2e': str(row.total_embedded_tco2e),
-        'specificDirectRaw': str(row.specific_direct_raw),
-        'specificIndirectRaw': str(row.specific_indirect_raw),
-        'specificTotalRaw': str(row.specific_total_raw),
-        'specificDirect': str(row.specific_direct),
-        'specificIndirect': str(row.specific_indirect),
-        'specificTotal': str(row.specific_total),
-        'precursorContributionCount': row.precursor_contribution_count,
-        'internalContributionCount': row.internal_contribution_count,
-        'resultUnit': row.result_unit,
-        'specificUnit': row.specific_unit,
-        'deaSourceUnit': row.dea_source_unit,
-        'components': row.components_json,
-        'provenance': row.provenance_json,
+        "ownDirectTco2eRaw": str(row.own_direct_tco2e_raw),
+        "ownIndirectTco2eRaw": str(row.own_indirect_tco2e_raw),
+        "precursorDirectTco2eRaw": str(row.precursor_direct_tco2e_raw),
+        "precursorIndirectTco2eRaw": str(row.precursor_indirect_tco2e_raw),
+        "internalDirectTco2eRaw": str(row.internal_direct_tco2e_raw),
+        "internalIndirectTco2eRaw": str(row.internal_indirect_tco2e_raw),
+        "totalDirectTco2eRaw": str(row.total_direct_tco2e_raw),
+        "totalIndirectTco2eRaw": str(row.total_indirect_tco2e_raw),
+        "totalEmbeddedTco2eRaw": str(row.total_embedded_tco2e_raw),
+        "ownDirectTco2e": str(row.own_direct_tco2e),
+        "ownIndirectTco2e": str(row.own_indirect_tco2e),
+        "precursorDirectTco2e": str(row.precursor_direct_tco2e),
+        "precursorIndirectTco2e": str(row.precursor_indirect_tco2e),
+        "internalDirectTco2e": str(row.internal_direct_tco2e),
+        "internalIndirectTco2e": str(row.internal_indirect_tco2e),
+        "totalDirectTco2e": str(row.total_direct_tco2e),
+        "totalIndirectTco2e": str(row.total_indirect_tco2e),
+        "totalEmbeddedTco2e": str(row.total_embedded_tco2e),
+        "specificDirectRaw": str(row.specific_direct_raw),
+        "specificIndirectRaw": str(row.specific_indirect_raw),
+        "specificTotalRaw": str(row.specific_total_raw),
+        "specificDirect": str(row.specific_direct),
+        "specificIndirect": str(row.specific_indirect),
+        "specificTotal": str(row.specific_total),
+        "precursorContributionCount": row.precursor_contribution_count,
+        "internalContributionCount": row.internal_contribution_count,
+        "resultUnit": row.result_unit,
+        "specificUnit": row.specific_unit,
+        "deaSourceUnit": row.dea_source_unit,
+        "components": row.components_json,
+        "provenance": row.provenance_json,
     }
 
 
@@ -2005,34 +1988,32 @@ def _contribution_payload(
     row: CbamProductEmbeddedEmissionsPrecursorContribution,
 ) -> dict[str, Any]:
     return {
-        'productProfileVersionId': str(row.product_profile_version_id),
-        'precursorId': str(row.precursor_id),
-        'precursorRowVersion': row.precursor_row_version,
-        'precursorName': row.precursor_name,
-        'precursorCnNormalizedCode': row.precursor_cn_normalized_code,
-        'precursorCnDisplayCode': row.precursor_cn_display_code,
-        'dataSourceMode': row.data_source_mode,
-        'valueSource': row.value_source,
-        'productUseId': str(row.product_use_id),
-        'productUseRowVersion': row.product_use_row_version,
-        'productUseQuantity': str(row.product_use_quantity),
-        'productUseUnit': row.product_use_unit,
-        'quantityTonnes': str(row.quantity_tonnes),
-        'specificDirect': str(row.specific_direct),
-        'specificIndirect': str(row.specific_indirect),
-        'contributionDirectTco2eRaw': str(row.contribution_direct_tco2e_raw),
-        'contributionIndirectTco2eRaw': str(row.contribution_indirect_tco2e_raw),
-        'contributionDirectTco2e': str(row.contribution_direct_tco2e),
-        'contributionIndirectTco2e': str(row.contribution_indirect_tco2e),
-        'defaultDatasetId': (
+        "productProfileVersionId": str(row.product_profile_version_id),
+        "precursorId": str(row.precursor_id),
+        "precursorRowVersion": row.precursor_row_version,
+        "precursorName": row.precursor_name,
+        "precursorCnNormalizedCode": row.precursor_cn_normalized_code,
+        "precursorCnDisplayCode": row.precursor_cn_display_code,
+        "dataSourceMode": row.data_source_mode,
+        "valueSource": row.value_source,
+        "productUseId": str(row.product_use_id),
+        "productUseRowVersion": row.product_use_row_version,
+        "productUseQuantity": str(row.product_use_quantity),
+        "productUseUnit": row.product_use_unit,
+        "quantityTonnes": str(row.quantity_tonnes),
+        "specificDirect": str(row.specific_direct),
+        "specificIndirect": str(row.specific_indirect),
+        "contributionDirectTco2eRaw": str(row.contribution_direct_tco2e_raw),
+        "contributionIndirectTco2eRaw": str(row.contribution_indirect_tco2e_raw),
+        "contributionDirectTco2e": str(row.contribution_direct_tco2e),
+        "contributionIndirectTco2e": str(row.contribution_indirect_tco2e),
+        "defaultDatasetId": (
             str(row.default_dataset_id) if row.default_dataset_id is not None else None
         ),
-        'defaultValueId': (
-            str(row.default_value_id) if row.default_value_id is not None else None
-        ),
-        'defaultSnapshot': row.default_snapshot_json,
-        'resultUnit': row.result_unit,
-        'specificUnit': row.specific_unit,
+        "defaultValueId": (str(row.default_value_id) if row.default_value_id is not None else None),
+        "defaultSnapshot": row.default_snapshot_json,
+        "resultUnit": row.result_unit,
+        "specificUnit": row.specific_unit,
     }
 
 
@@ -2040,26 +2021,26 @@ def _internal_contribution_payload(
     row: CbamProductEmbeddedEmissionsInternalContribution,
 ) -> dict[str, Any]:
     return {
-        'consumerProductProfileVersionId': str(row.consumer_product_profile_version_id),
-        'supplierProductProfileVersionId': str(row.supplier_product_profile_version_id),
-        'consumerProcessId': str(row.consumer_process_id),
-        'supplierProcessId': str(row.supplier_process_id),
-        'supplierProcessRowVersion': row.supplier_process_row_version,
-        'productUseId': str(row.product_use_id),
-        'productUseRowVersion': row.product_use_row_version,
-        'productUseQuantity': str(row.product_use_quantity),
-        'productUseUnit': row.product_use_unit,
-        'quantityTonnes': str(row.quantity_tonnes),
-        'consumerDenominatorTonnes': str(row.consumer_denominator_tonnes),
-        'aCoefficient': str(row.a_coefficient),
-        'supplierSpecificDirect': str(row.supplier_specific_direct),
-        'supplierSpecificIndirect': str(row.supplier_specific_indirect),
-        'contributionDirectTco2eRaw': str(row.contribution_direct_tco2e_raw),
-        'contributionIndirectTco2eRaw': str(row.contribution_indirect_tco2e_raw),
-        'contributionDirectTco2e': str(row.contribution_direct_tco2e),
-        'contributionIndirectTco2e': str(row.contribution_indirect_tco2e),
-        'resultUnit': row.result_unit,
-        'specificUnit': row.specific_unit,
+        "consumerProductProfileVersionId": str(row.consumer_product_profile_version_id),
+        "supplierProductProfileVersionId": str(row.supplier_product_profile_version_id),
+        "consumerProcessId": str(row.consumer_process_id),
+        "supplierProcessId": str(row.supplier_process_id),
+        "supplierProcessRowVersion": row.supplier_process_row_version,
+        "productUseId": str(row.product_use_id),
+        "productUseRowVersion": row.product_use_row_version,
+        "productUseQuantity": str(row.product_use_quantity),
+        "productUseUnit": row.product_use_unit,
+        "quantityTonnes": str(row.quantity_tonnes),
+        "consumerDenominatorTonnes": str(row.consumer_denominator_tonnes),
+        "aCoefficient": str(row.a_coefficient),
+        "supplierSpecificDirect": str(row.supplier_specific_direct),
+        "supplierSpecificIndirect": str(row.supplier_specific_indirect),
+        "contributionDirectTco2eRaw": str(row.contribution_direct_tco2e_raw),
+        "contributionIndirectTco2eRaw": str(row.contribution_indirect_tco2e_raw),
+        "contributionDirectTco2e": str(row.contribution_direct_tco2e),
+        "contributionIndirectTco2e": str(row.contribution_indirect_tco2e),
+        "resultUnit": row.result_unit,
+        "specificUnit": row.specific_unit,
     }
 
 
@@ -2080,7 +2061,7 @@ def get_product_embedded_emissions_result(
         )
     ).scalar_one_or_none()
     if row is None:
-        raise NotFoundError('Product embedded-emissions result not found.')
+        raise NotFoundError("Product embedded-emissions result not found.")
 
     pointer = _current_pointer(
         db,
@@ -2090,9 +2071,7 @@ def get_product_embedded_emissions_result(
     )
     is_current = pointer is not None and pointer.current_result_id == row.id
     stale_codes = (
-        compute_product_embedded_emissions_stale_reasons(
-            db, user, organization_id, binding_id, row
-        )
+        compute_product_embedded_emissions_stale_reasons(db, user, organization_id, binding_id, row)
         if is_current
         else []
     )
@@ -2139,12 +2118,9 @@ def get_product_embedded_emissions_result(
         indirect_emissions_allocation_result_id=row.iea_result_id,
         informational_codes=[str(code) for code in (row.informational_codes_json or [])],
         products=[_product_payload(p) for p in _product_rows(db, row.id)],
-        precursor_contributions=[
-            _contribution_payload(c) for c in _contribution_rows(db, row.id)
-        ],
+        precursor_contributions=[_contribution_payload(c) for c in _contribution_rows(db, row.id)],
         internal_contributions=[
-            _internal_contribution_payload(c)
-            for c in _internal_contribution_rows(db, row.id)
+            _internal_contribution_payload(c) for c in _internal_contribution_rows(db, row.id)
         ],
         created_at=row.created_at,
         created_by_user_id=row.created_by_user_id,
@@ -2156,9 +2132,7 @@ def get_product_embedded_emissions_summary(
 ) -> ProductEmbeddedEmissionsPeriodSummary:
     require_cbam_view(db, user, organization_id)
     get_binding_for_org(db, organization_id, binding_id)
-    pointer = _preferred_current_pointer(
-        db, organization_id=organization_id, binding_id=binding_id
-    )
+    pointer = _preferred_current_pointer(db, organization_id=organization_id, binding_id=binding_id)
     if pointer is None:
         return ProductEmbeddedEmissionsPeriodSummary(
             reporting_period_binding_id=binding_id,
@@ -2197,20 +2171,18 @@ def get_product_embedded_emissions_summary(
     )
 
 
-
-
 __all__ = [
-    'ProductEmbeddedEmissionsExecuteRequest',
-    'ProductEmbeddedEmissionsExecutionResponse',
-    'ProductEmbeddedEmissionsPeriodSummary',
-    'ProductEmbeddedEmissionsProductReadiness',
-    'ProductEmbeddedEmissionsReadiness',
-    'ProductEmbeddedEmissionsResultDetail',
-    'ProductEmbeddedEmissionsResultSummary',
-    'compute_product_embedded_emissions_stale_reasons',
-    'execute_product_embedded_emissions',
-    'get_product_embedded_emissions_readiness',
-    'get_product_embedded_emissions_result',
-    'get_product_embedded_emissions_summary',
-    'list_product_embedded_emissions_results',
+    "ProductEmbeddedEmissionsExecuteRequest",
+    "ProductEmbeddedEmissionsExecutionResponse",
+    "ProductEmbeddedEmissionsPeriodSummary",
+    "ProductEmbeddedEmissionsProductReadiness",
+    "ProductEmbeddedEmissionsReadiness",
+    "ProductEmbeddedEmissionsResultDetail",
+    "ProductEmbeddedEmissionsResultSummary",
+    "compute_product_embedded_emissions_stale_reasons",
+    "execute_product_embedded_emissions",
+    "get_product_embedded_emissions_readiness",
+    "get_product_embedded_emissions_result",
+    "get_product_embedded_emissions_summary",
+    "list_product_embedded_emissions_results",
 ]

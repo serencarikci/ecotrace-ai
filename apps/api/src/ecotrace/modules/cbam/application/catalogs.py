@@ -8,42 +8,42 @@ from ecotrace.core.exceptions import ValidationAppError
 from ecotrace.shared.domain.schemas import CamelModel
 
 ACTIVITY_GROUPS: Final[tuple[str, ...]] = (
-    'DIRECT',
-    'PURCHASED_ENERGY',
-    'PROCESS',
-    'OTHER',
+    "DIRECT",
+    "PURCHASED_ENERGY",
+    "PROCESS",
+    "OTHER",
 )
 
 DATA_SOURCE_TYPES: Final[tuple[str, ...]] = (
-    'PRIMARY',
-    'DEFAULT_REFERENCE',
-    'UNKNOWN',
+    "PRIMARY",
+    "DEFAULT_REFERENCE",
+    "UNKNOWN",
 )
 
-RECORD_SOURCE_TYPES: Final[tuple[str, ...]] = ('MANUAL', 'IMPORTED')
+RECORD_SOURCE_TYPES: Final[tuple[str, ...]] = ("MANUAL", "IMPORTED")
 
 BIOGENIC_STATUSES: Final[tuple[str, ...]] = (
-    'BIOGENIC',
-    'NON_BIOGENIC',
-    'UNKNOWN',
+    "BIOGENIC",
+    "NON_BIOGENIC",
+    "UNKNOWN",
 )
 
 EMBEDDED_EMISSION_SOURCE_TYPES: Final[tuple[str, ...]] = (
-    'PRIMARY',
-    'DEFAULT_REFERENCE',
-    'UNKNOWN',
-    'NOT_PROVIDED',
+    "PRIMARY",
+    "DEFAULT_REFERENCE",
+    "UNKNOWN",
+    "NOT_PROVIDED",
 )
 
-UNIT_FAMILIES: Final[tuple[str, ...]] = ('energy', 'volume', 'mass', 'count')
+UNIT_FAMILIES: Final[tuple[str, ...]] = ("energy", "volume", "mass", "count")
 
-RECORD_STATUSES: Final[tuple[str, ...]] = ('active', 'archived')
+RECORD_STATUSES: Final[tuple[str, ...]] = ("active", "archived")
 
-PROCESS_TYPE_CODES: Final[tuple[str, ...]] = ('OTHER_PROCESS',)
+PROCESS_TYPE_CODES: Final[tuple[str, ...]] = ("OTHER_PROCESS",)
 
 ACTIVITY_PROPERTY_CODES: Final[tuple[str, ...]] = (
-    'NET_CALORIFIC_VALUE',
-    'GROSS_CALORIFIC_VALUE',
+    "NET_CALORIFIC_VALUE",
+    "GROSS_CALORIFIC_VALUE",
 )
 
 
@@ -63,44 +63,44 @@ class ActivityTypeDef:
 
 
 UNITS: Final[tuple[UnitDef, ...]] = (
-    UnitDef('kWh', 'Kilowatt-hour', 'energy'),
-    UnitDef('MWh', 'Megawatt-hour', 'energy'),
-    UnitDef('GJ', 'Gigajoule', 'energy'),
-    UnitDef('MJ', 'Megajoule', 'energy'),
-    UnitDef('TJ', 'Terajoule', 'energy'),
-    UnitDef('L', 'Litre', 'volume'),
-    UnitDef('m3', 'Cubic metre', 'volume'),
-    UnitDef('Sm3', 'Standard cubic metre', 'volume'),
-    UnitDef('kg', 'Kilogram', 'mass'),
-    UnitDef('t', 'Tonne', 'mass'),
-    UnitDef('Gg', 'Gigagram', 'mass'),
-    UnitDef('unit', 'Unit count', 'count'),
+    UnitDef("kWh", "Kilowatt-hour", "energy"),
+    UnitDef("MWh", "Megawatt-hour", "energy"),
+    UnitDef("GJ", "Gigajoule", "energy"),
+    UnitDef("MJ", "Megajoule", "energy"),
+    UnitDef("TJ", "Terajoule", "energy"),
+    UnitDef("L", "Litre", "volume"),
+    UnitDef("m3", "Cubic metre", "volume"),
+    UnitDef("Sm3", "Standard cubic metre", "volume"),
+    UnitDef("kg", "Kilogram", "mass"),
+    UnitDef("t", "Tonne", "mass"),
+    UnitDef("Gg", "Gigagram", "mass"),
+    UnitDef("unit", "Unit count", "count"),
 )
 
 PROPERTY_UNITS: Final[tuple[UnitDef, ...]] = (
-    UnitDef('MJ/L', 'Megajoule per litre', 'energy_per_volume'),
-    UnitDef('GJ/t', 'Gigajoule per tonne', 'energy_per_mass'),
-    UnitDef('MJ/kg', 'Megajoule per kilogram', 'energy_per_mass'),
-    UnitDef('GJ/m3', 'Gigajoule per cubic metre', 'energy_per_volume'),
-    UnitDef('MJ/m3', 'Megajoule per cubic metre', 'energy_per_volume'),
-    UnitDef('TJ/Gg', 'Terajoule per gigagram', 'energy_per_mass'),
-    UnitDef('kg/Sm3', 'Kilogram per standard cubic metre', 'density'),
-    UnitDef('kg/m3', 'Kilogram per cubic metre', 'density'),
-    UnitDef('kgCO2/TJ', 'Kilogram CO2 per terajoule', 'emission_intensity_energy'),
-    UnitDef('kgCO2e/TJ', 'Kilogram CO2e per terajoule', 'emission_intensity_energy'),
-    UnitDef('tCO2e/t', 'Declared embedded emission intensity', 'embedded_intensity'),
+    UnitDef("MJ/L", "Megajoule per litre", "energy_per_volume"),
+    UnitDef("GJ/t", "Gigajoule per tonne", "energy_per_mass"),
+    UnitDef("MJ/kg", "Megajoule per kilogram", "energy_per_mass"),
+    UnitDef("GJ/m3", "Gigajoule per cubic metre", "energy_per_volume"),
+    UnitDef("MJ/m3", "Megajoule per cubic metre", "energy_per_volume"),
+    UnitDef("TJ/Gg", "Terajoule per gigagram", "energy_per_mass"),
+    UnitDef("kg/Sm3", "Kilogram per standard cubic metre", "density"),
+    UnitDef("kg/m3", "Kilogram per cubic metre", "density"),
+    UnitDef("kgCO2/TJ", "Kilogram CO2 per terajoule", "emission_intensity_energy"),
+    UnitDef("kgCO2e/TJ", "Kilogram CO2e per terajoule", "emission_intensity_energy"),
+    UnitDef("tCO2e/t", "Declared embedded emission intensity", "embedded_intensity"),
 )
 
 ACTIVITY_TYPES: Final[tuple[ActivityTypeDef, ...]] = (
-    ActivityTypeDef('ELECTRICITY', 'Electricity', 'PURCHASED_ENERGY', 'energy'),
-    ActivityTypeDef('NATURAL_GAS', 'Natural gas', 'PURCHASED_ENERGY', 'volume'),
-    ActivityTypeDef('DIESEL', 'Diesel', 'DIRECT', 'volume'),
-    ActivityTypeDef('GASOLINE', 'Gasoline', 'DIRECT', 'volume'),
-    ActivityTypeDef('LPG', 'LPG', 'DIRECT', 'mass'),
-    ActivityTypeDef('PURCHASED_STEAM', 'Purchased steam', 'PURCHASED_ENERGY', 'energy'),
-    ActivityTypeDef('PROCESS_ACTIVITY', 'Process activity', 'PROCESS', 'mass'),
-    ActivityTypeDef('OTHER_FUEL', 'Other fuel', 'DIRECT', 'volume'),
-    ActivityTypeDef('OTHER', 'Other activity', 'OTHER', 'mass'),
+    ActivityTypeDef("ELECTRICITY", "Electricity", "PURCHASED_ENERGY", "energy"),
+    ActivityTypeDef("NATURAL_GAS", "Natural gas", "PURCHASED_ENERGY", "volume"),
+    ActivityTypeDef("DIESEL", "Diesel", "DIRECT", "volume"),
+    ActivityTypeDef("GASOLINE", "Gasoline", "DIRECT", "volume"),
+    ActivityTypeDef("LPG", "LPG", "DIRECT", "mass"),
+    ActivityTypeDef("PURCHASED_STEAM", "Purchased steam", "PURCHASED_ENERGY", "energy"),
+    ActivityTypeDef("PROCESS_ACTIVITY", "Process activity", "PROCESS", "mass"),
+    ActivityTypeDef("OTHER_FUEL", "Other fuel", "DIRECT", "volume"),
+    ActivityTypeDef("OTHER", "Other activity", "OTHER", "mass"),
 )
 
 _UNITS_BY_CODE: Final[dict[str, UnitDef]] = {u.code: u for u in UNITS}
@@ -108,46 +108,46 @@ _PROPERTY_UNITS_BY_CODE: Final[dict[str, UnitDef]] = {u.code: u for u in PROPERT
 _ACTIVITY_BY_CODE: Final[dict[str, ActivityTypeDef]] = {a.code: a for a in ACTIVITY_TYPES}
 
 _SCALE_TO_CANONICAL: Final[dict[str, tuple[str, Decimal]]] = {
-    'MJ': ('J_canon', Decimal('1e6')),
-    'GJ': ('J_canon', Decimal('1e9')),
-    'TJ': ('J_canon', Decimal('1e12')),
-    'kWh': ('Wh_canon', Decimal('1000')),
-    'MWh': ('Wh_canon', Decimal('1000000')),
-    'kg': ('kg_canon', Decimal('1')),
-    't': ('kg_canon', Decimal('1000')),
-    'Gg': ('kg_canon', Decimal('1000000')),
+    "MJ": ("J_canon", Decimal("1e6")),
+    "GJ": ("J_canon", Decimal("1e9")),
+    "TJ": ("J_canon", Decimal("1e12")),
+    "kWh": ("Wh_canon", Decimal("1000")),
+    "MWh": ("Wh_canon", Decimal("1000000")),
+    "kg": ("kg_canon", Decimal("1")),
+    "t": ("kg_canon", Decimal("1000")),
+    "Gg": ("kg_canon", Decimal("1000000")),
 }
 
-KG_PER_GG: Final[Decimal] = Decimal('1000000')
-KG_PER_TONNE: Final[Decimal] = Decimal('1000')
+KG_PER_GG: Final[Decimal] = Decimal("1000000")
+KG_PER_TONNE: Final[Decimal] = Decimal("1000")
 
 VOLUME_DENSITY_PAIRS: Final[dict[str, str]] = {
-    'Sm3': 'kg/Sm3',
-    'm3': 'kg/m3',
+    "Sm3": "kg/Sm3",
+    "m3": "kg/m3",
 }
 
-NCV_UNITS: Final[frozenset[str]] = frozenset({'TJ/Gg'})
-CO2_EF_ENERGY_UNITS: Final[frozenset[str]] = frozenset({'kgCO2/TJ', 'kgCO2e/TJ'})
-MASS_ACTIVITY_UNITS: Final[frozenset[str]] = frozenset({'kg', 't', 'Gg'})
-VOLUME_ACTIVITY_UNITS: Final[frozenset[str]] = frozenset({'Sm3', 'm3'})
+NCV_UNITS: Final[frozenset[str]] = frozenset({"TJ/Gg"})
+CO2_EF_ENERGY_UNITS: Final[frozenset[str]] = frozenset({"kgCO2/TJ", "kgCO2e/TJ"})
+MASS_ACTIVITY_UNITS: Final[frozenset[str]] = frozenset({"kg", "t", "Gg"})
+VOLUME_ACTIVITY_UNITS: Final[frozenset[str]] = frozenset({"Sm3", "m3"})
 
 EMISSION_INTENSITY_UNITS: Final[tuple[str, ...]] = (
-    'kgCO2e/kWh',
-    'kgCO2e/MWh',
-    'tCO2e/kWh',
-    'tCO2e/MWh',
-    'kgCO2/kWh',
-    'kgCO2/MWh',
-    'tCO2/kWh',
-    'tCO2/MWh',
-    'kgCO2e/L',
-    'kgCO2/L',
-    'tCO2e/t',
-    'tCO2/t',
-    'kgCO2e/t',
-    'kgCO2e/kg',
-    'kgCO2/kg',
-    'tCO2e/kg',
+    "kgCO2e/kWh",
+    "kgCO2e/MWh",
+    "tCO2e/kWh",
+    "tCO2e/MWh",
+    "kgCO2/kWh",
+    "kgCO2/MWh",
+    "tCO2/kWh",
+    "tCO2/MWh",
+    "kgCO2e/L",
+    "kgCO2/L",
+    "tCO2e/t",
+    "tCO2/t",
+    "kgCO2e/t",
+    "kgCO2e/kg",
+    "kgCO2/kg",
+    "tCO2e/kg",
 )
 
 
@@ -167,9 +167,9 @@ def is_known_factor_unit(code: str) -> bool:
 def get_emission_intensity_parts(factor_unit: str) -> tuple[str, str] | None:
     if factor_unit not in EMISSION_INTENSITY_UNITS:
         return None
-    if '/' not in factor_unit:
+    if "/" not in factor_unit:
         return None
-    result_unit, per_unit = factor_unit.split('/', 1)
+    result_unit, per_unit = factor_unit.split("/", 1)
     if not result_unit or not per_unit:
         return None
     return result_unit, per_unit
@@ -236,7 +236,7 @@ def get_unit(code: str) -> UnitDef | None:
 def require_unit(code: str) -> str:
     normalized = code.strip()
     if get_unit(normalized) is None:
-        raise ValidationAppError(f'Unsupported unit: {normalized}')
+        raise ValidationAppError(f"Unsupported unit: {normalized}")
     return normalized
 
 
@@ -245,9 +245,7 @@ def get_activity_type(code: str) -> ActivityTypeDef | None:
 
 
 def list_unit_responses() -> list[UnitResponse]:
-    return [
-        UnitResponse(code=u.code, display_name=u.display_name, family=u.family) for u in UNITS
-    ]
+    return [UnitResponse(code=u.code, display_name=u.display_name, family=u.family) for u in UNITS]
 
 
 def list_activity_type_responses() -> list[ActivityTypeResponse]:
@@ -264,8 +262,8 @@ def list_activity_type_responses() -> list[ActivityTypeResponse]:
 
 def list_activity_property_type_responses() -> list[ActivityPropertyTypeResponse]:
     labels = {
-        'NET_CALORIFIC_VALUE': 'Net calorific value',
-        'GROSS_CALORIFIC_VALUE': 'Gross calorific value',
+        "NET_CALORIFIC_VALUE": "Net calorific value",
+        "GROSS_CALORIFIC_VALUE": "Gross calorific value",
     }
     return [
         ActivityPropertyTypeResponse(code=code, display_name=labels[code])

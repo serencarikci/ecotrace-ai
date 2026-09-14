@@ -61,10 +61,10 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.modules.organizations.infrastructure.models import Organization
 from ecotrace.modules.reporting_periods.infrastructure.models import ReportingPeriod
 
-JANUARY_SM3 = Decimal('105437.03007518797')
-JANUARY_SM3_PERSISTED = Decimal('105437.03007519')
-EXPECTED_JANUARY_TCO2 = Decimal('190.22695917')
-DENSITY = Decimal('0.67')
+JANUARY_SM3 = Decimal("105437.03007518797")
+JANUARY_SM3_PERSISTED = Decimal("105437.03007519")
+EXPECTED_JANUARY_TCO2 = Decimal("190.22695917")
+DENSITY = Decimal("0.67")
 
 
 def _org(db):
@@ -73,12 +73,14 @@ def _org(db):
 
 def _admin(db):
     return db.execute(
-        select(User).where(User.normalized_email == 'orgadmin@ecotrace.dev')
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
     ).scalar_one()
 
 
 def _facility(db, org_id):
-    return db.execute(select(Facility).where(Facility.organization_id == org_id).limit(1)).scalar_one()
+    return db.execute(
+        select(Facility).where(Facility.organization_id == org_id).limit(1)
+    ).scalar_one()
 
 
 def _setup(db, admin, org):
@@ -89,18 +91,18 @@ def _setup(db, admin, org):
         org.id,
         InstallationCreate(
             facility_id=facility.id,
-            code=f'SC5A-{uuid.uuid4().hex[:8]}',
-            name='SC Phase5A Installation',
+            code=f"SC5A-{uuid.uuid4().hex[:8]}",
+            name="SC Phase5A Installation",
         ),
     )
     period = ReportingPeriod(
         organization_id=org.id,
-        code=f'SC5A-{uuid.uuid4().hex[:6]}',
-        name='SC5A Period',
-        period_type='custom',
+        code=f"SC5A-{uuid.uuid4().hex[:6]}",
+        name="SC5A Period",
+        period_type="custom",
         start_date=date(2024, 1, 1),
         end_date=date(2024, 3, 31),
-        status='open',
+        status="open",
     )
     db.add(period)
     db.flush()
@@ -120,7 +122,17 @@ def _setup(db, admin, org):
     return opened, installation, period
 
 
-def _create_ng_activity(db, admin, org, binding, installation, *, quantity=JANUARY_SM3, unit='Sm3', activity_date=date(2024, 1, 15)):
+def _create_ng_activity(
+    db,
+    admin,
+    org,
+    binding,
+    installation,
+    *,
+    quantity=JANUARY_SM3,
+    unit="Sm3",
+    activity_date=date(2024, 1, 15),
+):
     return activity_record_service.create_activity_record(
         db,
         admin,
@@ -128,16 +140,18 @@ def _create_ng_activity(db, admin, org, binding, installation, *, quantity=JANUA
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='NATURAL_GAS',
+            activity_type="NATURAL_GAS",
             quantity=quantity,
             unit=unit,
-            data_source_type='PRIMARY',
+            data_source_type="PRIMARY",
             activity_date=activity_date,
         ),
     )
 
 
-def _exec(db, admin, org, binding, activity, *, density=DENSITY, client_request_id=None, commit=True):
+def _exec(
+    db, admin, org, binding, activity, *, density=DENSITY, client_request_id=None, commit=True
+):
     return execute_stationary_combustion_calculation(
         db,
         admin,
@@ -145,13 +159,13 @@ def _exec(db, admin, org, binding, activity, *, density=DENSITY, client_request_
             organization_id=org.id,
             reporting_period_binding_id=binding.id,
             activity_record_id=activity.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             reference_date=activity.activity_date or date(2024, 1, 15),
             density_value=density,
-            density_unit='kg/Sm3',
+            density_unit="kg/Sm3",
             requested_by_user_id=admin.id,
             client_request_id=client_request_id,
-            request_fingerprint='test',
+            request_fingerprint="test",
         ),
         commit=commit,
     )
@@ -171,7 +185,7 @@ def test_first_result_becomes_current_and_recalculation_updates_pointer(seeded_d
     assert pointer is not None
     assert pointer.current_result_id == first.result.id
 
-    second = _exec(seeded_db, admin, org, binding, activity, density=Decimal('0.68'))
+    second = _exec(seeded_db, admin, org, binding, activity, density=Decimal("0.68"))
     assert second.result.id != first.result.id
     pointer2 = get_current_pointer(
         seeded_db, organization_id=org.id, binding_id=binding.id, activity_id=activity.id
@@ -213,9 +227,9 @@ def test_idempotent_replay_of_current_does_not_duplicate_pointer(seeded_db) -> N
         StationaryCombustionExecutionApiRequest(
             client_request_id=key,
             activity_record_id=activity.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             density_value=DENSITY,
-            density_unit='kg/Sm3',
+            density_unit="kg/Sm3",
         ),
     )
     assert first.idempotent_replay is False
@@ -233,9 +247,9 @@ def test_idempotent_replay_of_current_does_not_duplicate_pointer(seeded_db) -> N
         StationaryCombustionExecutionApiRequest(
             client_request_id=key,
             activity_record_id=activity.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             density_value=DENSITY,
-            density_unit='kg/Sm3',
+            density_unit="kg/Sm3",
         ),
     )
     assert replay.idempotent_replay is True
@@ -247,7 +261,9 @@ def test_idempotent_replay_of_current_does_not_duplicate_pointer(seeded_db) -> N
     assert pointer_after.current_result_id == first.result_id
     assert pointer_after.updated_at == updated_at
     assert (
-        seeded_db.execute(select(func.count()).select_from(CbamStationaryCombustionCurrentResult)).scalar_one()
+        seeded_db.execute(
+            select(func.count()).select_from(CbamStationaryCombustionCurrentResult)
+        ).scalar_one()
         >= 1
     )
 
@@ -266,9 +282,9 @@ def test_replay_of_older_non_current_does_not_move_pointer_back(seeded_db) -> No
         StationaryCombustionExecutionApiRequest(
             client_request_id=key_a,
             activity_record_id=activity.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             density_value=DENSITY,
-            density_unit='kg/Sm3',
+            density_unit="kg/Sm3",
         ),
     )
     second = execute_stationary_combustion_api(
@@ -279,9 +295,9 @@ def test_replay_of_older_non_current_does_not_move_pointer_back(seeded_db) -> No
         StationaryCombustionExecutionApiRequest(
             client_request_id=uuid.uuid4(),
             activity_record_id=activity.id,
-            fuel_code='NATURAL_GAS',
-            density_value=Decimal('0.68'),
-            density_unit='kg/Sm3',
+            fuel_code="NATURAL_GAS",
+            density_value=Decimal("0.68"),
+            density_unit="kg/Sm3",
         ),
     )
     assert second.result_id != first.result_id
@@ -293,9 +309,9 @@ def test_replay_of_older_non_current_does_not_move_pointer_back(seeded_db) -> No
         StationaryCombustionExecutionApiRequest(
             client_request_id=key_a,
             activity_record_id=activity.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             density_value=DENSITY,
-            density_unit='kg/Sm3',
+            density_unit="kg/Sm3",
         ),
     )
     assert replay_old.idempotent_replay is True
@@ -321,7 +337,7 @@ def test_failed_recalculation_preserves_current(seeded_db) -> None:
                 organization_id=org.id,
                 reporting_period_binding_id=binding.id,
                 activity_record_id=activity.id,
-                fuel_code='NATURAL_GAS',
+                fuel_code="NATURAL_GAS",
                 reference_date=date(2024, 1, 15),
                 density_value=None,
                 density_unit=None,
@@ -347,22 +363,22 @@ def test_stale_detection_quantity_unit_date_fuel(seeded_db) -> None:
     assert row is not None
     assert is_stationary_combustion_result_stale(activity, row) is False
 
-    activity.quantity = JANUARY_SM3_PERSISTED + Decimal('1')
+    activity.quantity = JANUARY_SM3_PERSISTED + Decimal("1")
     seeded_db.flush()
     assert is_stationary_combustion_result_stale(activity, row) is True
 
     activity.quantity = JANUARY_SM3_PERSISTED
-    activity.unit = 'm3'
+    activity.unit = "m3"
     seeded_db.flush()
     assert is_stationary_combustion_result_stale(activity, row) is True
 
-    activity.unit = 'Sm3'
+    activity.unit = "Sm3"
     activity.activity_date = date(2024, 2, 1)
     seeded_db.flush()
     assert is_stationary_combustion_result_stale(activity, row) is True
 
     activity.activity_date = date(2024, 1, 15)
-    activity.activity_type = 'DIESEL'
+    activity.activity_type = "DIESEL"
     seeded_db.flush()
     assert is_stationary_combustion_result_stale(activity, row) is True
 
@@ -387,41 +403,33 @@ def test_summary_empty_incomplete_stale_ready(seeded_db) -> None:
     admin = _admin(seeded_db)
     binding, installation, _period = _setup(seeded_db, admin, org)
 
-    empty = get_stationary_combustion_summary_for_binding(
-        seeded_db, admin, org.id, binding.id
-    )
+    empty = get_stationary_combustion_summary_for_binding(seeded_db, admin, org.id, binding.id)
     assert empty.readiness_status == READINESS_EMPTY
     assert empty.eligible_activity_count == 0
 
     created = _create_ng_activity(seeded_db, admin, org, binding, installation)
-    incomplete = get_stationary_combustion_summary_for_binding(
-        seeded_db, admin, org.id, binding.id
-    )
+    incomplete = get_stationary_combustion_summary_for_binding(seeded_db, admin, org.id, binding.id)
     assert incomplete.readiness_status == READINESS_INCOMPLETE
     assert incomplete.missing_result_count == 1
 
     _exec(seeded_db, admin, org, binding, created)
-    ready = get_stationary_combustion_summary_for_binding(
-        seeded_db, admin, org.id, binding.id
-    )
+    ready = get_stationary_combustion_summary_for_binding(seeded_db, admin, org.id, binding.id)
     assert ready.readiness_status == READINESS_READY
     assert ready.final_result_value == EXPECTED_JANUARY_TCO2
-    assert ready.final_result_unit == 'tCO2'
+    assert ready.final_result_unit == "tCO2"
     assert ready.valid_current_result_count == 1
     assert sum(t.final_result_value for t in ready.totals_by_fuel) == ready.final_result_value
 
     activity = seeded_db.get(CbamActivityRecord, created.id)
     assert activity is not None
-    activity.quantity = JANUARY_SM3_PERSISTED + Decimal('10')
+    activity.quantity = JANUARY_SM3_PERSISTED + Decimal("10")
     seeded_db.flush()
-    stale = get_stationary_combustion_summary_for_binding(
-        seeded_db, admin, org.id, binding.id
-    )
+    stale = get_stationary_combustion_summary_for_binding(seeded_db, admin, org.id, binding.id)
     assert stale.readiness_status == READINESS_STALE
     assert stale.stale_result_count == 1
     assert stale.valid_current_result_count == 0
-    assert stale.final_result_value == quantize_result(Decimal('0'))
-    assert any('no longer match' in issue for issue in stale.blocking_issues)
+    assert stale.final_result_value == quantize_result(Decimal("0"))
+    assert any("no longer match" in issue for issue in stale.blocking_issues)
 
 
 def test_summary_excludes_historical_and_failed_and_uses_prequantized(seeded_db) -> None:
@@ -429,16 +437,12 @@ def test_summary_excludes_historical_and_failed_and_uses_prequantized(seeded_db)
     admin = _admin(seeded_db)
     binding, installation, _period = _setup(seeded_db, admin, org)
     a1 = _create_ng_activity(seeded_db, admin, org, binding, installation)
-    a2 = _create_ng_activity(
-        seeded_db, admin, org, binding, installation, quantity=JANUARY_SM3
-    )
+    a2 = _create_ng_activity(seeded_db, admin, org, binding, installation, quantity=JANUARY_SM3)
     first = _exec(seeded_db, admin, org, binding, a1)
-    _exec(seeded_db, admin, org, binding, a1, density=Decimal('0.68'))
+    _exec(seeded_db, admin, org, binding, a1, density=Decimal("0.68"))
     second_activity = _exec(seeded_db, admin, org, binding, a2)
 
-    summary = get_stationary_combustion_summary_for_binding(
-        seeded_db, admin, org.id, binding.id
-    )
+    summary = get_stationary_combustion_summary_for_binding(seeded_db, admin, org.id, binding.id)
     assert summary.valid_current_result_count == 2
     # Historical first result must not double-count.
     assert summary.current_result_count == 2
@@ -466,11 +470,9 @@ def test_summary_missing_and_stale_both_exposed(seeded_db) -> None:
     _exec(seeded_db, admin, org, binding, a1)
     row = seeded_db.get(CbamActivityRecord, a1.id)
     assert row is not None
-    row.quantity = JANUARY_SM3_PERSISTED + Decimal('5')
+    row.quantity = JANUARY_SM3_PERSISTED + Decimal("5")
     seeded_db.flush()
-    summary = get_stationary_combustion_summary_for_binding(
-        seeded_db, admin, org.id, binding.id
-    )
+    summary = get_stationary_combustion_summary_for_binding(seeded_db, admin, org.id, binding.id)
     assert summary.readiness_status == READINESS_INCOMPLETE
     assert summary.missing_result_count == 1
     assert summary.stale_result_count == 1
@@ -495,10 +497,10 @@ def test_concurrent_recalculations_one_valid_pointer(engine) -> None:
         activity = _create_ng_activity(setup, admin, org, binding, installation)
         setup.commit()
         ctx = {
-            'org_id': org.id,
-            'admin_id': admin.id,
-            'binding_id': binding.id,
-            'activity_id': activity.id,
+            "org_id": org.id,
+            "admin_id": admin.id,
+            "binding_id": binding.id,
+            "activity_id": activity.id,
         }
     finally:
         setup.close()
@@ -509,20 +511,20 @@ def test_concurrent_recalculations_one_valid_pointer(engine) -> None:
     def worker(density: str) -> None:
         db = session_factory()
         try:
-            admin = db.get(User, ctx['admin_id'])
+            admin = db.get(User, ctx["admin_id"])
             assert admin is not None
             barrier.wait(timeout=10)
             execute_stationary_combustion_api(
                 db,
                 admin,
-                ctx['org_id'],
-                ctx['binding_id'],
+                ctx["org_id"],
+                ctx["binding_id"],
                 StationaryCombustionExecutionApiRequest(
                     client_request_id=uuid.uuid4(),
-                    activity_record_id=ctx['activity_id'],
-                    fuel_code='NATURAL_GAS',
+                    activity_record_id=ctx["activity_id"],
+                    fuel_code="NATURAL_GAS",
                     density_value=Decimal(density),
-                    density_unit='kg/Sm3',
+                    density_unit="kg/Sm3",
                 ),
             )
         except BaseException as exc:
@@ -531,8 +533,8 @@ def test_concurrent_recalculations_one_valid_pointer(engine) -> None:
         finally:
             db.close()
 
-    t1 = threading.Thread(target=worker, args=('0.67',))
-    t2 = threading.Thread(target=worker, args=('0.68',))
+    t1 = threading.Thread(target=worker, args=("0.67",))
+    t2 = threading.Thread(target=worker, args=("0.68",))
     t1.start()
     t2.start()
     t1.join(timeout=60)
@@ -541,15 +543,19 @@ def test_concurrent_recalculations_one_valid_pointer(engine) -> None:
 
     verify = session_factory()
     try:
-        pointers = verify.execute(
-            select(CbamStationaryCombustionCurrentResult).where(
-                CbamStationaryCombustionCurrentResult.activity_record_id == ctx['activity_id']
+        pointers = (
+            verify.execute(
+                select(CbamStationaryCombustionCurrentResult).where(
+                    CbamStationaryCombustionCurrentResult.activity_record_id == ctx["activity_id"]
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(pointers) == 1
         result = verify.get(CbamStationaryCombustionResult, pointers[0].current_result_id)
         assert result is not None
-        assert result.activity_record_id == ctx['activity_id']
+        assert result.activity_record_id == ctx["activity_id"]
     finally:
         verify.close()
 
@@ -577,10 +583,10 @@ def test_pointer_table_and_unique_index_exist(engine) -> None:
             )
         }
     assert {
-        'organization_id',
-        'reporting_period_binding_id',
-        'activity_record_id',
-        'current_result_id',
+        "organization_id",
+        "reporting_period_binding_id",
+        "activity_record_id",
+        "current_result_id",
     }.issubset(cols)
 
 
@@ -640,7 +646,7 @@ def test_historical_backfill_selects_newest_and_preserves_snapshots(seeded_db) -
     binding, installation, _period = _setup(seeded_db, admin, org)
     activity = _create_ng_activity(seeded_db, admin, org, binding, installation)
     first = _exec(seeded_db, admin, org, binding, activity)
-    second = _exec(seeded_db, admin, org, binding, activity, density=Decimal('0.68'))
+    second = _exec(seeded_db, admin, org, binding, activity, density=Decimal("0.68"))
     first_row = seeded_db.get(CbamStationaryCombustionResult, first.result.id)
     second_row = seeded_db.get(CbamStationaryCombustionResult, second.result.id)
     assert first_row is not None and second_row is not None
@@ -652,11 +658,14 @@ def test_historical_backfill_selects_newest_and_preserves_snapshots(seeded_db) -
         second_row.fossil_co2_tonnes,
     )
 
-    seeded_db.execute(text('DELETE FROM cbam_stationary_combustion_current_results'))
+    seeded_db.execute(text("DELETE FROM cbam_stationary_combustion_current_results"))
     seeded_db.flush()
-    assert get_current_pointer(
-        seeded_db, organization_id=org.id, binding_id=binding.id, activity_id=activity.id
-    ) is None
+    assert (
+        get_current_pointer(
+            seeded_db, organization_id=org.id, binding_id=binding.id, activity_id=activity.id
+        )
+        is None
+    )
 
     seeded_db.execute(text(_BACKFILL_SQL))
     seeded_db.flush()
@@ -693,7 +702,7 @@ def test_backfill_created_at_tie_uses_stable_id_ordering(seeded_db) -> None:
     binding, installation, _period = _setup(seeded_db, admin, org)
     activity = _create_ng_activity(seeded_db, admin, org, binding, installation)
     older = _exec(seeded_db, admin, org, binding, activity)
-    newer = _exec(seeded_db, admin, org, binding, activity, density=Decimal('0.68'))
+    newer = _exec(seeded_db, admin, org, binding, activity, density=Decimal("0.68"))
     older_row = seeded_db.get(CbamStationaryCombustionResult, older.result.id)
     newer_row = seeded_db.get(CbamStationaryCombustionResult, newer.result.id)
     assert older_row is not None and newer_row is not None
@@ -704,7 +713,7 @@ def test_backfill_created_at_tie_uses_stable_id_ordering(seeded_db) -> None:
     seeded_db.flush()
     expected = max(older.result.id, newer.result.id)
 
-    seeded_db.execute(text('DELETE FROM cbam_stationary_combustion_current_results'))
+    seeded_db.execute(text("DELETE FROM cbam_stationary_combustion_current_results"))
     seeded_db.flush()
     seeded_db.execute(text(_BACKFILL_SQL))
     seeded_db.flush()

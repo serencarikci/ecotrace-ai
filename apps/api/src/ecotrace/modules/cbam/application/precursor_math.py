@@ -46,7 +46,7 @@ def compute_precursor_distribution_balance(
 
     distributed = product_use_tonnes + non_cbam_tonnes
     remaining = purchased_tonnes - distributed
-    balanced = remaining == Decimal('0')
+    balanced = remaining == Decimal("0")
     return PrecursorDistributionBalance(
         purchased_tonnes=purchased_tonnes,
         product_use_tonnes=product_use_tonnes,

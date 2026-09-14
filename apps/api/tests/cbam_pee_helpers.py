@@ -55,19 +55,17 @@ PERIOD_END = date(2024, 7, 31)
 ACTIVITY_DAY = date(2024, 7, 15)
 
 # Single-month basis: total production D, CBAM quantity E.
-TOTAL_PRODUCTION_TONNES = Decimal('100')
-CBAM_PRODUCTION_TONNES = Decimal('10')
+TOTAL_PRODUCTION_TONNES = Decimal("100")
+CBAM_PRODUCTION_TONNES = Decimal("10")
 
 # Synthetic golden precursor (see docs/cbam/product-embedded-emissions-workbook.md).
-PRECURSOR_PURCHASED_TONNES = Decimal('5')
-PRECURSOR_USE_TONNES = Decimal('3')
-PRECURSOR_NON_CBAM_TONNES = Decimal('2')
-PRECURSOR_SPECIFIC_DIRECT = Decimal('0.5')
-PRECURSOR_ELECTRICITY_INTENSITY = Decimal('0.2')
-PRECURSOR_ELECTRICITY_EF = Decimal('0.5')
-PRECURSOR_SPECIFIC_INDIRECT = (
-    PRECURSOR_ELECTRICITY_INTENSITY * PRECURSOR_ELECTRICITY_EF
-)  # 0.10
+PRECURSOR_PURCHASED_TONNES = Decimal("5")
+PRECURSOR_USE_TONNES = Decimal("3")
+PRECURSOR_NON_CBAM_TONNES = Decimal("2")
+PRECURSOR_SPECIFIC_DIRECT = Decimal("0.5")
+PRECURSOR_ELECTRICITY_INTENSITY = Decimal("0.2")
+PRECURSOR_ELECTRICITY_EF = Decimal("0.5")
+PRECURSOR_SPECIFIC_INDIRECT = PRECURSOR_ELECTRICITY_INTENSITY * PRECURSOR_ELECTRICITY_EF  # 0.10
 
 GOLDEN_PRECURSOR_DIRECT_TCO2E = PRECURSOR_USE_TONNES * PRECURSOR_SPECIFIC_DIRECT  # 1.5
 GOLDEN_PRECURSOR_INDIRECT_TCO2E = PRECURSOR_USE_TONNES * PRECURSOR_SPECIFIC_INDIRECT  # 0.3
@@ -95,10 +93,12 @@ def seed_allocations(
     exported_electricity_kwh: Decimal | None = None,
 ) -> tuple[object, object, uuid.UUID]:
     """One month of stationary combustion + purchased electricity with a single product."""
-    binding, installation = setup_binding(db, user, organization, start=PERIOD_START, end=PERIOD_END)
+    binding, installation = setup_binding(
+        db, user, organization, start=PERIOD_START, end=PERIOD_END
+    )
 
     activity = create_ng_activity(
-        db, user, organization, binding, installation, qty=Decimal('188'), day=ACTIVITY_DAY
+        db, user, organization, binding, installation, qty=Decimal("188"), day=ACTIVITY_DAY
     )
     run_sc(db, user, organization, binding, activity, day=ACTIVITY_DAY)
 
@@ -109,11 +109,11 @@ def seed_allocations(
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='ELECTRICITY',
+            activity_type="ELECTRICITY",
             activity_date=ACTIVITY_DAY,
-            quantity=Decimal('176034.53'),
-            unit='kWh',
-            data_source_type='PRIMARY',
+            quantity=Decimal("176034.53"),
+            unit="kWh",
+            data_source_type="PRIMARY",
         ),
     )
     execute_purchased_electricity(
@@ -124,10 +124,10 @@ def seed_allocations(
         PurchasedElectricityExecuteRequest(
             client_request_id=uuid.uuid4(),
             activity_record_id=electricity.id,
-            factor_source_mode='MANUAL',
+            factor_source_mode="MANUAL",
             manual_factor=_manual(),
             exported_electricity_quantity=exported_electricity_kwh,
-            exported_electricity_unit='kWh' if exported_electricity_kwh is not None else None,
+            exported_electricity_unit="kWh" if exported_electricity_kwh is not None else None,
         ),
     )
 
@@ -140,11 +140,11 @@ def seed_allocations(
             month_start=PERIOD_START,
             total_production_quantity=TOTAL_PRODUCTION_TONNES,
             cbam_quantity=cbam_tonnes,
-            quantity_unit='t',
+            quantity_unit="t",
         ),
     )
 
-    product = ensure_org_product(db, organization.id, code=f'PEE-{uuid.uuid4().hex[:6]}')
+    product = ensure_org_product(db, organization.id, code=f"PEE-{uuid.uuid4().hex[:6]}")
     profile = create_active_ready_profile(db, user, organization.id, product=product)
     production_record_service.create_production_record(
         db,
@@ -155,7 +155,7 @@ def seed_allocations(
             installation_profile_id=installation.id,
             product_profile_version_id=profile.id,
             quantity=cbam_tonnes,
-            unit='t',
+            unit="t",
             production_date=ACTIVITY_DAY,
         ),
     )
@@ -194,14 +194,14 @@ def create_ready_process(
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Rollup process',
+            name="Rollup process",
             product_profile_version_id=profile_id,
             produced_quantity=produced_tonnes,
-            produced_quantity_unit='t',
+            produced_quantity_unit="t",
             marketed_quantity=produced_tonnes,
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
@@ -230,16 +230,16 @@ def create_ready_precursor(
         binding.id,
         PurchasedPrecursorCreate(
             installation_profile_id=installation.id,
-            data_source_mode='SUPPLIER_DATA',
-            name='Golden precursor',
+            data_source_mode="SUPPLIER_DATA",
+            name="Golden precursor",
             quantity=purchased_tonnes,
-            quantity_unit='t',
+            quantity_unit="t",
             non_cbam_quantity=purchased_tonnes - use_tonnes,
-            non_cbam_quantity_unit='t',
+            non_cbam_quantity_unit="t",
             specific_direct_embedded_emissions=specific_direct,
             electricity_consumption_intensity=electricity_intensity,
             electricity_emission_factor=electricity_ef,
-            provenance_notes='Supplier declaration 2024-07',
+            provenance_notes="Supplier declaration 2024-07",
         ),
     )
     use = purchased_precursor_service.create_precursor_product_use(
@@ -251,7 +251,7 @@ def create_ready_precursor(
         PrecursorProductUseCreate(
             target_product_profile_version_id=profile_id,
             quantity=use_tonnes,
-            unit='t',
+            unit="t",
         ),
     )
     return precursor.id, use.id
@@ -265,9 +265,7 @@ def seed_ready_rollup(
     user = user or admin(db)
     organization = organization or org(db)
     binding, installation, profile_id = seed_allocations(db, user, organization)
-    process_id = create_ready_process(
-        db, user, organization, binding, installation, profile_id
-    )
+    process_id = create_ready_process(db, user, organization, binding, installation, profile_id)
     precursor_id, use_id = create_ready_precursor(
         db, user, organization, binding, installation, profile_id
     )

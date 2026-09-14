@@ -1287,9 +1287,7 @@ def get_production_process_metadata(
     db: DbSession,
     user: CurrentUser,
 ) -> ProductionProcessMetadataResponse:
-    return production_process_service.get_production_process_metadata(
-        db, user, organization_id
-    )
+    return production_process_service.get_production_process_metadata(db, user, organization_id)
 
 
 @router.get(
@@ -1302,9 +1300,7 @@ def list_production_process_controlled_lists(
     db: DbSession,
     user: CurrentUser,
 ) -> list[ControlledListResponse]:
-    return production_process_service.list_controlled_lists_for_processes(
-        db, user, organization_id
-    )
+    return production_process_service.list_controlled_lists_for_processes(db, user, organization_id)
 
 
 @router.get(
@@ -1585,9 +1581,7 @@ def get_purchased_precursor_metadata(
     db: DbSession,
     user: CurrentUser,
 ) -> PurchasedPrecursorMetadataResponse:
-    return purchased_precursor_service.get_purchased_precursor_metadata(
-        db, user, organization_id
-    )
+    return purchased_precursor_service.get_purchased_precursor_metadata(db, user, organization_id)
 
 
 @router.get(

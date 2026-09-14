@@ -21,11 +21,11 @@ from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
 SOURCE_TYPES = frozenset(
     {
-        'STANDARD_REFERENCE',
-        'PRIMARY_MEASUREMENT',
-        'SUPPLIER_DECLARATION',
-        'MANUAL_APPROVED',
-        'OTHER',
+        "STANDARD_REFERENCE",
+        "PRIMARY_MEASUREMENT",
+        "SUPPLIER_DECLARATION",
+        "MANUAL_APPROVED",
+        "OTHER",
     }
 )
 
@@ -74,9 +74,9 @@ def _get_visible(
 ) -> CbamReferenceSource:
     row = db.get(CbamReferenceSource, source_id)
     if row is None:
-        raise NotFoundError('CBAM reference source not found.')
+        raise NotFoundError("CBAM reference source not found.")
     if row.organization_id is not None and row.organization_id != organization_id:
-        raise NotFoundError('CBAM reference source not found.')
+        raise NotFoundError("CBAM reference source not found.")
     return row
 
 
@@ -98,7 +98,7 @@ def list_reference_sources(
         )
     )
     if not include_archived:
-        stmt = stmt.where(CbamReferenceSource.status != 'ARCHIVED')
+        stmt = stmt.where(CbamReferenceSource.status != "ARCHIVED")
     total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
     rows = list(
         db.execute(
@@ -136,9 +136,9 @@ def create_reference_source(
     ensure_platform_factor_catalog(db)
     code = payload.code.strip().upper()
     if not code:
-        raise ValidationAppError('code is required.')
+        raise ValidationAppError("code is required.")
     if payload.source_type not in SOURCE_TYPES:
-        raise ValidationAppError('Invalid sourceType.')
+        raise ValidationAppError("Invalid sourceType.")
     exists = db.execute(
         select(CbamReferenceSource.id).where(
             CbamReferenceSource.organization_id == organization_id,
@@ -146,7 +146,7 @@ def create_reference_source(
         )
     ).scalar_one_or_none()
     if exists is not None:
-        raise ConflictError('A reference source with this code already exists.')
+        raise ConflictError("A reference source with this code already exists.")
     row = CbamReferenceSource(
         organization_id=organization_id,
         code=code,
@@ -157,7 +157,7 @@ def create_reference_source(
         publication_year=payload.publication_year,
         reference_url=payload.reference_url,
         description=payload.description,
-        status='ACTIVE',
+        status="ACTIVE",
         created_by_user_id=user.id,
         updated_by_user_id=user.id,
     )
@@ -165,15 +165,15 @@ def create_reference_source(
     db.flush()
     write_audit_log(
         db,
-        action='cbam.reference_source.created',
+        action="cbam.reference_source.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_reference_source',
+        entity_type="cbam_reference_source",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'code': row.code, 'sourceType': row.source_type},
+        metadata={"code": row.code, "sourceType": row.source_type},
     )
     db.commit()
     db.refresh(row)
@@ -194,26 +194,26 @@ def update_reference_source(
     require_cbam_configure(db, user, organization_id)
     row = _get_visible(db, organization_id, source_id)
     if row.organization_id is None:
-        raise BusinessRuleError('Platform reference sources cannot be updated via org API.')
+        raise BusinessRuleError("Platform reference sources cannot be updated via org API.")
     if row.organization_id != organization_id:
-        raise NotFoundError('CBAM reference source not found.')
+        raise NotFoundError("CBAM reference source not found.")
     data = payload.model_dump(exclude_unset=True)
-    if 'status' in data and data['status'] not in {'ACTIVE', 'INACTIVE', 'ARCHIVED'}:
-        raise ValidationAppError('Invalid status.')
+    if "status" in data and data["status"] not in {"ACTIVE", "INACTIVE", "ARCHIVED"}:
+        raise ValidationAppError("Invalid status.")
     for field, value in data.items():
         setattr(row, field, value)
     row.updated_by_user_id = user.id
     write_audit_log(
         db,
-        action='cbam.reference_source.updated',
+        action="cbam.reference_source.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_reference_source',
+        entity_type="cbam_reference_source",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'fields': list(data.keys())},
+        metadata={"fields": list(data.keys())},
     )
     db.commit()
     db.refresh(row)
@@ -233,22 +233,22 @@ def archive_reference_source(
     require_cbam_configure(db, user, organization_id)
     row = _get_visible(db, organization_id, source_id)
     if row.organization_id is None:
-        raise BusinessRuleError('Platform reference sources cannot be archived via org API.')
-    if row.status == 'ARCHIVED':
-        raise BusinessRuleError('Reference source is already archived.')
-    row.status = 'ARCHIVED'
+        raise BusinessRuleError("Platform reference sources cannot be archived via org API.")
+    if row.status == "ARCHIVED":
+        raise BusinessRuleError("Reference source is already archived.")
+    row.status = "ARCHIVED"
     row.updated_by_user_id = user.id
     write_audit_log(
         db,
-        action='cbam.reference_source.archived',
+        action="cbam.reference_source.archived",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_reference_source',
+        entity_type="cbam_reference_source",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'code': row.code, 'archivedAt': datetime.now(UTC).isoformat()},
+        metadata={"code": row.code, "archivedAt": datetime.now(UTC).isoformat()},
     )
     db.commit()
     db.refresh(row)

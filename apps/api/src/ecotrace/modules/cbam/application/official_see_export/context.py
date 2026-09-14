@@ -81,7 +81,7 @@ class OfficialSeeExportContext:
     precursor_ids: list[uuid.UUID] = field(default_factory=list)
     capacity_usage: CapacityUsage | None = None
     expected_outputs: dict[tuple[str, str], Any] = field(default_factory=dict)
-    source_fingerprint: str = ''
+    source_fingerprint: str = ""
 
     def input_values(self) -> dict[tuple[str, str], Any]:
         """Resolve manifest source paths to cell values for used INPUT slots."""
@@ -91,7 +91,7 @@ class OfficialSeeExportContext:
 
 
 def _fingerprint(payload: dict[str, Any]) -> str:
-    raw = json.dumps(payload, sort_keys=True, separators=(',', ':'), default=str).encode('utf-8')
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
 
 
@@ -125,26 +125,20 @@ def load_official_see_context(
     )
     # Stable workbook slot order: slot by sorted UUID then assign 0..n-1
     processes_sorted = sorted(processes, key=lambda p: (p.id,))
-    installation_id = (
-        processes_sorted[0].installation_profile_id
-        if processes_sorted
-        else None
-    )
-    installation_row = (
-        db.get(CbamInstallationProfile, installation_id) if installation_id else None
-    )
+    installation_id = processes_sorted[0].installation_profile_id if processes_sorted else None
+    installation_row = db.get(CbamInstallationProfile, installation_id) if installation_id else None
     installation = {
-        'id': str(installation_row.id) if installation_row else None,
-        'name': installation_row.name if installation_row else org_name,
-        'address': None,
-        'city': None,
-        'country_code': None,
-        'postal_code': None,
-        'unlocode': None,
-        'contact_name': None,
-        'email': None,
-        'telephone': None,
-        'code': installation_row.code if installation_row else None,
+        "id": str(installation_row.id) if installation_row else None,
+        "name": installation_row.name if installation_row else org_name,
+        "address": None,
+        "city": None,
+        "country_code": None,
+        "postal_code": None,
+        "unlocode": None,
+        "contact_name": None,
+        "email": None,
+        "telephone": None,
+        "code": installation_row.code if installation_row else None,
     }
 
     profiles = list_product_profiles_for_binding(
@@ -158,12 +152,12 @@ def load_official_see_context(
     seen_goods: set[str] = set()
     for profile in ready_profiles:
         # Goods type label: SEE expects aggregated goods category strings from CN lists.
-        label = 'Iron or steel products'
+        label = "Iron or steel products"
         key = profile.cn_normalized_code or label
         if key in seen_goods:
             continue
         seen_goods.add(key)
-        goods.append({'goods_type': label, 'profile_id': str(profile.id)})
+        goods.append({"goods_type": label, "profile_id": str(profile.id)})
 
     dea_pointer = db.execute(
         select(CbamDirectEmissionsAllocationCurrent).where(
@@ -234,8 +228,8 @@ def load_official_see_context(
             qty = by_consumer.get(consumer_slot)
             mapped_uses.append(
                 {
-                    'quantity': _dec(qty),
-                    'target_product_profile_version_id': (
+                    "quantity": _dec(qty),
+                    "target_product_profile_version_id": (
                         str(processes_sorted[consumer_slot].product_profile_version_id)
                         if processes_sorted[consumer_slot].product_profile_version_id
                         else None
@@ -243,7 +237,7 @@ def load_official_see_context(
                 }
             )
         while len(mapped_uses) < CAPACITY_PROCESS_PRODUCT_USE_ROWS:
-            mapped_uses.append({'quantity': None, 'target_product_profile_version_id': None})
+            mapped_uses.append({"quantity": None, "target_product_profile_version_id": None})
         mapped_uses = mapped_uses[:CAPACITY_PROCESS_PRODUCT_USE_ROWS]
 
         profile_id = process.product_profile_version_id
@@ -255,29 +249,29 @@ def load_official_see_context(
             elec_ef = elec_t / elec_mwh
         process_payloads.append(
             {
-                'slot_index': slot,
-                'id': str(process.id),
-                'name': process.name or f'Process {slot + 1}',
-                'goods_type': 'Iron or steel products',
-                'produced_quantity': _dec(process.produced_quantity),
-                'marketed_quantity': _dec(process.marketed_quantity),
-                'non_cbam_quantity': _dec(process.non_cbam_quantity),
-                'allocated_direct_tco2e': _dec(direct),
-                'allocated_electricity_mwh': _dec(elec_mwh),
-                'electricity_ef': _dec(elec_ef),
-                'electricity_ef_source': 'D.4(b)',
-                'exported_electricity_mwh': _dec(process.exported_electricity_quantity),
-                'exported_electricity_ef': _dec(process.exported_electricity_emission_factor),
-                'has_measurable_heat': process.has_measurable_heat,
-                'has_waste_gas': process.has_waste_gas,
-                'heat_import_tj': _dec(process.heat_imported_quantity),
-                'heat_export_tj': _dec(process.heat_exported_quantity),
-                'heat_import_ef': _dec(process.heat_imported_ef),
-                'heat_export_ef': _dec(process.heat_exported_ef),
-                'waste_import_tj': _dec(process.waste_gas_imported_quantity),
-                'waste_export_tj': _dec(process.waste_gas_exported_quantity),
-                'product_uses': mapped_uses,
-                'product_use_count': len(process_uses),
+                "slot_index": slot,
+                "id": str(process.id),
+                "name": process.name or f"Process {slot + 1}",
+                "goods_type": "Iron or steel products",
+                "produced_quantity": _dec(process.produced_quantity),
+                "marketed_quantity": _dec(process.marketed_quantity),
+                "non_cbam_quantity": _dec(process.non_cbam_quantity),
+                "allocated_direct_tco2e": _dec(direct),
+                "allocated_electricity_mwh": _dec(elec_mwh),
+                "electricity_ef": _dec(elec_ef),
+                "electricity_ef_source": "D.4(b)",
+                "exported_electricity_mwh": _dec(process.exported_electricity_quantity),
+                "exported_electricity_ef": _dec(process.exported_electricity_emission_factor),
+                "has_measurable_heat": process.has_measurable_heat,
+                "has_waste_gas": process.has_waste_gas,
+                "heat_import_tj": _dec(process.heat_imported_quantity),
+                "heat_export_tj": _dec(process.heat_exported_quantity),
+                "heat_import_ef": _dec(process.heat_imported_ef),
+                "heat_export_ef": _dec(process.heat_exported_ef),
+                "waste_import_tj": _dec(process.waste_gas_imported_quantity),
+                "waste_export_tj": _dec(process.waste_gas_exported_quantity),
+                "product_uses": mapped_uses,
+                "product_use_count": len(process_uses),
             }
         )
 
@@ -311,29 +305,27 @@ def load_official_see_context(
         total_qty = precursor.quantity
         # E_PurchPrec L28+i maps directly to process index i (1-based D column).
         precursor_use_slots: list[dict[str, Any]] = [
-            {'quantity': None} for _ in range(CAPACITY_PRECURSOR_PRODUCT_USE_ROWS)
+            {"quantity": None} for _ in range(CAPACITY_PRECURSOR_PRODUCT_USE_ROWS)
         ]
         for p_use in precursor_uses:
             consumer_slot = profile_to_process_slot.get(p_use.target_product_profile_version_id)
             if consumer_slot is None or consumer_slot >= CAPACITY_PRECURSOR_PRODUCT_USE_ROWS:
                 continue
-            precursor_use_slots[consumer_slot] = {'quantity': _dec(p_use.quantity)}
+            precursor_use_slots[consumer_slot] = {"quantity": _dec(p_use.quantity)}
         precursor_payloads.append(
             {
-                'slot_index': slot,
-                'id': str(precursor.id),
-                'name': precursor.name or f'Precursor {slot + 1}',
-                'goods_type': precursor.aggregated_goods_category or 'Iron or steel products',
-                'country_code': precursor.country_of_origin,
-                'routes': [_dec(total_qty)] + [None] * 7,
-                'non_cbam_quantity': _dec(precursor.non_cbam_quantity),
-                'specific_direct_tco2e_per_t': _dec(
-                    precursor.specific_direct_embedded_emissions
-                ),
-                'electricity_mwh_per_t': _dec(precursor.electricity_consumption_intensity),
-                'electricity_ef': _dec(precursor.electricity_emission_factor),
-                'product_uses': precursor_use_slots,
-                'product_use_count': len(precursor_uses),
+                "slot_index": slot,
+                "id": str(precursor.id),
+                "name": precursor.name or f"Precursor {slot + 1}",
+                "goods_type": precursor.aggregated_goods_category or "Iron or steel products",
+                "country_code": precursor.country_of_origin,
+                "routes": [_dec(total_qty)] + [None] * 7,
+                "non_cbam_quantity": _dec(precursor.non_cbam_quantity),
+                "specific_direct_tco2e_per_t": _dec(precursor.specific_direct_embedded_emissions),
+                "electricity_mwh_per_t": _dec(precursor.electricity_consumption_intensity),
+                "electricity_ef": _dec(precursor.electricity_emission_factor),
+                "product_uses": precursor_use_slots,
+                "product_use_count": len(precursor_uses),
             }
         )
 
@@ -363,8 +355,8 @@ def load_official_see_context(
             name: str | None = None
             cn: str | None = None
             for proc in process_payloads:
-                if proc.get('id') and pee_row.process_id and str(pee_row.process_id) == proc['id']:
-                    name = proc['name']
+                if proc.get("id") and pee_row.process_id and str(pee_row.process_id) == proc["id"]:
+                    name = proc["name"]
                     break
             profile_match = next(
                 (p for p in ready_profiles if p.id == pee_row.product_profile_version_id),
@@ -379,44 +371,44 @@ def load_official_see_context(
             if cn is None:
                 cn = pee_row.cn_normalized_code
             steel: dict[str, Any] = {
-                'reducing_agent': None,
-                'steel_mill_identification_number': None,
-                'percent_mn': None,
-                'percent_cr': None,
-                'percent_ni': None,
-                'percent_other_alloys': None,
-                'percent_other_materials': None,
+                "reducing_agent": None,
+                "steel_mill_identification_number": None,
+                "percent_mn": None,
+                "percent_cr": None,
+                "percent_ni": None,
+                "percent_other_alloys": None,
+                "percent_other_materials": None,
             }
             if profile_match is not None:
                 steel = {
-                    'reducing_agent': profile_match.reducing_agent,
-                    'steel_mill_identification_number': (
+                    "reducing_agent": profile_match.reducing_agent,
+                    "steel_mill_identification_number": (
                         profile_match.steel_mill_identification_number
                     ),
-                    'percent_mn': _dec(profile_match.percent_mn),
-                    'percent_cr': _dec(profile_match.percent_cr),
-                    'percent_ni': _dec(profile_match.percent_ni),
-                    'percent_other_alloys': _dec(profile_match.percent_other_alloys),
-                    'percent_other_materials': _dec(profile_match.percent_other_materials),
+                    "percent_mn": _dec(profile_match.percent_mn),
+                    "percent_cr": _dec(profile_match.percent_cr),
+                    "percent_ni": _dec(profile_match.percent_ni),
+                    "percent_other_alloys": _dec(profile_match.percent_other_alloys),
+                    "percent_other_materials": _dec(profile_match.percent_other_materials),
                 }
             pee_products.append(
                 {
-                    'slot_index': idx,
-                    'name': name or f'Product {idx + 1}',
-                    'cn_code': cn,
-                    'description': None,
+                    "slot_index": idx,
+                    "name": name or f"Product {idx + 1}",
+                    "cn_code": cn,
+                    "description": None,
                     # Keep Decimal strings for pee payload; expected_outputs use DB Decimals.
-                    'specific_direct': str(pee_row.specific_direct),
-                    'specific_indirect': str(pee_row.specific_indirect),
-                    'specific_total': str(pee_row.specific_total),
+                    "specific_direct": str(pee_row.specific_direct),
+                    "specific_indirect": str(pee_row.specific_indirect),
+                    "specific_total": str(pee_row.specific_total),
                     **steel,
                 }
             )
             excel_row = 10 + idx
             # Immutable PEE V2 snapshot only — never invent workbook tolerances here.
-            expected_outputs[('Summary_Products', f'I{excel_row}')] = pee_row.specific_direct
-            expected_outputs[('Summary_Products', f'J{excel_row}')] = pee_row.specific_indirect
-            expected_outputs[('Summary_Products', f'K{excel_row}')] = pee_row.specific_total
+            expected_outputs[("Summary_Products", f"I{excel_row}")] = pee_row.specific_direct
+            expected_outputs[("Summary_Products", f"J{excel_row}")] = pee_row.specific_indirect
+            expected_outputs[("Summary_Products", f"K{excel_row}")] = pee_row.specific_total
         _ = result
 
     # Stationary combustion → B_EmInst fuel slots (deterministic by activity/result id).
@@ -424,8 +416,7 @@ def load_official_see_context(
         db.execute(
             select(CbamStationaryCombustionCurrentResult).where(
                 CbamStationaryCombustionCurrentResult.organization_id == organization_id,
-                CbamStationaryCombustionCurrentResult.reporting_period_binding_id
-                == binding_id,
+                CbamStationaryCombustionCurrentResult.reporting_period_binding_id == binding_id,
             )
         )
         .scalars()
@@ -439,18 +430,18 @@ def load_official_see_context(
             continue
         fuel_payloads.append(
             {
-                'slot_index': slot,
-                'id': str(sc_row.id),
-                'activity_record_id': str(sc_row.activity_record_id),
-                'monitoring_approach': 'Combustion',
-                'fuel_name': sc_row.fuel_name,
-                'activity_amount': _dec(sc_row.activity_quantity),
-                'activity_unit': sc_row.activity_unit,
-                'ncv': _dec(sc_row.net_calorific_value),
-                'ef': _dec(sc_row.fossil_co2_emission_factor),
-                'density': _dec(sc_row.density_value),
-                'density_unit': sc_row.density_unit,
-                'oxidation_factor': _dec(sc_row.oxidation_factor),
+                "slot_index": slot,
+                "id": str(sc_row.id),
+                "activity_record_id": str(sc_row.activity_record_id),
+                "monitoring_approach": "Combustion",
+                "fuel_name": sc_row.fuel_name,
+                "activity_amount": _dec(sc_row.activity_quantity),
+                "activity_unit": sc_row.activity_unit,
+                "ncv": _dec(sc_row.net_calorific_value),
+                "ef": _dec(sc_row.fossil_co2_emission_factor),
+                "density": _dec(sc_row.density_value),
+                "density_unit": sc_row.density_unit,
+                "oxidation_factor": _dec(sc_row.oxidation_factor),
             }
         )
 
@@ -468,22 +459,22 @@ def load_official_see_context(
         from ecotrace.core.exceptions import BusinessRuleError
 
         raise BusinessRuleError(
-            'Official SEE capacity exceeded.',
-            details=[{'code': code} for code in overflow],
+            "Official SEE capacity exceeded.",
+            details=[{"code": code} for code in overflow],
         )
 
-    start = getattr(period, 'start_date', None) or getattr(period, 'period_start', None)
-    end = getattr(period, 'end_date', None) or getattr(period, 'period_end', None)
+    start = getattr(period, "start_date", None) or getattr(period, "period_start", None)
+    end = getattr(period, "end_date", None) or getattr(period, "period_end", None)
     fp_payload = {
-        'organizationId': str(organization_id),
-        'bindingId': str(binding_id),
-        'peeResultId': str(pee_result_id) if pee_result_id else None,
-        'deaResultId': str(dea_pointer.current_result_id) if dea_pointer else None,
-        'ieaResultId': str(iea_pointer.current_result_id) if iea_pointer else None,
-        'processIds': [p['id'] for p in process_payloads],
-        'precursorIds': [p['id'] for p in precursor_payloads],
-        'fuelIds': [p['id'] for p in fuel_payloads],
-        'peeProductIds': [str(p.get('slot_index')) for p in pee_products],
+        "organizationId": str(organization_id),
+        "bindingId": str(binding_id),
+        "peeResultId": str(pee_result_id) if pee_result_id else None,
+        "deaResultId": str(dea_pointer.current_result_id) if dea_pointer else None,
+        "ieaResultId": str(iea_pointer.current_result_id) if iea_pointer else None,
+        "processIds": [p["id"] for p in process_payloads],
+        "precursorIds": [p["id"] for p in precursor_payloads],
+        "fuelIds": [p["id"] for p in fuel_payloads],
+        "peeProductIds": [str(p.get("slot_index")) for p in pee_products],
     }
 
     return OfficialSeeExportContext(
@@ -492,9 +483,9 @@ def load_official_see_context(
         binding_id=binding_id,
         installation=installation,
         reporting_period={
-            'start_date': start.isoformat() if isinstance(start, date) else start,
-            'end_date': end.isoformat() if isinstance(end, date) else end,
-            'label': f'{start}_{end}' if start and end else str(binding_id),
+            "start_date": start.isoformat() if isinstance(start, date) else start,
+            "end_date": end.isoformat() if isinstance(end, date) else end,
+            "label": f"{start}_{end}" if start and end else str(binding_id),
         },
         goods=goods,
         processes=process_payloads,
@@ -504,8 +495,8 @@ def load_official_see_context(
         pee_result_id=pee_result_id,
         dea_result_id=dea_pointer.current_result_id if dea_pointer else None,
         iea_result_id=iea_pointer.current_result_id if iea_pointer else None,
-        process_ids=[uuid.UUID(p['id']) for p in process_payloads],
-        precursor_ids=[uuid.UUID(p['id']) for p in precursor_payloads],
+        process_ids=[uuid.UUID(p["id"]) for p in process_payloads],
+        precursor_ids=[uuid.UUID(p["id"]) for p in precursor_payloads],
         capacity_usage=usage,
         expected_outputs=expected_outputs,
         source_fingerprint=_fingerprint(fp_payload),
@@ -514,94 +505,94 @@ def load_official_see_context(
 
 def resolve_source(ctx: OfficialSeeExportContext, source: str) -> Any:
     """Resolve a manifest ``source`` path against the snapshot context."""
-    if not source or source.startswith('example') or source.startswith('constant'):
-        if source == 'constant.blank':
+    if not source or source.startswith("example") or source.startswith("constant"):
+        if source == "constant.blank":
             return None
-        if source == 'constant.COMBUSTION':
-            return 'Combustion'
+        if source == "constant.COMBUSTION":
+            return "Combustion"
         return None
-    if source == 'organization.name':
+    if source == "organization.name":
         return ctx.organization_name
-    if source == 'installation.name':
-        return ctx.installation.get('name')
-    if source == 'installation.address':
-        return ctx.installation.get('address')
-    if source == 'installation.city':
-        return ctx.installation.get('city')
-    if source == 'installation.country_code':
-        return ctx.installation.get('country_code')
-    if source == 'installation.postal_code':
-        return ctx.installation.get('postal_code')
-    if source == 'installation.unlocode':
-        return ctx.installation.get('unlocode')
-    if source == 'installation.contact_name':
-        return ctx.installation.get('contact_name')
-    if source == 'installation.email':
-        return ctx.installation.get('email')
-    if source == 'installation.telephone':
-        return ctx.installation.get('telephone')
-    if source == 'reporting_period.start_date':
-        return ctx.reporting_period.get('start_date')
-    if source == 'reporting_period.end_date':
-        return ctx.reporting_period.get('end_date')
+    if source == "installation.name":
+        return ctx.installation.get("name")
+    if source == "installation.address":
+        return ctx.installation.get("address")
+    if source == "installation.city":
+        return ctx.installation.get("city")
+    if source == "installation.country_code":
+        return ctx.installation.get("country_code")
+    if source == "installation.postal_code":
+        return ctx.installation.get("postal_code")
+    if source == "installation.unlocode":
+        return ctx.installation.get("unlocode")
+    if source == "installation.contact_name":
+        return ctx.installation.get("contact_name")
+    if source == "installation.email":
+        return ctx.installation.get("email")
+    if source == "installation.telephone":
+        return ctx.installation.get("telephone")
+    if source == "reporting_period.start_date":
+        return ctx.reporting_period.get("start_date")
+    if source == "reporting_period.end_date":
+        return ctx.reporting_period.get("end_date")
 
     # Indexed paths: goods[i].goods_type, processes[i].*, precursors[i].*, pee.products[i].*
     import re
 
-    m = re.fullmatch(r'goods\[(\d+)\]\.(\w+)', source)
+    m = re.fullmatch(r"goods\[(\d+)\]\.(\w+)", source)
     if m:
         idx, key = int(m.group(1)), m.group(2)
         if idx < len(ctx.goods):
             return ctx.goods[idx].get(key)
         return None
 
-    m = re.fullmatch(r'processes\[(\d+)\]\.(.+)', source)
+    m = re.fullmatch(r"processes\[(\d+)\]\.(.+)", source)
     if m:
         idx = int(m.group(1))
         path = m.group(2)
         if idx >= len(ctx.processes):
             return None
         proc = ctx.processes[idx]
-        use_m = re.fullmatch(r'product_uses\[(\d+)\]\.(\w+)', path)
+        use_m = re.fullmatch(r"product_uses\[(\d+)\]\.(\w+)", path)
         if use_m:
             uidx, ukey = int(use_m.group(1)), use_m.group(2)
-            uses = proc.get('product_uses') or []
+            uses = proc.get("product_uses") or []
             if uidx < len(uses):
                 return uses[uidx].get(ukey)
             return None
         return proc.get(path)
 
-    m = re.fullmatch(r'precursors\[(\d+)\]\.(.+)', source)
+    m = re.fullmatch(r"precursors\[(\d+)\]\.(.+)", source)
     if m:
         idx = int(m.group(1))
         path = m.group(2)
         if idx >= len(ctx.precursors):
             return None
         prec = ctx.precursors[idx]
-        route_m = re.fullmatch(r'routes\[(\d+)\]', path)
+        route_m = re.fullmatch(r"routes\[(\d+)\]", path)
         if route_m:
             ridx = int(route_m.group(1))
-            routes = prec.get('routes') or []
+            routes = prec.get("routes") or []
             if ridx < len(routes):
                 return routes[ridx]
             return None
-        use_m = re.fullmatch(r'product_uses\[(\d+)\]\.(\w+)', path)
+        use_m = re.fullmatch(r"product_uses\[(\d+)\]\.(\w+)", path)
         if use_m:
             uidx, ukey = int(use_m.group(1)), use_m.group(2)
-            uses = prec.get('product_uses') or []
+            uses = prec.get("product_uses") or []
             if uidx < len(uses):
                 return uses[uidx].get(ukey)
             return None
         return prec.get(path)
 
-    m = re.fullmatch(r'pee\.products\[(\d+)\]\.(\w+)', source)
+    m = re.fullmatch(r"pee\.products\[(\d+)\]\.(\w+)", source)
     if m:
         idx, key = int(m.group(1)), m.group(2)
         if idx < len(ctx.pee_products):
             return ctx.pee_products[idx].get(key)
         return None
 
-    m = re.fullmatch(r'fuels\[(\d+)\]\.(\w+)', source)
+    m = re.fullmatch(r"fuels\[(\d+)\]\.(\w+)", source)
     if m:
         idx, key = int(m.group(1)), m.group(2)
         if idx < len(ctx.fuels):

@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0011_cbam_factor_resolution'
-down_revision: str | None = '0010_cbam_allocation_foundation'
+revision: str = "0011_cbam_factor_resolution"
+down_revision: str | None = "0010_cbam_allocation_foundation"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -52,12 +52,10 @@ CREATE TABLE cbam_reference_sources (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_reference_sources_organization_id '
-        'ON cbam_reference_sources (organization_id)'
+        "CREATE INDEX ix_cbam_reference_sources_organization_id "
+        "ON cbam_reference_sources (organization_id)"
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_reference_sources_status ON cbam_reference_sources (status)'
-    )
+    op.execute("CREATE INDEX ix_cbam_reference_sources_status ON cbam_reference_sources (status)")
     op.execute(
         """
 CREATE UNIQUE INDEX uq_cbam_reference_source_org_code
@@ -98,12 +96,10 @@ CREATE TABLE cbam_factor_definitions (
 )
 """
     )
+    op.execute("CREATE INDEX ix_cbam_factor_definitions_status ON cbam_factor_definitions (status)")
     op.execute(
-        'CREATE INDEX ix_cbam_factor_definitions_status ON cbam_factor_definitions (status)'
-    )
-    op.execute(
-        'CREATE INDEX ix_cbam_factor_definitions_category '
-        'ON cbam_factor_definitions (factor_category)'
+        "CREATE INDEX ix_cbam_factor_definitions_category "
+        "ON cbam_factor_definitions (factor_category)"
     )
 
     op.execute(
@@ -159,24 +155,23 @@ CREATE TABLE cbam_factor_values (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_values_organization_id '
-        'ON cbam_factor_values (organization_id)'
+        "CREATE INDEX ix_cbam_factor_values_organization_id ON cbam_factor_values (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_values_definition_status '
-        'ON cbam_factor_values (factor_definition_id, status)'
+        "CREATE INDEX ix_cbam_factor_values_definition_status "
+        "ON cbam_factor_values (factor_definition_id, status)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_values_activity_type_status '
-        'ON cbam_factor_values (activity_type, status)'
+        "CREATE INDEX ix_cbam_factor_values_activity_type_status "
+        "ON cbam_factor_values (activity_type, status)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_values_org_definition '
-        'ON cbam_factor_values (organization_id, factor_definition_id)'
+        "CREATE INDEX ix_cbam_factor_values_org_definition "
+        "ON cbam_factor_values (organization_id, factor_definition_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_values_validity '
-        'ON cbam_factor_values (valid_from, valid_until)'
+        "CREATE INDEX ix_cbam_factor_values_validity "
+        "ON cbam_factor_values (valid_from, valid_until)"
     )
 
     op.execute(
@@ -239,20 +234,20 @@ CREATE TABLE cbam_factor_resolutions (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_resolutions_organization_id '
-        'ON cbam_factor_resolutions (organization_id)'
+        "CREATE INDEX ix_cbam_factor_resolutions_organization_id "
+        "ON cbam_factor_resolutions (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_resolutions_org_binding '
-        'ON cbam_factor_resolutions (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_factor_resolutions_org_binding "
+        "ON cbam_factor_resolutions (organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_resolutions_source '
-        'ON cbam_factor_resolutions (source_type, source_id)'
+        "CREATE INDEX ix_cbam_factor_resolutions_source "
+        "ON cbam_factor_resolutions (source_type, source_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_factor_resolutions_binding_status '
-        'ON cbam_factor_resolutions (reporting_period_binding_id, resolution_status)'
+        "CREATE INDEX ix_cbam_factor_resolutions_binding_status "
+        "ON cbam_factor_resolutions (reporting_period_binding_id, resolution_status)"
     )
 
     op.execute(
@@ -370,7 +365,7 @@ INSERT INTO cbam_factor_definitions (
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_factor_resolutions')
-    op.execute('DROP TABLE IF EXISTS cbam_factor_values')
-    op.execute('DROP TABLE IF EXISTS cbam_factor_definitions')
-    op.execute('DROP TABLE IF EXISTS cbam_reference_sources')
+    op.execute("DROP TABLE IF EXISTS cbam_factor_resolutions")
+    op.execute("DROP TABLE IF EXISTS cbam_factor_values")
+    op.execute("DROP TABLE IF EXISTS cbam_factor_definitions")
+    op.execute("DROP TABLE IF EXISTS cbam_reference_sources")

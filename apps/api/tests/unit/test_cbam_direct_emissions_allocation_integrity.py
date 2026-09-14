@@ -70,25 +70,28 @@ def test_unbalanced_allocation_cannot_complete_or_become_current(seeded_db) -> N
     )
 
     def unbalanced_allocate(*, pool_raw, groups):
-        pool_final = Decimal('1.00000000')
+        pool_final = Decimal("1.00000000")
         gid = groups[0][0]
         return pool_final, [
             ProductAllocationRow(
                 group_id=gid,
                 quantity=groups[0][1],
-                share=Decimal('1'),
-                raw_allocated=Decimal('0.5'),
-                final_allocated=Decimal('0.50000000'),
-                rounding_adjustment=Decimal('0'),
+                share=Decimal("1"),
+                raw_allocated=Decimal("0.5"),
+                final_allocated=Decimal("0.50000000"),
+                rounding_adjustment=Decimal("0"),
             )
         ]
 
     client_id = uuid.uuid4()
-    with patch(
-        'ecotrace.modules.cbam.application.direct_emissions_allocation_service.'
-        'allocate_pool_with_largest_remainder',
-        side_effect=unbalanced_allocate,
-    ), pytest.raises(BusinessRuleError) as exc:
+    with (
+        patch(
+            "ecotrace.modules.cbam.application.direct_emissions_allocation_service."
+            "allocate_pool_with_largest_remainder",
+            side_effect=unbalanced_allocate,
+        ),
+        pytest.raises(BusinessRuleError) as exc,
+    ):
         execute_direct_emissions_allocation(
             seeded_db,
             user,
@@ -96,7 +99,7 @@ def test_unbalanced_allocation_cannot_complete_or_become_current(seeded_db) -> N
             binding.id,
             DirectEmissionsAllocationExecuteRequest(client_request_id=client_id),
         )
-    assert any(d.get('code') == 'UNBALANCED' for d in (exc.value.details or []))
+    assert any(d.get("code") == "UNBALANCED" for d in (exc.value.details or []))
     assert (
         len(seeded_db.execute(select(CbamDirectEmissionsAllocationResult)).scalars().all())
         == result_count_before
@@ -153,18 +156,18 @@ def test_pg_rejects_balanced_with_nonzero_remaining(seeded_db) -> None:
                 """
             ),
             {
-                'id': str(uuid.uuid4()),
-                'org': str(organization.id),
-                'binding': str(binding.id),
-                'sha': 'b' * 64,
-                'cid': str(uuid.uuid4()),
-                'fp': 'c' * 64,
+                "id": str(uuid.uuid4()),
+                "org": str(organization.id),
+                "binding": str(binding.id),
+                "sha": "b" * 64,
+                "cid": str(uuid.uuid4()),
+                "fp": "c" * 64,
             },
         )
         seeded_db.flush()
     seeded_db.rollback()
     msg = str(exc.value).lower()
-    assert 'balanced_zero_remaining' in msg or 'check' in msg
+    assert "balanced_zero_remaining" in msg or "check" in msg
 
 
 def test_jsonb_production_snapshots_complete_and_deterministic(seeded_db) -> None:
@@ -188,11 +191,11 @@ def test_jsonb_production_snapshots_complete_and_deterministic(seeded_db) -> Non
                 month_start=date(mday.year, mday.month, 1),
                 total_production_quantity=d,
                 cbam_quantity=e,
-                quantity_unit='t',
+                quantity_unit="t",
             ),
         )
         p = ensure_org_product(
-            seeded_db, organization.id, code=f'PX-{mday.month}-{uuid.uuid4().hex[:3]}'
+            seeded_db, organization.id, code=f"PX-{mday.month}-{uuid.uuid4().hex[:3]}"
         )
         pr = create_active_ready_profile(seeded_db, user, organization.id, product=p)
         production_record_service.create_production_record(
@@ -204,13 +207,13 @@ def test_jsonb_production_snapshots_complete_and_deterministic(seeded_db) -> Non
                 installation_profile_id=installation.id,
                 product_profile_version_id=pr.id,
                 quantity=e,
-                unit='t',
+                unit="t",
                 production_date=mday,
             ),
         )
 
     act = create_ng_activity(
-        seeded_db, user, organization, binding, installation, qty=Decimal('188'), day=day
+        seeded_db, user, organization, binding, installation, qty=Decimal("188"), day=day
     )
     run_sc(seeded_db, user, organization, binding, act, day=day)
     monthly_production_basis_service.create_monthly_production_basis(
@@ -220,15 +223,15 @@ def test_jsonb_production_snapshots_complete_and_deterministic(seeded_db) -> Non
         binding.id,
         MonthlyProductionBasisCreate(
             month_start=date(2024, 7, 1),
-            total_production_quantity=Decimal('100'),
-            cbam_quantity=Decimal('50'),
-            quantity_unit='t',
+            total_production_quantity=Decimal("100"),
+            cbam_quantity=Decimal("50"),
+            quantity_unit="t",
         ),
     )
-    product = ensure_org_product(seeded_db, organization.id, code=f'GRP-{uuid.uuid4().hex[:4]}')
+    product = ensure_org_product(seeded_db, organization.id, code=f"GRP-{uuid.uuid4().hex[:4]}")
     profile = create_active_ready_profile(seeded_db, user, organization.id, product=product)
     ids: list[str] = []
-    for qty in (Decimal('20.5'), Decimal('29.5')):
+    for qty in (Decimal("20.5"), Decimal("29.5")):
         rec = production_record_service.create_production_record(
             seeded_db,
             user,
@@ -238,7 +241,7 @@ def test_jsonb_production_snapshots_complete_and_deterministic(seeded_db) -> Non
                 installation_profile_id=installation.id,
                 product_profile_version_id=profile.id,
                 quantity=qty,
-                unit='t',
+                unit="t",
                 production_date=day,
             ),
         )
@@ -260,45 +263,41 @@ def test_jsonb_production_snapshots_complete_and_deterministic(seeded_db) -> Non
     assert alloc.production_record_ids == sorted(ids)
     snaps = alloc.production_quantity_snapshots
     assert len(snaps) == 2
-    assert [s['productionRecordId'] for s in snaps] == sorted(ids)
+    assert [s["productionRecordId"] for s in snaps] == sorted(ids)
     for s in snaps:
         assert {
-            'productionRecordId',
-            'quantity',
-            'unit',
-            'normalizedTonnes',
-            'productionDate',
-            'productProfileVersionId',
+            "productionRecordId",
+            "quantity",
+            "unit",
+            "normalizedTonnes",
+            "productionDate",
+            "productProfileVersionId",
         } <= set(s)
-        assert s['productProfileVersionId'] == str(profile.id)
-        assert isinstance(s['quantity'], str)
-        Decimal(s['quantity'])
-        Decimal(s['normalizedTonnes'])
+        assert s["productProfileVersionId"] == str(profile.id)
+        assert isinstance(s["quantity"], str)
+        Decimal(s["quantity"])
+        Decimal(s["normalizedTonnes"])
 
     detail = get_direct_emissions_allocation_result(
         seeded_db, user, organization.id, binding.id, executed.result_id
     )
     group = next(
-        p
-        for p in detail.product_allocations
-        if p['productProfileVersionId'] == str(profile.id)
+        p for p in detail.product_allocations if p["productProfileVersionId"] == str(profile.id)
     )
-    assert group['productionQuantitySnapshots'] == snaps
+    assert group["productionQuantitySnapshots"] == snaps
 
-    original_qty = snaps[0]['quantity']
+    original_qty = snaps[0]["quantity"]
     prod = seeded_db.get(CbamProductionRecord, uuid.UUID(ids[0]))
     assert prod is not None
-    prod.quantity = Decimal('999')
+    prod.quantity = Decimal("999")
     seeded_db.flush()
     detail2 = get_direct_emissions_allocation_result(
         seeded_db, user, organization.id, binding.id, executed.result_id
     )
     group2 = next(
-        p
-        for p in detail2.product_allocations
-        if p['productProfileVersionId'] == str(profile.id)
+        p for p in detail2.product_allocations if p["productProfileVersionId"] == str(profile.id)
     )
-    assert group2['productionQuantitySnapshots'][0]['quantity'] == original_qty
+    assert group2["productionQuantitySnapshots"][0]["quantity"] == original_qty
 
 
 def test_result_list_detail_query_count_bounded(seeded_db, engine: Engine) -> None:
@@ -310,7 +309,7 @@ def test_result_list_detail_query_count_bounded(seeded_db, engine: Engine) -> No
     page = production_record_service.list_production_records(
         seeded_db, user, organization.id, binding.id, page=1, page_size=50
     )
-    july = next(i for i in page.items if str(i.production_date).startswith('2024-07'))
+    july = next(i for i in page.items if str(i.production_date).startswith("2024-07"))
     # Bump July basis E and add second production row for same profile
     basis_page = monthly_production_basis_service.list_monthly_production_basis(
         seeded_db, user, organization.id, binding.id, page=1, page_size=20
@@ -327,7 +326,7 @@ def test_result_list_detail_query_count_bounded(seeded_db, engine: Engine) -> No
         july_basis.id,
         MonthlyProductionBasisUpdate(
             row_version=july_basis.row_version,
-            cbam_quantity=july.quantity + Decimal('1'),
+            cbam_quantity=july.quantity + Decimal("1"),
         ),
     )
     production_record_service.create_production_record(
@@ -338,8 +337,8 @@ def test_result_list_detail_query_count_bounded(seeded_db, engine: Engine) -> No
         ProductionRecordCreate(
             installation_profile_id=installation.id,
             product_profile_version_id=july.product_profile_version_id,
-            quantity=Decimal('1'),
-            unit='t',
+            quantity=Decimal("1"),
+            unit="t",
             production_date=date(2024, 7, 16),
         ),
     )
@@ -351,7 +350,7 @@ def test_result_list_detail_query_count_bounded(seeded_db, engine: Engine) -> No
         organization,
         binding,
         installation,
-        qty=Decimal('10'),
+        qty=Decimal("10"),
         day=date(2024, 7, 18),
     )
     run_sc(seeded_db, user, organization, binding, act2, day=date(2024, 7, 18))
@@ -369,14 +368,14 @@ def test_result_list_detail_query_count_bounded(seeded_db, engine: Engine) -> No
     assert len(detail0.monthly_basis) == 3
     assert len(detail0.product_allocations) >= 3
     assert len(detail0.source_calculations) >= 4
-    assert any(len(p['productionRecordIds']) >= 2 for p in detail0.product_allocations)
+    assert any(len(p["productionRecordIds"]) >= 2 for p in detail0.product_allocations)
 
     statements: list[str] = []
 
     def before_cursor(conn, cursor, statement, parameters, context, executemany):
         statements.append(statement)
 
-    event.listen(engine, 'before_cursor_execute', before_cursor)
+    event.listen(engine, "before_cursor_execute", before_cursor)
     try:
         statements.clear()
         get_direct_emissions_allocation_result(
@@ -390,16 +389,16 @@ def test_result_list_detail_query_count_bounded(seeded_db, engine: Engine) -> No
         )
         list_q = len(statements)
     finally:
-        event.remove(engine, 'before_cursor_execute', before_cursor)
+        event.remove(engine, "before_cursor_execute", before_cursor)
 
     # Snapshot hydration is batch (one select per snapshot table family).
     def _hits(name: str) -> int:
         return sum(1 for s in detail_statements if name in s.lower())
 
-    assert _hits('cbam_dea_monthly_basis_snapshots') <= 2
-    assert _hits('cbam_dea_source_snapshots') <= 2
-    assert _hits('cbam_dea_product_allocations') <= 2
-    assert _hits('cbam_direct_emissions_allocation_results') <= 3
+    assert _hits("cbam_dea_monthly_basis_snapshots") <= 2
+    assert _hits("cbam_dea_source_snapshots") <= 2
+    assert _hits("cbam_dea_product_allocations") <= 2
+    assert _hits("cbam_direct_emissions_allocation_results") <= 3
     # Total may include stale-detection lookups; soft ceiling only.
-    assert detail_q <= 80, f'detail queries={detail_q}'
-    assert list_q <= 80, f'list queries={list_q}'
+    assert detail_q <= 80, f"detail queries={detail_q}"
+    assert list_q <= 80, f"list queries={list_q}"

@@ -65,15 +65,15 @@ def _committed_setup(engine) -> dict:
             select(Organization).where(Organization.slug == DEMO_ORG_SLUG)
         ).scalar_one()
         admin = db.execute(
-            select(User).where(User.normalized_email == 'orgadmin@ecotrace.dev')
+            select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
         ).scalar_one()
         scenario = seed_ready_rollup(db, admin, org)
         db.commit()
         return {
-            'org_id': org.id,
-            'admin_id': admin.id,
-            'binding_id': scenario.binding.id,
-            'precursor_id': scenario.precursor_id,
+            "org_id": org.id,
+            "admin_id": admin.id,
+            "binding_id": scenario.binding.id,
+            "precursor_id": scenario.precursor_id,
         }
     finally:
         db.close()
@@ -93,16 +93,18 @@ def test_concurrent_identical_requests_produce_one_result(engine) -> None:
     def worker() -> None:
         db = _session(engine)
         try:
-            admin = db.get(User, ctx['admin_id'])
+            admin = db.get(User, ctx["admin_id"])
             assert admin is not None
             barrier.wait(timeout=30)
             results.append(
                 execute_product_embedded_emissions(
                     db,
                     admin,
-                    ctx['org_id'],
-                    ctx['binding_id'],
-                    ProductEmbeddedEmissionsExecuteRequest(client_request_id=client_id, methodology_code=METHODOLOGY_CODE),
+                    ctx["org_id"],
+                    ctx["binding_id"],
+                    ProductEmbeddedEmissionsExecuteRequest(
+                        client_request_id=client_id, methodology_code=METHODOLOGY_CODE
+                    ),
                 )
             )
         except Exception as exc:
@@ -128,7 +130,7 @@ def test_concurrent_identical_requests_produce_one_result(engine) -> None:
             db.execute(
                 select(CbamProductEmbeddedEmissionsResult).where(
                     CbamProductEmbeddedEmissionsResult.reporting_period_binding_id
-                    == ctx['binding_id'],
+                    == ctx["binding_id"],
                     CbamProductEmbeddedEmissionsResult.client_request_id == client_id,
                 )
             )
@@ -136,7 +138,7 @@ def test_concurrent_identical_requests_produce_one_result(engine) -> None:
             .all()
         )
         assert len(rows) == 1
-        assert rows[0].status == 'COMPLETED'
+        assert rows[0].status == "COMPLETED"
 
         products = (
             db.execute(
@@ -163,7 +165,7 @@ def test_concurrent_identical_requests_produce_one_result(engine) -> None:
             db.execute(
                 select(CbamProductEmbeddedEmissionsCurrent).where(
                     CbamProductEmbeddedEmissionsCurrent.reporting_period_binding_id
-                    == ctx['binding_id']
+                    == ctx["binding_id"]
                 )
             )
             .scalars()
@@ -181,34 +183,36 @@ def test_same_key_with_different_material_inputs_conflicts(engine) -> None:
 
     db0 = _session(engine)
     try:
-        admin = db0.get(User, ctx['admin_id'])
+        admin = db0.get(User, ctx["admin_id"])
         assert admin is not None
         execute_product_embedded_emissions(
             db0,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
-            ProductEmbeddedEmissionsExecuteRequest(client_request_id=client_id, methodology_code=METHODOLOGY_CODE),
+            ctx["org_id"],
+            ctx["binding_id"],
+            ProductEmbeddedEmissionsExecuteRequest(
+                client_request_id=client_id, methodology_code=METHODOLOGY_CODE
+            ),
         )
     finally:
         db0.close()
 
     db1 = _session(engine)
     try:
-        admin = db1.get(User, ctx['admin_id'])
+        admin = db1.get(User, ctx["admin_id"])
         assert admin is not None
         precursor = purchased_precursor_service.get_purchased_precursor(
-            db1, admin, ctx['org_id'], ctx['binding_id'], ctx['precursor_id']
+            db1, admin, ctx["org_id"], ctx["binding_id"], ctx["precursor_id"]
         )
         purchased_precursor_service.update_purchased_precursor_draft(
             db1,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
-            ctx['precursor_id'],
+            ctx["org_id"],
+            ctx["binding_id"],
+            ctx["precursor_id"],
             PurchasedPrecursorUpdate(
                 row_version=precursor.row_version,
-                specific_direct_embedded_emissions=Decimal('0.9'),
+                specific_direct_embedded_emissions=Decimal("0.9"),
             ),
         )
         db1.commit()
@@ -216,13 +220,15 @@ def test_same_key_with_different_material_inputs_conflicts(engine) -> None:
             execute_product_embedded_emissions(
                 db1,
                 admin,
-                ctx['org_id'],
-                ctx['binding_id'],
-                ProductEmbeddedEmissionsExecuteRequest(client_request_id=client_id, methodology_code=METHODOLOGY_CODE),
+                ctx["org_id"],
+                ctx["binding_id"],
+                ProductEmbeddedEmissionsExecuteRequest(
+                    client_request_id=client_id, methodology_code=METHODOLOGY_CODE
+                ),
             )
-            raise AssertionError('expected ConflictError')
+            raise AssertionError("expected ConflictError")
         except ConflictError as exc:
-            assert exc.details[0]['code'] == 'IDEMPOTENCY_KEY_REUSED'
+            assert exc.details[0]["code"] == "IDEMPOTENCY_KEY_REUSED"
     finally:
         db1.close()
 
@@ -231,29 +237,29 @@ def test_failed_execution_preserves_the_previous_current_pointer(engine) -> None
     ctx = _committed_setup(engine)
     db = _session(engine)
     try:
-        admin = db.get(User, ctx['admin_id'])
+        admin = db.get(User, ctx["admin_id"])
         assert admin is not None
         first = execute_product_embedded_emissions(
             db,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
-            ProductEmbeddedEmissionsExecuteRequest(client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE),
+            ctx["org_id"],
+            ctx["binding_id"],
+            ProductEmbeddedEmissionsExecuteRequest(
+                client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE
+            ),
         )
 
         # Unbalance the precursor so the binding is no longer ready.
         precursor = purchased_precursor_service.get_purchased_precursor(
-            db, admin, ctx['org_id'], ctx['binding_id'], ctx['precursor_id']
+            db, admin, ctx["org_id"], ctx["binding_id"], ctx["precursor_id"]
         )
         purchased_precursor_service.update_purchased_precursor_draft(
             db,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
-            ctx['precursor_id'],
-            PurchasedPrecursorUpdate(
-                row_version=precursor.row_version, quantity=Decimal('9')
-            ),
+            ctx["org_id"],
+            ctx["binding_id"],
+            ctx["precursor_id"],
+            PurchasedPrecursorUpdate(row_version=precursor.row_version, quantity=Decimal("9")),
         )
         db.commit()
 
@@ -262,11 +268,13 @@ def test_failed_execution_preserves_the_previous_current_pointer(engine) -> None
             execute_product_embedded_emissions(
                 db,
                 admin,
-                ctx['org_id'],
-                ctx['binding_id'],
-                ProductEmbeddedEmissionsExecuteRequest(client_request_id=failed_key, methodology_code=METHODOLOGY_CODE),
+                ctx["org_id"],
+                ctx["binding_id"],
+                ProductEmbeddedEmissionsExecuteRequest(
+                    client_request_id=failed_key, methodology_code=METHODOLOGY_CODE
+                ),
             )
-            raise AssertionError('expected BusinessRuleError')
+            raise AssertionError("expected BusinessRuleError")
         except BusinessRuleError:
             pass
 
@@ -280,8 +288,7 @@ def test_failed_execution_preserves_the_previous_current_pointer(engine) -> None
         )
         pointer = db.execute(
             select(CbamProductEmbeddedEmissionsCurrent).where(
-                CbamProductEmbeddedEmissionsCurrent.reporting_period_binding_id
-                == ctx['binding_id']
+                CbamProductEmbeddedEmissionsCurrent.reporting_period_binding_id == ctx["binding_id"]
             )
         ).scalar_one()
         assert pointer.current_result_id == first.result_id
@@ -293,45 +300,48 @@ def test_successful_reexecution_advances_the_current_pointer(engine) -> None:
     ctx = _committed_setup(engine)
     db = _session(engine)
     try:
-        admin = db.get(User, ctx['admin_id'])
+        admin = db.get(User, ctx["admin_id"])
         assert admin is not None
         first = execute_product_embedded_emissions(
             db,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
-            ProductEmbeddedEmissionsExecuteRequest(client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE),
+            ctx["org_id"],
+            ctx["binding_id"],
+            ProductEmbeddedEmissionsExecuteRequest(
+                client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE
+            ),
         )
         precursor = purchased_precursor_service.get_purchased_precursor(
-            db, admin, ctx['org_id'], ctx['binding_id'], ctx['precursor_id']
+            db, admin, ctx["org_id"], ctx["binding_id"], ctx["precursor_id"]
         )
         purchased_precursor_service.update_purchased_precursor_draft(
             db,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
-            ctx['precursor_id'],
+            ctx["org_id"],
+            ctx["binding_id"],
+            ctx["precursor_id"],
             PurchasedPrecursorUpdate(
                 row_version=precursor.row_version,
-                specific_direct_embedded_emissions=Decimal('1'),
+                specific_direct_embedded_emissions=Decimal("1"),
             ),
         )
         db.commit()
         second = execute_product_embedded_emissions(
             db,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
-            ProductEmbeddedEmissionsExecuteRequest(client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE),
+            ctx["org_id"],
+            ctx["binding_id"],
+            ProductEmbeddedEmissionsExecuteRequest(
+                client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE
+            ),
         )
         assert second.result_id != first.result_id
         # 3 t × 1.0 instead of 3 t × 0.5 → the direct total grows by exactly 1.5 tCO2e.
-        assert second.total_direct_tco2e - first.total_direct_tco2e == Decimal('1.50000000')
+        assert second.total_direct_tco2e - first.total_direct_tco2e == Decimal("1.50000000")
 
         pointer = db.execute(
             select(CbamProductEmbeddedEmissionsCurrent).where(
-                CbamProductEmbeddedEmissionsCurrent.reporting_period_binding_id
-                == ctx['binding_id']
+                CbamProductEmbeddedEmissionsCurrent.reporting_period_binding_id == ctx["binding_id"]
             )
         ).scalar_one()
         assert pointer.current_result_id == second.result_id

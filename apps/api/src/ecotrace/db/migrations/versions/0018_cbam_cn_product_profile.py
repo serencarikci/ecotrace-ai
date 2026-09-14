@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0018_cbam_cn_product_profile'
-down_revision: str | None = '0017_cbam_sc_current_result'
+revision: str = "0018_cbam_cn_product_profile"
+down_revision: str | None = "0017_cbam_sc_current_result"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -36,9 +36,7 @@ CREATE TABLE cbam_cn_code_datasets (
 )
 """
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_cn_code_datasets_status ON cbam_cn_code_datasets (status)'
-    )
+    op.execute("CREATE INDEX ix_cbam_cn_code_datasets_status ON cbam_cn_code_datasets (status)")
 
     op.execute(
         """
@@ -63,18 +61,10 @@ CREATE TABLE cbam_cn_codes (
 )
 """
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_cn_codes_dataset_id ON cbam_cn_codes (dataset_id)'
-    )
-    op.execute(
-        'CREATE INDEX ix_cbam_cn_codes_normalized_code ON cbam_cn_codes (normalized_code)'
-    )
-    op.execute(
-        'CREATE INDEX ix_cbam_cn_codes_cbam_sector ON cbam_cn_codes (cbam_sector)'
-    )
-    op.execute(
-        'CREATE INDEX ix_cbam_cn_codes_status ON cbam_cn_codes (status)'
-    )
+    op.execute("CREATE INDEX ix_cbam_cn_codes_dataset_id ON cbam_cn_codes (dataset_id)")
+    op.execute("CREATE INDEX ix_cbam_cn_codes_normalized_code ON cbam_cn_codes (normalized_code)")
+    op.execute("CREATE INDEX ix_cbam_cn_codes_cbam_sector ON cbam_cn_codes (cbam_sector)")
+    op.execute("CREATE INDEX ix_cbam_cn_codes_status ON cbam_cn_codes (status)")
 
     op.execute(
         """
@@ -95,10 +85,10 @@ CREATE TABLE cbam_cn_controlled_list_values (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_cn_list_dataset_id ON cbam_cn_controlled_list_values (dataset_id)'
+        "CREATE INDEX ix_cbam_cn_list_dataset_id ON cbam_cn_controlled_list_values (dataset_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_cn_list_list_code ON cbam_cn_controlled_list_values (list_code)'
+        "CREATE INDEX ix_cbam_cn_list_list_code ON cbam_cn_controlled_list_values (list_code)"
     )
 
     op.execute(
@@ -133,8 +123,8 @@ WHERE status = 'active'
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_product_profile_cn_code_id '
-        'ON cbam_product_profile_versions (cn_code_id)'
+        "CREATE INDEX ix_cbam_product_profile_cn_code_id "
+        "ON cbam_product_profile_versions (cn_code_id)"
     )
     # Existing skeleton rows stay draft/not ready; no guessed CN codes.
     op.execute(
@@ -152,8 +142,8 @@ WHERE TRUE
 
 
 def downgrade() -> None:
-    op.execute('DROP INDEX IF EXISTS uq_cbam_product_profile_one_active')
-    op.execute('DROP INDEX IF EXISTS ix_cbam_product_profile_cn_code_id')
+    op.execute("DROP INDEX IF EXISTS uq_cbam_product_profile_one_active")
+    op.execute("DROP INDEX IF EXISTS ix_cbam_product_profile_cn_code_id")
     op.execute(
         """
 ALTER TABLE cbam_product_profile_versions
@@ -176,6 +166,6 @@ ALTER TABLE cbam_product_profile_versions
     DROP COLUMN IF EXISTS validation_issues
 """
     )
-    op.execute('DROP TABLE IF EXISTS cbam_cn_controlled_list_values')
-    op.execute('DROP TABLE IF EXISTS cbam_cn_codes')
-    op.execute('DROP TABLE IF EXISTS cbam_cn_code_datasets')
+    op.execute("DROP TABLE IF EXISTS cbam_cn_controlled_list_values")
+    op.execute("DROP TABLE IF EXISTS cbam_cn_codes")
+    op.execute("DROP TABLE IF EXISTS cbam_cn_code_datasets")

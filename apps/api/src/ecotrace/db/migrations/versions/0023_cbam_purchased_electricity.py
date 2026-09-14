@@ -10,8 +10,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0023_cbam_purchased_electricity'
-down_revision: str | None = '0022_cbam_dea_allocation'
+revision: str = "0023_cbam_purchased_electricity"
+down_revision: str | None = "0022_cbam_dea_allocation"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -207,8 +207,8 @@ CREATE INDEX ix_cbam_pe_current_result_id
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_purchased_electricity_current_results')
-    op.execute('DROP TABLE IF EXISTS cbam_purchased_electricity_results')
+    op.execute("DROP TABLE IF EXISTS cbam_purchased_electricity_current_results")
+    op.execute("DROP TABLE IF EXISTS cbam_purchased_electricity_results")
     op.execute(
         """
 ALTER TABLE cbam_calculation_definitions

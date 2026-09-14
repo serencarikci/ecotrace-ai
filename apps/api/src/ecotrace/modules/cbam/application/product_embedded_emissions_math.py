@@ -10,7 +10,7 @@ import uuid
 from dataclasses import dataclass
 from decimal import Decimal
 
-ZERO = Decimal('0')
+ZERO = Decimal("0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,7 +78,7 @@ def compute_precursor_contribution(
     so the full matrix inverse collapses into this direct product.
     """
     if quantity_tonnes < 0:
-        raise ValueError('PRECURSOR_USE_QUANTITY_NEGATIVE')
+        raise ValueError("PRECURSOR_USE_QUANTITY_NEGATIVE")
     return PrecursorContribution(
         precursor_id=precursor_id,
         product_use_id=product_use_id,
@@ -136,7 +136,7 @@ def compute_product_specifics(
 ) -> ProductSpecifics:
     """Specific embedded emissions per tonne of produced goods (fail closed on 0)."""
     if denominator_tonnes <= 0:
-        raise ValueError('PRODUCT_DENOMINATOR_ZERO')
+        raise ValueError("PRODUCT_DENOMINATOR_ZERO")
     return ProductSpecifics(
         denominator_tonnes=denominator_tonnes,
         specific_direct=totals.total_direct_tco2e / denominator_tonnes,
@@ -152,15 +152,15 @@ def assert_product_identities(
 ) -> None:
     """Exact Decimal identity guard used by the engine before persistence."""
     if totals.total_direct_tco2e != totals.own_direct_tco2e + totals.precursor_direct_tco2e:
-        raise ValueError('DIRECT_TOTAL_IDENTITY_BROKEN')
+        raise ValueError("DIRECT_TOTAL_IDENTITY_BROKEN")
     if totals.total_indirect_tco2e != totals.own_indirect_tco2e + totals.precursor_indirect_tco2e:
-        raise ValueError('INDIRECT_TOTAL_IDENTITY_BROKEN')
+        raise ValueError("INDIRECT_TOTAL_IDENTITY_BROKEN")
     if totals.total_embedded_tco2e != totals.total_direct_tco2e + totals.total_indirect_tco2e:
-        raise ValueError('EMBEDDED_TOTAL_IDENTITY_BROKEN')
+        raise ValueError("EMBEDDED_TOTAL_IDENTITY_BROKEN")
     if specifics is None:
         return
     if specifics.denominator_tonnes <= 0:
-        raise ValueError('PRODUCT_DENOMINATOR_ZERO')
+        raise ValueError("PRODUCT_DENOMINATOR_ZERO")
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,12 +182,12 @@ def aggregate_binding_totals(rows: list[ProductTotals]) -> BindingTotals:
 
 def golden_single_precursor_product(
     *,
-    produced_tonnes: Decimal = Decimal('10'),
-    dea_direct_tco2: Decimal = Decimal('1'),
-    iea_indirect_tco2e: Decimal = Decimal('2'),
-    precursor_use_tonnes: Decimal = Decimal('3'),
-    precursor_specific_direct: Decimal = Decimal('0.5'),
-    precursor_specific_indirect: Decimal = Decimal('0.1'),
+    produced_tonnes: Decimal = Decimal("10"),
+    dea_direct_tco2: Decimal = Decimal("1"),
+    iea_indirect_tco2e: Decimal = Decimal("2"),
+    precursor_use_tonnes: Decimal = Decimal("3"),
+    precursor_specific_direct: Decimal = Decimal("0.5"),
+    precursor_specific_indirect: Decimal = Decimal("0.1"),
 ) -> tuple[ProductTotals, ProductSpecifics]:
     """Synthetic golden fixture (one product, one purchased precursor, no heat/waste)."""
     own = compute_own_process_emissions(

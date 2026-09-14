@@ -16,8 +16,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0030_cbam_official_see'
-down_revision: str | None = '0029_cbam_pee_v2'
+revision: str = "0030_cbam_official_see"
+down_revision: str | None = "0029_cbam_pee_v2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -82,20 +82,19 @@ CREATE TABLE cbam_official_see_export_runs (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_ose_runs_org ON cbam_official_see_export_runs (organization_id)'
+        "CREATE INDEX ix_cbam_ose_runs_org ON cbam_official_see_export_runs (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_ose_runs_org_binding ON cbam_official_see_export_runs '
-        '(organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_ose_runs_org_binding ON cbam_official_see_export_runs "
+        "(organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_ose_runs_status ON cbam_official_see_export_runs '
-        '(generation_status)'
+        "CREATE INDEX ix_cbam_ose_runs_status ON cbam_official_see_export_runs (generation_status)"
     )
     op.execute(
-        'CREATE UNIQUE INDEX uq_cbam_ose_runs_org_binding_client_request '
-        'ON cbam_official_see_export_runs '
-        '(organization_id, reporting_period_binding_id, client_request_id)'
+        "CREATE UNIQUE INDEX uq_cbam_ose_runs_org_binding_client_request "
+        "ON cbam_official_see_export_runs "
+        "(organization_id, reporting_period_binding_id, client_request_id)"
     )
 
     op.execute(
@@ -123,15 +122,15 @@ CREATE TABLE cbam_official_see_export_artifacts (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_ose_artifacts_org '
-        'ON cbam_official_see_export_artifacts (organization_id)'
+        "CREATE INDEX ix_cbam_ose_artifacts_org "
+        "ON cbam_official_see_export_artifacts (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_ose_artifacts_run '
-        'ON cbam_official_see_export_artifacts (export_run_id)'
+        "CREATE INDEX ix_cbam_ose_artifacts_run "
+        "ON cbam_official_see_export_artifacts (export_run_id)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_official_see_export_artifacts')
-    op.execute('DROP TABLE IF EXISTS cbam_official_see_export_runs')
+    op.execute("DROP TABLE IF EXISTS cbam_official_see_export_artifacts")
+    op.execute("DROP TABLE IF EXISTS cbam_official_see_export_runs")

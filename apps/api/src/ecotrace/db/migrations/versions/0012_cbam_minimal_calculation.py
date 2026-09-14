@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0012_cbam_minimal_calculation'
-down_revision: str | None = '0011_cbam_factor_resolution'
+revision: str = "0012_cbam_minimal_calculation"
+down_revision: str | None = "0011_cbam_factor_resolution"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -46,12 +46,12 @@ CREATE TABLE cbam_calculation_definitions (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_definitions_status '
-        'ON cbam_calculation_definitions (status)'
+        "CREATE INDEX ix_cbam_calculation_definitions_status "
+        "ON cbam_calculation_definitions (status)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_definitions_factor '
-        'ON cbam_calculation_definitions (factor_definition_id)'
+        "CREATE INDEX ix_cbam_calculation_definitions_factor "
+        "ON cbam_calculation_definitions (factor_definition_id)"
     )
 
     op.execute(
@@ -94,16 +94,14 @@ CREATE TABLE cbam_calculation_runs (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_runs_organization_id '
-        'ON cbam_calculation_runs (organization_id)'
+        "CREATE INDEX ix_cbam_calculation_runs_organization_id "
+        "ON cbam_calculation_runs (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_runs_org_binding '
-        'ON cbam_calculation_runs (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_calculation_runs_org_binding "
+        "ON cbam_calculation_runs (organization_id, reporting_period_binding_id)"
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_calculation_runs_status ON cbam_calculation_runs (status)'
-    )
+    op.execute("CREATE INDEX ix_cbam_calculation_runs_status ON cbam_calculation_runs (status)")
 
     op.execute(
         """
@@ -172,24 +170,24 @@ CREATE TABLE cbam_calculation_results (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_results_organization_id '
-        'ON cbam_calculation_results (organization_id)'
+        "CREATE INDEX ix_cbam_calculation_results_organization_id "
+        "ON cbam_calculation_results (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_results_run_status '
-        'ON cbam_calculation_results (calculation_run_id, status)'
+        "CREATE INDEX ix_cbam_calculation_results_run_status "
+        "ON cbam_calculation_results (calculation_run_id, status)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_results_source '
-        'ON cbam_calculation_results (source_type, source_id)'
+        "CREATE INDEX ix_cbam_calculation_results_source "
+        "ON cbam_calculation_results (source_type, source_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_results_factor_resolution '
-        'ON cbam_calculation_results (factor_resolution_id)'
+        "CREATE INDEX ix_cbam_calculation_results_factor_resolution "
+        "ON cbam_calculation_results (factor_resolution_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_calculation_results_allocation '
-        'ON cbam_calculation_results (allocation_result_id)'
+        "CREATE INDEX ix_cbam_calculation_results_allocation "
+        "ON cbam_calculation_results (allocation_result_id)"
     )
     op.execute(
         """
@@ -290,6 +288,6 @@ WHERE fd.code = 'SUPPLIER_EMBEDDED_EMISSION'
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_calculation_results')
-    op.execute('DROP TABLE IF EXISTS cbam_calculation_runs')
-    op.execute('DROP TABLE IF EXISTS cbam_calculation_definitions')
+    op.execute("DROP TABLE IF EXISTS cbam_calculation_results")
+    op.execute("DROP TABLE IF EXISTS cbam_calculation_runs")
+    op.execute("DROP TABLE IF EXISTS cbam_calculation_definitions")

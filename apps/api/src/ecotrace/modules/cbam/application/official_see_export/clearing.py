@@ -15,7 +15,7 @@ from ecotrace.modules.cbam.application.official_see_export.mapping.loader import
 
 
 def _is_formula(value: object | None) -> bool:
-    return isinstance(value, str) and value.startswith('=')
+    return isinstance(value, str) and value.startswith("=")
 
 
 def clear_example_and_unused_inputs(
@@ -30,8 +30,8 @@ def clear_example_and_unused_inputs(
     ``used_input_keys`` is the set of (sheet, cell) that will receive EcoTrace INPUT.
     """
     cleared = 0
-    clear_entries = list(manifest.by_direction('CLEAR_EXAMPLE'))
-    input_entries = list(manifest.by_direction('INPUT'))
+    clear_entries = list(manifest.by_direction("CLEAR_EXAMPLE"))
+    input_entries = list(manifest.by_direction("INPUT"))
 
     for entry in clear_entries:
         cleared += _clear_cell(wb, entry)
@@ -54,16 +54,16 @@ def _clear_cell(wb: Workbook, entry: ManifestEntry) -> int:
     if _is_formula(cell.value):
         # CLEAR_EXAMPLE entries that collide with formulas are skipped (manifest hygiene).
         # Unused INPUT must never clear a formula — that is a mapping bug.
-        if entry.direction == 'CLEAR_EXAMPLE':
+        if entry.direction == "CLEAR_EXAMPLE":
             return 0
         raise BusinessRuleError(
-            f'Refusing to clear formula cell {entry.sheet}!{entry.cell}',
+            f"Refusing to clear formula cell {entry.sheet}!{entry.cell}",
             code=CODE_FORMULA_PRESERVATION_FAILED,
             details=[
                 {
-                    'code': CODE_FORMULA_PRESERVATION_FAILED,
-                    'sheet': entry.sheet,
-                    'cell': entry.cell,
+                    "code": CODE_FORMULA_PRESERVATION_FAILED,
+                    "sheet": entry.sheet,
+                    "cell": entry.cell,
                 }
             ],
         )

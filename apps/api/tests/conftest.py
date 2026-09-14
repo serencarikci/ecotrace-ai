@@ -9,28 +9,31 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-os.environ.setdefault('APP_ENV', 'test')
-os.environ.setdefault('APP_DEBUG', 'true')
-os.environ['APP_VERSION'] = '0.7.1'
-os.environ.setdefault('SECRET_KEY', 'test-secret-key-that-is-long-enough-32chars')
-os.environ.setdefault('INITIAL_ADMIN_PASSWORD', 'EcoTraceAdmin!2024')
-os.environ.setdefault('POSTGRES_HOST', 'localhost')
-os.environ.setdefault('POSTGRES_PORT', '5433')
-os.environ.setdefault('POSTGRES_DB', 'ecotrace_test')
-os.environ.setdefault('POSTGRES_USER', 'ecotrace')
-os.environ.setdefault('POSTGRES_PASSWORD', 'ecotrace_dev_password')
-os.environ.setdefault('DATABASE_URL', 'postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5433/ecotrace_test')
-os.environ.setdefault('CORS_ALLOWED_ORIGINS', 'http://localhost:4200')
-os.environ.setdefault('LOG_LEVEL', 'WARNING')
-os.environ.setdefault('ATTACHMENT_STORAGE_PATH', '/tmp/ecotrace-test-attachments')
-os.environ.setdefault('KNOWLEDGE_STORAGE_PATH', '/tmp/ecotrace-test-knowledge')
-os.environ.setdefault('REPORT_STORAGE_PATH', '/tmp/ecotrace-test-reports')
-os.environ.setdefault('BACKUP_STORAGE_PATH', '/tmp/ecotrace-test-backups')
-os.environ.setdefault('MAX_ATTACHMENT_SIZE_MB', '5')
-os.environ.setdefault('MAX_CSV_IMPORT_ROWS', '5000')
-os.environ.setdefault('ALLOWED_ATTACHMENT_TYPES', 'pdf,csv,xlsx,png,jpeg,jpg')
-os.environ.setdefault('AI_LLM_PROVIDER', 'local_grounded')
-os.environ.setdefault('AI_EMBEDDING_PROVIDER', 'local_hash')
+os.environ.setdefault("APP_ENV", "test")
+os.environ.setdefault("APP_DEBUG", "true")
+os.environ["APP_VERSION"] = "0.7.1"
+os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-32chars")
+os.environ.setdefault("INITIAL_ADMIN_PASSWORD", "EcoTraceAdmin!2024")
+os.environ.setdefault("POSTGRES_HOST", "localhost")
+os.environ.setdefault("POSTGRES_PORT", "5433")
+os.environ.setdefault("POSTGRES_DB", "ecotrace_test")
+os.environ.setdefault("POSTGRES_USER", "ecotrace")
+os.environ.setdefault("POSTGRES_PASSWORD", "ecotrace_dev_password")
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5433/ecotrace_test",
+)
+os.environ.setdefault("CORS_ALLOWED_ORIGINS", "http://localhost:4200")
+os.environ.setdefault("LOG_LEVEL", "WARNING")
+os.environ.setdefault("ATTACHMENT_STORAGE_PATH", "/tmp/ecotrace-test-attachments")
+os.environ.setdefault("KNOWLEDGE_STORAGE_PATH", "/tmp/ecotrace-test-knowledge")
+os.environ.setdefault("REPORT_STORAGE_PATH", "/tmp/ecotrace-test-reports")
+os.environ.setdefault("BACKUP_STORAGE_PATH", "/tmp/ecotrace-test-backups")
+os.environ.setdefault("MAX_ATTACHMENT_SIZE_MB", "5")
+os.environ.setdefault("MAX_CSV_IMPORT_ROWS", "5000")
+os.environ.setdefault("ALLOWED_ATTACHMENT_TYPES", "pdf,csv,xlsx,png,jpeg,jpg")
+os.environ.setdefault("AI_LLM_PROVIDER", "local_grounded")
+os.environ.setdefault("AI_EMBEDDING_PROVIDER", "local_hash")
 import ecotrace.modules.activity_data.infrastructure.models
 import ecotrace.modules.carbon_inventory.infrastructure.models
 import ecotrace.modules.cbam.infrastructure.models
@@ -60,6 +63,7 @@ from ecotrace.main import create_app
 from ecotrace.modules.cbam.application.calculation_service import (
     ensure_platform_calculation_definitions,
 )
+from ecotrace.modules.cbam.application.cn_catalog_seed import ensure_platform_cn_catalog
 from ecotrace.modules.cbam.application.export_template_service import (
     ensure_internal_export_template,
 )
@@ -67,37 +71,42 @@ from ecotrace.modules.cbam.application.factor_catalog_seed import ensure_platfor
 from ecotrace.modules.cbam.application.stationary_combustion_catalog_seed import (
     ensure_platform_stationary_combustion_catalog,
 )
-from ecotrace.modules.cbam.application.cn_catalog_seed import ensure_platform_cn_catalog
 
 
 def _admin_database_url() -> str:
-    return 'postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5433/postgres'
+    return "postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5433/postgres"
+
 
 def _ensure_test_database() -> None:
-    admin_engine = create_engine(_admin_database_url(), isolation_level='AUTOCOMMIT')
+    admin_engine = create_engine(_admin_database_url(), isolation_level="AUTOCOMMIT")
     with admin_engine.connect() as conn:
-        exists = conn.execute(text("SELECT 1 FROM pg_database WHERE datname = 'ecotrace_test'")).scalar()
+        exists = conn.execute(
+            text("SELECT 1 FROM pg_database WHERE datname = 'ecotrace_test'")
+        ).scalar()
         if not exists:
-            conn.execute(text('CREATE DATABASE ecotrace_test'))
+            conn.execute(text("CREATE DATABASE ecotrace_test"))
     admin_engine.dispose()
+
 
 def _truncate_all(engine: Engine) -> None:
     with engine.begin() as conn:
-        tables = ', '.join(f'"{t.name}"' for t in reversed(Base.metadata.sorted_tables))
+        tables = ", ".join(f'"{t.name}"' for t in reversed(Base.metadata.sorted_tables))
         if tables:
-            conn.execute(text(f'TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE'))
+            conn.execute(text(f"TRUNCATE TABLE {tables} RESTART IDENTITY CASCADE"))
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope="session")
 def engine() -> Generator[Engine, None, None]:
     reset_settings_cache()
     _ensure_test_database()
-    db_url = os.environ['DATABASE_URL']
+    db_url = os.environ["DATABASE_URL"]
     eng = create_engine(db_url, pool_pre_ping=True, future=True)
     Base.metadata.drop_all(bind=eng)
     Base.metadata.create_all(bind=eng)
     yield eng
     Base.metadata.drop_all(bind=eng)
     eng.dispose()
+
 
 @pytest.fixture
 def db_session(engine: Engine) -> Generator[Session, None, None]:
@@ -112,6 +121,7 @@ def db_session(engine: Engine) -> Generator[Session, None, None]:
         transaction.rollback()
         connection.close()
 
+
 @pytest.fixture
 def client(engine: Engine) -> Generator[TestClient, None, None]:
     reset_settings_cache()
@@ -125,6 +135,7 @@ def client(engine: Engine) -> Generator[TestClient, None, None]:
             yield db
         finally:
             db.close()
+
     app = create_app()
     app.dependency_overrides[get_db] = _override_get_db
     with TestClient(app) as test_client:
@@ -141,6 +152,7 @@ def client(engine: Engine) -> Generator[TestClient, None, None]:
             seed_session.close()
         yield test_client
     app.dependency_overrides.clear()
+
 
 @pytest.fixture
 def seeded_db(engine: Engine) -> Generator[Session, None, None]:

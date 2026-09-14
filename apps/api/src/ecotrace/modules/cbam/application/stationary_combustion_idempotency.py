@@ -8,20 +8,20 @@ from decimal import Decimal
 
 def canonicalize_decimal(value: Decimal | None) -> str:
     if value is None:
-        return '-'
+        return "-"
     # Fixed-point string; avoids float and unstable hash()/repr() forms.
-    normalized = value.normalize() if value != 0 else Decimal('0')
-    text = format(normalized, 'f')
-    if '.' in text:
-        text = text.rstrip('0').rstrip('.')
-    return text or '0'
+    normalized = value.normalize() if value != 0 else Decimal("0")
+    text = format(normalized, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text or "0"
 
 
 def canonicalize_optional_str(value: str | None) -> str:
     if value is None:
-        return '-'
+        return "-"
     stripped = value.strip()
-    return stripped if stripped else '-'
+    return stripped if stripped else "-"
 
 
 def build_stationary_combustion_request_fingerprint(
@@ -45,5 +45,5 @@ def build_stationary_combustion_request_fingerprint(
         canonicalize_optional_str(density_unit),
         canonicalize_optional_str(dataset_version),
     )
-    payload = '|'.join(parts)
-    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+    payload = "|".join(parts)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()

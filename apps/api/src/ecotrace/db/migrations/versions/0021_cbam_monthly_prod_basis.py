@@ -10,8 +10,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0021_cbam_monthly_prod_basis'
-down_revision: str | None = '0020_cbam_prod_profile_link'
+revision: str = "0021_cbam_monthly_prod_basis"
+down_revision: str | None = "0020_cbam_prod_profile_link"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -83,7 +83,7 @@ CREATE INDEX ix_cbam_monthly_prod_basis_binding_month
 
 
 def downgrade() -> None:
-    op.execute('DROP INDEX IF EXISTS ix_cbam_monthly_prod_basis_binding_month')
-    op.execute('DROP INDEX IF EXISTS ix_cbam_monthly_prod_basis_org_binding')
-    op.execute('DROP INDEX IF EXISTS ix_cbam_monthly_prod_basis_organization_id')
-    op.execute('DROP TABLE IF EXISTS cbam_monthly_production_basis')
+    op.execute("DROP INDEX IF EXISTS ix_cbam_monthly_prod_basis_binding_month")
+    op.execute("DROP INDEX IF EXISTS ix_cbam_monthly_prod_basis_org_binding")
+    op.execute("DROP INDEX IF EXISTS ix_cbam_monthly_prod_basis_organization_id")
+    op.execute("DROP TABLE IF EXISTS cbam_monthly_production_basis")

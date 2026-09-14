@@ -13,7 +13,7 @@ from ecotrace.modules.cbam.application.official_see_export.constants import (
 )
 
 __all__ = [
-    'MAPPING_VERSION',
-    'TEMPLATE_FILENAME',
-    'TEMPLATE_SHA256',
+    "MAPPING_VERSION",
+    "TEMPLATE_FILENAME",
+    "TEMPLATE_SHA256",
 ]

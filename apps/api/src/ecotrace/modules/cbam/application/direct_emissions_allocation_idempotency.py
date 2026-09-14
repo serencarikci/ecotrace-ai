@@ -34,21 +34,21 @@ def build_direct_emissions_allocation_fingerprint(
         WORKBOOK_SHA256,
     ]
     for rid in sorted(source_result_ids, key=str):
-        parts.append(f'src:{rid}')
+        parts.append(f"src:{rid}")
     for rid, fuel, qty, unit in sorted(source_material, key=lambda t: str(t[0])):
         parts.append(
-            f'smat:{rid}|{fuel}|{canonicalize_decimal(qty)}|{canonicalize_optional_str(unit)}'
+            f"smat:{rid}|{fuel}|{canonicalize_decimal(qty)}|{canonicalize_optional_str(unit)}"
         )
     for bid, ver, month, d, e, unit in sorted(monthly_basis, key=lambda t: (t[2], str(t[0]))):
         parts.append(
-            f'mb:{bid}|{ver}|{month}|'
-            f'{canonicalize_decimal(d)}|{canonicalize_decimal(e)}|'
-            f'{canonicalize_optional_str(unit)}'
+            f"mb:{bid}|{ver}|{month}|"
+            f"{canonicalize_decimal(d)}|{canonicalize_decimal(e)}|"
+            f"{canonicalize_optional_str(unit)}"
         )
     for pid, qty, unit, pdate, profile in sorted(production, key=lambda t: str(t[0])):
         parts.append(
-            f'pr:{pid}|{canonicalize_decimal(qty)}|'
-            f'{canonicalize_optional_str(unit)}|{pdate}|{profile}'
+            f"pr:{pid}|{canonicalize_decimal(qty)}|"
+            f"{canonicalize_optional_str(unit)}|{pdate}|{profile}"
         )
-    payload = '|'.join(parts)
-    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+    payload = "|".join(parts)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()

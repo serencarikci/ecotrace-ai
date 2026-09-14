@@ -55,14 +55,14 @@ def _committed_setup(engine):
             select(Organization).where(Organization.slug == DEMO_ORG_SLUG)
         ).scalar_one()
         admin = db.execute(
-            select(User).where(User.normalized_email == 'orgadmin@ecotrace.dev')
+            select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
         ).scalar_one()
         binding, _ = seed_workbook_ready_allocation(db, admin, org)
         db.commit()
         return {
-            'org_id': org.id,
-            'admin_id': admin.id,
-            'binding_id': binding.id,
+            "org_id": org.id,
+            "admin_id": admin.id,
+            "binding_id": binding.id,
         }
     finally:
         db.close()
@@ -79,14 +79,14 @@ def test_concurrent_identical_requests_one_result(engine) -> None:
     def worker() -> None:
         db = session_factory()
         try:
-            admin = db.get(User, ctx['admin_id'])
+            admin = db.get(User, ctx["admin_id"])
             assert admin is not None
             barrier.wait(timeout=30)
             out = execute_direct_emissions_allocation(
                 db,
                 admin,
-                ctx['org_id'],
-                ctx['binding_id'],
+                ctx["org_id"],
+                ctx["binding_id"],
                 DirectEmissionsAllocationExecuteRequest(client_request_id=client_id),
             )
             results.append(out)
@@ -111,29 +111,39 @@ def test_concurrent_identical_requests_one_result(engine) -> None:
 
     db = session_factory()
     try:
-        rows = db.execute(
-            select(CbamDirectEmissionsAllocationResult).where(
-                CbamDirectEmissionsAllocationResult.reporting_period_binding_id
-                == ctx['binding_id'],
-                CbamDirectEmissionsAllocationResult.client_request_id == client_id,
+        rows = (
+            db.execute(
+                select(CbamDirectEmissionsAllocationResult).where(
+                    CbamDirectEmissionsAllocationResult.reporting_period_binding_id
+                    == ctx["binding_id"],
+                    CbamDirectEmissionsAllocationResult.client_request_id == client_id,
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(rows) == 1
-        assert rows[0].status == 'COMPLETED'
-        assert rows[0].balance_status == 'BALANCED'
-        sources = db.execute(
-            select(CbamDeaSourceSnapshot).where(
-                CbamDeaSourceSnapshot.result_id == rows[0].id
+        assert rows[0].status == "COMPLETED"
+        assert rows[0].balance_status == "BALANCED"
+        sources = (
+            db.execute(
+                select(CbamDeaSourceSnapshot).where(CbamDeaSourceSnapshot.result_id == rows[0].id)
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(sources) == 3
         # No orphan RUNNING — status check constraint only allows COMPLETED
-        pointers = db.execute(
-            select(CbamDirectEmissionsAllocationCurrent).where(
-                CbamDirectEmissionsAllocationCurrent.reporting_period_binding_id
-                == ctx['binding_id']
+        pointers = (
+            db.execute(
+                select(CbamDirectEmissionsAllocationCurrent).where(
+                    CbamDirectEmissionsAllocationCurrent.reporting_period_binding_id
+                    == ctx["binding_id"]
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(pointers) == 1
         assert pointers[0].current_result_id == rows[0].id
     finally:
@@ -149,13 +159,13 @@ def test_concurrent_conflicting_fingerprint_safe(engine) -> None:
     # First commit a successful allocation with the key
     db0 = session_factory()
     try:
-        admin = db0.get(User, ctx['admin_id'])
+        admin = db0.get(User, ctx["admin_id"])
         assert admin is not None
         execute_direct_emissions_allocation(
             db0,
             admin,
-            ctx['org_id'],
-            ctx['binding_id'],
+            ctx["org_id"],
+            ctx["binding_id"],
             DirectEmissionsAllocationExecuteRequest(client_request_id=client_id),
         )
     finally:
@@ -164,26 +174,26 @@ def test_concurrent_conflicting_fingerprint_safe(engine) -> None:
     # Corrupt fingerprint then retry → conflict
     db1 = session_factory()
     try:
-        admin = db1.get(User, ctx['admin_id'])
+        admin = db1.get(User, ctx["admin_id"])
         assert admin is not None
         row = db1.execute(
             select(CbamDirectEmissionsAllocationResult).where(
                 CbamDirectEmissionsAllocationResult.client_request_id == client_id
             )
         ).scalar_one()
-        row.request_fingerprint = 'a' * 64
+        row.request_fingerprint = "a" * 64
         db1.commit()
         try:
             execute_direct_emissions_allocation(
                 db1,
                 admin,
-                ctx['org_id'],
-                ctx['binding_id'],
+                ctx["org_id"],
+                ctx["binding_id"],
                 DirectEmissionsAllocationExecuteRequest(client_request_id=client_id),
             )
-            raise AssertionError('expected ConflictError')
+            raise AssertionError("expected ConflictError")
         except ConflictError as exc:
-            assert exc.details[0]['code'] == 'IDEMPOTENCY_KEY_REUSED'
+            assert exc.details[0]["code"] == "IDEMPOTENCY_KEY_REUSED"
     finally:
         db1.close()
 
@@ -193,7 +203,7 @@ def test_failed_request_leaves_no_idempotency_row(engine) -> None:
     session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
     db = session_factory()
     try:
-        admin = db.get(User, ctx['admin_id'])
+        admin = db.get(User, ctx["admin_id"])
         assert admin is not None
         from ecotrace.modules.cbam.application import production_record_service
         from ecotrace.modules.cbam.application.production_record_service import (
@@ -201,15 +211,15 @@ def test_failed_request_leaves_no_idempotency_row(engine) -> None:
         )
 
         page = production_record_service.list_production_records(
-            db, admin, ctx['org_id'], ctx['binding_id'], page=1, page_size=50
+            db, admin, ctx["org_id"], ctx["binding_id"], page=1, page_size=50
         )
         row = page.items[0]
         production_record_service.update_production_record(
             db,
             admin,
-            ctx['org_id'],
+            ctx["org_id"],
             row.id,
-            ProductionRecordUpdate(row_version=row.row_version, quantity=Decimal('1')),
+            ProductionRecordUpdate(row_version=row.row_version, quantity=Decimal("1")),
         )
         client_id = uuid.uuid4()
         from ecotrace.core.exceptions import BusinessRuleError
@@ -218,11 +228,11 @@ def test_failed_request_leaves_no_idempotency_row(engine) -> None:
             execute_direct_emissions_allocation(
                 db,
                 admin,
-                ctx['org_id'],
-                ctx['binding_id'],
+                ctx["org_id"],
+                ctx["binding_id"],
                 DirectEmissionsAllocationExecuteRequest(client_request_id=client_id),
             )
-            raise AssertionError('expected BusinessRuleError')
+            raise AssertionError("expected BusinessRuleError")
         except BusinessRuleError:
             pass
         found = db.execute(
@@ -231,9 +241,6 @@ def test_failed_request_leaves_no_idempotency_row(engine) -> None:
             )
         ).scalar_one_or_none()
         assert found is None
-        assert (
-            db.execute(select(CbamDirectEmissionsAllocationCurrent)).scalar_one_or_none()
-            is None
-        )
+        assert db.execute(select(CbamDirectEmissionsAllocationCurrent)).scalar_one_or_none() is None
     finally:
         db.close()

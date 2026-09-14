@@ -32,7 +32,7 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-ProfileLinkStatus = Literal['MISSING', 'READY', 'OUTDATED', 'INVALID']
+ProfileLinkStatus = Literal["MISSING", "READY", "OUTDATED", "INVALID"]
 
 
 class ProductionRecordCreate(CamelModel):
@@ -44,7 +44,7 @@ class ProductionRecordCreate(CamelModel):
     quantity: Decimal
     unit: str
     notes: str | None = None
-    source_type: str = 'MANUAL'
+    source_type: str = "MANUAL"
 
 
 class ProductionRecordUpdate(CamelModel):
@@ -128,12 +128,10 @@ def _to_response(db: Session, row: CbamProductionRecord) -> ProductionRecordResp
     )
 
 
-def _get_row(
-    db: Session, organization_id: uuid.UUID, record_id: uuid.UUID
-) -> CbamProductionRecord:
+def _get_row(db: Session, organization_id: uuid.UUID, record_id: uuid.UUID) -> CbamProductionRecord:
     row = db.get(CbamProductionRecord, record_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM production record not found.')
+        raise NotFoundError("CBAM production record not found.")
     return row
 
 
@@ -154,7 +152,7 @@ def list_production_records(
         CbamProductionRecord.reporting_period_binding_id == binding_id,
     )
     if not include_archived:
-        stmt = stmt.where(CbamProductionRecord.status == 'active')
+        stmt = stmt.where(CbamProductionRecord.status == "active")
     total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
     rows = list(
         db.execute(
@@ -194,7 +192,7 @@ def get_production_profile_link_summary(
             select(CbamProductionRecord).where(
                 CbamProductionRecord.organization_id == organization_id,
                 CbamProductionRecord.reporting_period_binding_id == binding_id,
-                CbamProductionRecord.status == 'active',
+                CbamProductionRecord.status == "active",
             )
         )
         .scalars()
@@ -206,22 +204,22 @@ def get_production_profile_link_summary(
     invalid = 0
     for row in rows:
         status, _, _ = compute_profile_link_state(db, row)
-        if status == 'MISSING':
+        if status == "MISSING":
             missing += 1
-        elif status == 'OUTDATED':
+        elif status == "OUTDATED":
             outdated += 1
             eligible += 1
-        elif status == 'READY':
+        elif status == "READY":
             eligible += 1
         else:
             invalid += 1
     blocking: list[str] = []
     if missing:
-        blocking.append('PRODUCTION_PROFILE_LINK_MISSING')
+        blocking.append("PRODUCTION_PROFILE_LINK_MISSING")
     if invalid:
-        blocking.append('PRODUCTION_PROFILE_LINK_INVALID')
+        blocking.append("PRODUCTION_PROFILE_LINK_INVALID")
     if not rows:
-        blocking.append('PRODUCTION_RECORDS_REQUIRED')
+        blocking.append("PRODUCTION_RECORDS_REQUIRED")
     allocation_ready = missing == 0 and invalid == 0 and eligible > 0
     return ProductionProfileLinkSummary(
         eligible_record_count=eligible,
@@ -255,7 +253,7 @@ def create_production_record(
     require_positive_quantity(payload.quantity)
     unit = require_unit(payload.unit)
     if payload.source_type not in RECORD_SOURCE_TYPES:
-        raise ValidationAppError('Invalid sourceType.')
+        raise ValidationAppError("Invalid sourceType.")
     validate_optional_date_range(payload.period_start, payload.period_end)
     row = CbamProductionRecord(
         organization_id=organization_id,
@@ -269,7 +267,7 @@ def create_production_record(
         unit=unit,
         notes=payload.notes,
         source_type=payload.source_type,
-        status='active',
+        status="active",
         row_version=1,
         created_by_user_id=user.id,
         updated_by_user_id=user.id,
@@ -278,21 +276,21 @@ def create_production_record(
     db.flush()
     write_audit_log(
         db,
-        action='cbam.production_record.created',
+        action="cbam.production_record.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_production_record',
+        entity_type="cbam_production_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'bindingId': str(binding.id),
-            'installationProfileId': str(installation.id),
-            'productProfileVersionId': str(profile.id),
-            'productId': str(profile.product_id),
-            'quantity': str(row.quantity),
-            'unit': row.unit,
+            "bindingId": str(binding.id),
+            "installationProfileId": str(installation.id),
+            "productProfileVersionId": str(profile.id),
+            "productId": str(profile.product_id),
+            "quantity": str(row.quantity),
+            "unit": row.unit,
         },
     )
     db.commit()
@@ -313,27 +311,27 @@ def update_production_record(
 ) -> ProductionRecordResponse:
     require_cbam_configure(db, user, organization_id)
     row = _get_row(db, organization_id, record_id)
-    if row.status == 'archived':
-        raise BusinessRuleError('Archived production records cannot be updated.')
+    if row.status == "archived":
+        raise BusinessRuleError("Archived production records cannot be updated.")
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM production record')
-    data = payload.model_dump(exclude_unset=True, exclude={'row_version'})
-    if 'product_profile_version_id' in data:
-        pid = data['product_profile_version_id']
+    check_row_version(row.row_version, payload.row_version, entity="CBAM production record")
+    data = payload.model_dump(exclude_unset=True, exclude={"row_version"})
+    if "product_profile_version_id" in data:
+        pid = data["product_profile_version_id"]
         if pid is None:
             raise BusinessRuleError(
-                'Select a published product profile before saving production data.',
-                details=[{'code': 'PRODUCT_PROFILE_REQUIRED'}],
+                "Select a published product profile before saving production data.",
+                details=[{"code": "PRODUCT_PROFILE_REQUIRED"}],
             )
         profile = require_linkable_product_profile(db, organization_id, pid)
         row.product_profile_version_id = profile.id
-    if 'quantity' in data and data['quantity'] is not None:
-        require_positive_quantity(data['quantity'])
-        row.quantity = data['quantity']
-    if 'unit' in data and data['unit'] is not None:
-        row.unit = require_unit(data['unit'])
-    for field in ('production_date', 'period_start', 'period_end', 'notes'):
+    if "quantity" in data and data["quantity"] is not None:
+        require_positive_quantity(data["quantity"])
+        row.quantity = data["quantity"]
+    if "unit" in data and data["unit"] is not None:
+        row.unit = require_unit(data["unit"])
+    for field in ("production_date", "period_start", "period_end", "notes"):
         if field in data:
             setattr(row, field, data[field])
     validate_optional_date_range(row.period_start, row.period_end)
@@ -341,15 +339,15 @@ def update_production_record(
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.production_record.updated',
+        action="cbam.production_record.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_production_record',
+        entity_type="cbam_production_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'fields': list(data.keys()), 'rowVersion': row.row_version},
+        metadata={"fields": list(data.keys()), "rowVersion": row.row_version},
     )
     db.commit()
     db.refresh(row)
@@ -371,9 +369,9 @@ def archive_production_record(
     row = _get_row(db, organization_id, record_id)
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM production record')
-    if row.status == 'archived':
-        raise BusinessRuleError('Production record is already archived.')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM production record")
+    if row.status == "archived":
+        raise BusinessRuleError("Production record is already archived.")
     from ecotrace.modules.cbam.application.direct_emissions_allocation_service import (
         assert_production_record_not_referenced,
     )
@@ -381,20 +379,20 @@ def archive_production_record(
     assert_production_record_not_referenced(
         db, organization_id=organization_id, production_record_id=row.id
     )
-    row.status = 'archived'
+    row.status = "archived"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.production_record.archived',
+        action="cbam.production_record.archived",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_production_record',
+        entity_type="cbam_production_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'to': 'archived'},
+        metadata={"to": "archived"},
     )
     db.commit()
     db.refresh(row)
@@ -403,15 +401,15 @@ def archive_production_record(
 
 # Re-export for typed callers / tests.
 __all__ = [
-    'ProductionProfileLinkSummary',
-    'ProductionRecordCreate',
-    'ProductionRecordResponse',
-    'ProductionRecordUpdate',
-    'ProductionRecordVersionRequest',
-    'archive_production_record',
-    'create_production_record',
-    'get_production_profile_link_summary',
-    'get_production_record',
-    'list_production_records',
-    'update_production_record',
+    "ProductionProfileLinkSummary",
+    "ProductionRecordCreate",
+    "ProductionRecordResponse",
+    "ProductionRecordUpdate",
+    "ProductionRecordVersionRequest",
+    "archive_production_record",
+    "create_production_record",
+    "get_production_profile_link_summary",
+    "get_production_record",
+    "list_production_records",
+    "update_production_record",
 ]

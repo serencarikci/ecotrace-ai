@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0014_cbam_sc_fuel_catalog'
-down_revision: str | None = '0013_cbam_excel_export'
+revision: str = "0014_cbam_sc_fuel_catalog"
+down_revision: str | None = "0013_cbam_excel_export"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -37,8 +37,8 @@ CREATE TABLE cbam_stationary_combustion_fuels (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_stationary_combustion_fuels_status '
-        'ON cbam_stationary_combustion_fuels (status)'
+        "CREATE INDEX ix_cbam_stationary_combustion_fuels_status "
+        "ON cbam_stationary_combustion_fuels (status)"
     )
 
     op.execute(
@@ -113,24 +113,24 @@ CREATE TABLE cbam_stationary_combustion_parameter_sets (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_param_sets_fuel_id '
-        'ON cbam_stationary_combustion_parameter_sets (fuel_id)'
+        "CREATE INDEX ix_cbam_sc_param_sets_fuel_id "
+        "ON cbam_stationary_combustion_parameter_sets (fuel_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_param_sets_status '
-        'ON cbam_stationary_combustion_parameter_sets (status)'
+        "CREATE INDEX ix_cbam_sc_param_sets_status "
+        "ON cbam_stationary_combustion_parameter_sets (status)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_param_sets_validity '
-        'ON cbam_stationary_combustion_parameter_sets (valid_from, valid_until)'
+        "CREATE INDEX ix_cbam_sc_param_sets_validity "
+        "ON cbam_stationary_combustion_parameter_sets (valid_from, valid_until)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_param_sets_fuel_status_validity '
-        'ON cbam_stationary_combustion_parameter_sets '
-        '(fuel_id, status, valid_from, valid_until)'
+        "CREATE INDEX ix_cbam_sc_param_sets_fuel_status_validity "
+        "ON cbam_stationary_combustion_parameter_sets "
+        "(fuel_id, status, valid_from, valid_until)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_stationary_combustion_parameter_sets')
-    op.execute('DROP TABLE IF EXISTS cbam_stationary_combustion_fuels')
+    op.execute("DROP TABLE IF EXISTS cbam_stationary_combustion_parameter_sets")
+    op.execute("DROP TABLE IF EXISTS cbam_stationary_combustion_fuels")

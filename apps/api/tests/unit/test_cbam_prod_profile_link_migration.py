@@ -7,11 +7,9 @@ from sqlalchemy import text
 
 def test_prod_profile_link_index_migration_round_trip(seeded_db) -> None:
     """upgrade → downgrade → upgrade keeps allocation query indexes."""
+    seeded_db.execute(text("DROP INDEX IF EXISTS ix_cbam_production_records_org_binding_profile"))
     seeded_db.execute(
-        text('DROP INDEX IF EXISTS ix_cbam_production_records_org_binding_profile')
-    )
-    seeded_db.execute(
-        text('DROP INDEX IF EXISTS ix_cbam_production_records_product_profile_version_id')
+        text("DROP INDEX IF EXISTS ix_cbam_production_records_product_profile_version_id")
     )
     seeded_db.flush()
 
@@ -40,10 +38,10 @@ CREATE INDEX IF NOT EXISTS ix_cbam_production_records_org_binding_profile
 
     def downgrade() -> None:
         seeded_db.execute(
-            text('DROP INDEX IF EXISTS ix_cbam_production_records_org_binding_profile')
+            text("DROP INDEX IF EXISTS ix_cbam_production_records_org_binding_profile")
         )
         seeded_db.execute(
-            text('DROP INDEX IF EXISTS ix_cbam_production_records_product_profile_version_id')
+            text("DROP INDEX IF EXISTS ix_cbam_production_records_product_profile_version_id")
         )
         seeded_db.flush()
 
@@ -64,13 +62,13 @@ WHERE tablename = 'cbam_production_records'
 
     upgrade()
     assert index_names() == {
-        'ix_cbam_production_records_product_profile_version_id',
-        'ix_cbam_production_records_org_binding_profile',
+        "ix_cbam_production_records_product_profile_version_id",
+        "ix_cbam_production_records_org_binding_profile",
     }
     downgrade()
     assert index_names() == set()
     upgrade()
     assert index_names() == {
-        'ix_cbam_production_records_product_profile_version_id',
-        'ix_cbam_production_records_org_binding_profile',
+        "ix_cbam_production_records_product_profile_version_id",
+        "ix_cbam_production_records_org_binding_profile",
     }

@@ -50,11 +50,15 @@ def _org(db):
 
 
 def _admin(db):
-    return db.execute(select(User).where(User.normalized_email == 'orgadmin@ecotrace.dev')).scalar_one()
+    return db.execute(
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
+    ).scalar_one()
 
 
 def _facility(db, org_id):
-    return db.execute(select(Facility).where(Facility.organization_id == org_id).limit(1)).scalar_one()
+    return db.execute(
+        select(Facility).where(Facility.organization_id == org_id).limit(1)
+    ).scalar_one()
 
 
 def _setup(db, admin, org):
@@ -65,18 +69,18 @@ def _setup(db, admin, org):
         org.id,
         InstallationCreate(
             facility_id=facility.id,
-            code=f'P4A-{uuid.uuid4().hex[:8]}',
-            name='P4A Installation',
+            code=f"P4A-{uuid.uuid4().hex[:8]}",
+            name="P4A Installation",
         ),
     )
     period = ReportingPeriod(
         organization_id=org.id,
-        code=f'P4A-{uuid.uuid4().hex[:6]}',
-        name='P4A Period',
-        period_type='custom',
-        start_date=__import__('datetime').date(2029, 1, 1),
-        end_date=__import__('datetime').date(2029, 3, 31),
-        status='open',
+        code=f"P4A-{uuid.uuid4().hex[:6]}",
+        name="P4A Period",
+        period_type="custom",
+        start_date=__import__("datetime").date(2029, 1, 1),
+        end_date=__import__("datetime").date(2029, 3, 31),
+        status="open",
     )
     db.add(period)
     db.commit()
@@ -97,19 +101,15 @@ def _setup(db, admin, org):
 
 
 def test_allocation_math_decimal_safe() -> None:
-    assert direct_assignment_ratio() == Decimal('1')
-    ratio = compute_production_quantity_ratio(
-        numerator=Decimal('100'), denominator=Decimal('500')
-    )
-    assert ratio == Decimal('0.2')
-    allocated = compute_allocated_quantity(
-        source_quantity=Decimal('100'), allocation_ratio=ratio
-    )
-    assert allocated == Decimal('20')
+    assert direct_assignment_ratio() == Decimal("1")
+    ratio = compute_production_quantity_ratio(numerator=Decimal("100"), denominator=Decimal("500"))
+    assert ratio == Decimal("0.2")
+    allocated = compute_allocated_quantity(source_quantity=Decimal("100"), allocation_ratio=ratio)
+    assert allocated == Decimal("20")
     with pytest.raises(ValidationAppError):
-        compute_production_quantity_ratio(numerator=Decimal('100'), denominator=Decimal('0'))
+        compute_production_quantity_ratio(numerator=Decimal("100"), denominator=Decimal("0"))
     with pytest.raises(ValidationAppError):
-        compute_production_quantity_ratio(numerator=Decimal('600'), denominator=Decimal('500'))
+        compute_production_quantity_ratio(numerator=Decimal("600"), denominator=Decimal("500"))
 
 
 def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
@@ -126,8 +126,8 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         ProductionRecordCreate(
             product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
-            quantity=Decimal('500'),
-            unit='t',
+            quantity=Decimal("500"),
+            unit="t",
         ),
     )
     target = production_record_service.create_production_record(
@@ -138,8 +138,8 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         ProductionRecordCreate(
             product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
-            quantity=Decimal('100'),
-            unit='t',
+            quantity=Decimal("100"),
+            unit="t",
         ),
     )
     activity = activity_record_service.create_activity_record(
@@ -149,10 +149,10 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='ELECTRICITY',
-            quantity=Decimal('100'),
-            unit='MWh',
-            data_source_type='PRIMARY',
+            activity_type="ELECTRICITY",
+            quantity=Decimal("100"),
+            unit="MWh",
+            data_source_type="PRIMARY",
         ),
     )
 
@@ -163,11 +163,11 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         binding.id,
         AllocationRuleCreate(
             installation_profile_id=installation.id,
-            allocation_method='DIRECT_ASSIGNMENT',
-            name='Direct electricity',
+            allocation_method="DIRECT_ASSIGNMENT",
+            name="Direct electricity",
         ),
     )
-    assert direct.allocation_ratio == Decimal('1')
+    assert direct.allocation_ratio == Decimal("1")
     activated_direct = allocation_rule_service.activate_allocation_rule(
         seeded_db,
         admin,
@@ -175,12 +175,12 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         direct.id,
         AllocationRuleVersionRequest(row_version=direct.row_version),
     )
-    assert activated_direct.status == 'ACTIVE'
+    assert activated_direct.status == "ACTIVE"
     direct_result = allocation_service.allocate_activity_record(
         seeded_db, admin, org.id, activated_direct.id, activity.id
     )
-    assert direct_result.allocated_quantity == Decimal('100')
-    assert direct_result.source_quantity == Decimal('100')
+    assert direct_result.allocated_quantity == Decimal("100")
+    assert direct_result.source_quantity == Decimal("100")
     assert direct_result.calculation_version == CALCULATION_VERSION
 
     allocation_rule_service.archive_allocation_rule(
@@ -198,15 +198,15 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         binding.id,
         AllocationRuleCreate(
             installation_profile_id=installation.id,
-            allocation_method='PRODUCTION_QUANTITY_RATIO',
-            name='Prod ratio',
+            allocation_method="PRODUCTION_QUANTITY_RATIO",
+            name="Prod ratio",
             numerator_production_record_id=target.id,
             denominator_production_record_id=base.id,
         ),
     )
-    assert ratio_rule.allocation_ratio == Decimal('0.2')
-    assert ratio_rule.numerator_quantity == Decimal('100')
-    assert ratio_rule.denominator_quantity == Decimal('500')
+    assert ratio_rule.allocation_ratio == Decimal("0.2")
+    assert ratio_rule.numerator_quantity == Decimal("100")
+    assert ratio_rule.denominator_quantity == Decimal("500")
     active_ratio = allocation_rule_service.activate_allocation_rule(
         seeded_db,
         admin,
@@ -217,14 +217,16 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
     result = allocation_service.allocate_activity_record(
         seeded_db, admin, org.id, active_ratio.id, activity.id
     )
-    assert result.allocation_ratio == Decimal('0.2')
-    assert result.allocated_quantity == Decimal('20')
-    assert result.allocated_unit == 'MWh'
-    assert result.source_quantity == Decimal('100')
+    assert result.allocation_ratio == Decimal("0.2")
+    assert result.allocated_quantity == Decimal("20")
+    assert result.allocated_unit == "MWh"
+    assert result.source_quantity == Decimal("100")
 
-    audits = seeded_db.execute(
-        select(AuditLog).where(AuditLog.action == 'cbam.allocation.executed')
-    ).scalars().all()
+    audits = (
+        seeded_db.execute(select(AuditLog).where(AuditLog.action == "cbam.allocation.executed"))
+        .scalars()
+        .all()
+    )
     assert any(a.entity_id == str(result.id) for a in audits)
 
 
@@ -241,8 +243,8 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
         ProductionRecordCreate(
             product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
-            quantity=Decimal('500'),
-            unit='t',
+            quantity=Decimal("500"),
+            unit="t",
         ),
     )
     target_kg = production_record_service.create_production_record(
@@ -253,8 +255,8 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
         ProductionRecordCreate(
             product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
-            quantity=Decimal('100'),
-            unit='kg',
+            quantity=Decimal("100"),
+            unit="kg",
         ),
     )
     with pytest.raises(ValidationAppError):
@@ -265,8 +267,8 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
             binding.id,
             AllocationRuleCreate(
                 installation_profile_id=installation.id,
-                allocation_method='PRODUCTION_QUANTITY_RATIO',
-                name='Bad units',
+                allocation_method="PRODUCTION_QUANTITY_RATIO",
+                name="Bad units",
                 numerator_production_record_id=target_kg.id,
                 denominator_production_record_id=base.id,
             ),
@@ -279,8 +281,8 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
         ProductionRecordCreate(
             product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
-            quantity=Decimal('600'),
-            unit='t',
+            quantity=Decimal("600"),
+            unit="t",
         ),
     )
     with pytest.raises(ValidationAppError):
@@ -291,8 +293,8 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
             binding.id,
             AllocationRuleCreate(
                 installation_profile_id=installation.id,
-                allocation_method='PRODUCTION_QUANTITY_RATIO',
-                name='Oversized',
+                allocation_method="PRODUCTION_QUANTITY_RATIO",
+                name="Oversized",
                 numerator_production_record_id=oversized.id,
                 denominator_production_record_id=base.id,
             ),
@@ -303,7 +305,7 @@ def test_manual_ratio_bounds_and_rationale(seeded_db) -> None:
     org = _org(seeded_db)
     admin = _admin(seeded_db)
     binding, installation = _setup(seeded_db, admin, org)
-    for ratio in (Decimal('0'), Decimal('1'), Decimal('0.25')):
+    for ratio in (Decimal("0"), Decimal("1"), Decimal("0.25")):
         rule = allocation_rule_service.create_allocation_rule(
             seeded_db,
             admin,
@@ -311,11 +313,11 @@ def test_manual_ratio_bounds_and_rationale(seeded_db) -> None:
             binding.id,
             AllocationRuleCreate(
                 installation_profile_id=installation.id,
-                allocation_method='MANUAL_RATIO',
-                name=f'Manual {ratio}',
+                allocation_method="MANUAL_RATIO",
+                name=f"Manual {ratio}",
                 allocation_ratio=ratio,
-                rationale='Uzman değerlendirmesi',
-                source_reference='internal note',
+                rationale="Uzman değerlendirmesi",
+                source_reference="internal note",
             ),
         )
         assert rule.allocation_ratio == ratio
@@ -327,11 +329,11 @@ def test_manual_ratio_bounds_and_rationale(seeded_db) -> None:
             binding.id,
             AllocationRuleCreate(
                 installation_profile_id=installation.id,
-                allocation_method='MANUAL_RATIO',
-                name='Bad low',
-                allocation_ratio=Decimal('-0.1'),
-                rationale='x',
-                source_reference='y',
+                allocation_method="MANUAL_RATIO",
+                name="Bad low",
+                allocation_ratio=Decimal("-0.1"),
+                rationale="x",
+                source_reference="y",
             ),
         )
     with pytest.raises(ValidationAppError):
@@ -342,11 +344,11 @@ def test_manual_ratio_bounds_and_rationale(seeded_db) -> None:
             binding.id,
             AllocationRuleCreate(
                 installation_profile_id=installation.id,
-                allocation_method='MANUAL_RATIO',
-                name='Bad high',
-                allocation_ratio=Decimal('1.1'),
-                rationale='x',
-                source_reference='y',
+                allocation_method="MANUAL_RATIO",
+                name="Bad high",
+                allocation_ratio=Decimal("1.1"),
+                rationale="x",
+                source_reference="y",
             ),
         )
     with pytest.raises(ValidationAppError):
@@ -357,10 +359,10 @@ def test_manual_ratio_bounds_and_rationale(seeded_db) -> None:
             binding.id,
             AllocationRuleCreate(
                 installation_profile_id=installation.id,
-                allocation_method='MANUAL_RATIO',
-                name='No rationale',
-                allocation_ratio=Decimal('0.5'),
-                source_reference='y',
+                allocation_method="MANUAL_RATIO",
+                name="No rationale",
+                allocation_ratio=Decimal("0.5"),
+                source_reference="y",
             ),
         )
 
@@ -376,11 +378,11 @@ def test_purchased_input_uses_consumed_not_purchased(seeded_db) -> None:
         binding.id,
         PurchasedInputCreate(
             installation_profile_id=installation.id,
-            input_name='Steam',
-            quantity=Decimal('200'),
-            unit='t',
-            consumed_quantity=Decimal('80'),
-            consumed_unit='t',
+            input_name="Steam",
+            quantity=Decimal("200"),
+            unit="t",
+            consumed_quantity=Decimal("80"),
+            consumed_unit="t",
         ),
     )
     without_consumed = purchased_input_service.create_purchased_input(
@@ -390,9 +392,9 @@ def test_purchased_input_uses_consumed_not_purchased(seeded_db) -> None:
         binding.id,
         PurchasedInputCreate(
             installation_profile_id=installation.id,
-            input_name='Coal',
-            quantity=Decimal('50'),
-            unit='t',
+            input_name="Coal",
+            quantity=Decimal("50"),
+            unit="t",
         ),
     )
     rule = allocation_rule_service.create_allocation_rule(
@@ -402,8 +404,8 @@ def test_purchased_input_uses_consumed_not_purchased(seeded_db) -> None:
         binding.id,
         AllocationRuleCreate(
             installation_profile_id=installation.id,
-            allocation_method='DIRECT_ASSIGNMENT',
-            name='Purchased direct',
+            allocation_method="DIRECT_ASSIGNMENT",
+            name="Purchased direct",
         ),
     )
     active = allocation_rule_service.activate_allocation_rule(
@@ -416,8 +418,8 @@ def test_purchased_input_uses_consumed_not_purchased(seeded_db) -> None:
     result = allocation_service.allocate_purchased_input(
         seeded_db, admin, org.id, active.id, with_consumed.id
     )
-    assert result.source_quantity == Decimal('80')
-    assert result.allocated_quantity == Decimal('80')
+    assert result.source_quantity == Decimal("80")
+    assert result.allocated_quantity == Decimal("80")
     with pytest.raises(BusinessRuleError):
         allocation_service.allocate_purchased_input(
             seeded_db, admin, org.id, active.id, without_consumed.id
@@ -435,10 +437,10 @@ def test_recalculate_supersedes_previous(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='ELECTRICITY',
-            quantity=Decimal('100'),
-            unit='MWh',
-            data_source_type='PRIMARY',
+            activity_type="ELECTRICITY",
+            quantity=Decimal("100"),
+            unit="MWh",
+            data_source_type="PRIMARY",
         ),
     )
     rule = allocation_rule_service.create_allocation_rule(
@@ -448,11 +450,11 @@ def test_recalculate_supersedes_previous(seeded_db) -> None:
         binding.id,
         AllocationRuleCreate(
             installation_profile_id=installation.id,
-            allocation_method='MANUAL_RATIO',
-            name='Manual 25',
-            allocation_ratio=Decimal('0.25'),
-            rationale='test',
-            source_reference='test',
+            allocation_method="MANUAL_RATIO",
+            name="Manual 25",
+            allocation_ratio=Decimal("0.25"),
+            rationale="test",
+            source_reference="test",
         ),
     )
     active = allocation_rule_service.activate_allocation_rule(
@@ -465,13 +467,11 @@ def test_recalculate_supersedes_previous(seeded_db) -> None:
     first = allocation_service.allocate_activity_record(
         seeded_db, admin, org.id, active.id, activity.id
     )
-    assert first.allocated_quantity == Decimal('25')
-    second = allocation_service.recalculate_allocation_result(
-        seeded_db, admin, org.id, first.id
-    )
+    assert first.allocated_quantity == Decimal("25")
+    second = allocation_service.recalculate_allocation_result(seeded_db, admin, org.id, first.id)
     assert second.id != first.id
     assert second.is_current is True
-    assert second.allocated_quantity == Decimal('25')
+    assert second.allocated_quantity == Decimal("25")
     from ecotrace.modules.cbam.infrastructure.models import CbamAllocationResult
 
     old = seeded_db.get(CbamAllocationResult, first.id)
@@ -492,8 +492,8 @@ def test_stale_row_version_and_draft_only_update(seeded_db) -> None:
         binding.id,
         AllocationRuleCreate(
             installation_profile_id=installation.id,
-            allocation_method='DIRECT_ASSIGNMENT',
-            name='Draft rule',
+            allocation_method="DIRECT_ASSIGNMENT",
+            name="Draft rule",
         ),
     )
     with pytest.raises(ConflictError):
@@ -502,7 +502,7 @@ def test_stale_row_version_and_draft_only_update(seeded_db) -> None:
             admin,
             org.id,
             rule.id,
-            AllocationRuleUpdate(row_version=999, name='Stale'),
+            AllocationRuleUpdate(row_version=999, name="Stale"),
         )
     active = allocation_rule_service.activate_allocation_rule(
         seeded_db,
@@ -517,7 +517,7 @@ def test_stale_row_version_and_draft_only_update(seeded_db) -> None:
             admin,
             org.id,
             active.id,
-            AllocationRuleUpdate(row_version=active.row_version, name='Nope'),
+            AllocationRuleUpdate(row_version=active.row_version, name="Nope"),
         )
 
 
@@ -527,31 +527,31 @@ def test_phase4a_has_no_forbidden_engine_imports() -> None:
 
 def test_phase4a_source_has_no_emission_calculation() -> None:
     api_root = Path(__file__).resolve().parents[2]
-    src = api_root / 'src' / 'ecotrace'
+    src = api_root / "src" / "ecotrace"
     files = [
-        src / 'modules' / 'cbam' / 'application' / 'allocation_math.py',
-        src / 'modules' / 'cbam' / 'application' / 'allocation_rule_service.py',
-        src / 'modules' / 'cbam' / 'application' / 'allocation_service.py',
+        src / "modules" / "cbam" / "application" / "allocation_math.py",
+        src / "modules" / "cbam" / "application" / "allocation_rule_service.py",
+        src / "modules" / "cbam" / "application" / "allocation_service.py",
     ]
     banned = (
-        'ipcc',
-        'defra',
-        'epa_factor',
-        'emission_factor',
-        'co2e_factor',
-        'embedded_emission_calc',
-        'calculate_co2',
-        'openpyxl',
-        'xlsxwriter',
-        'generate_excel',
-        'cn_code',
-        'shipment_allocation',
+        "ipcc",
+        "defra",
+        "epa_factor",
+        "emission_factor",
+        "co2e_factor",
+        "embedded_emission_calc",
+        "calculate_co2",
+        "openpyxl",
+        "xlsxwriter",
+        "generate_excel",
+        "cn_code",
+        "shipment_allocation",
     )
     for path in files:
-        text = path.read_text(encoding='utf-8').lower()
+        text = path.read_text(encoding="utf-8").lower()
         for token in banned:
-            assert token not in text, f'{path} contains banned token {token}'
-    math_src = (src / 'modules' / 'cbam' / 'application' / 'allocation_math.py').read_text()
-    assert 'source_quantity * allocation_ratio' in math_src
-    assert 'emission_factor' not in math_src.lower()
-    assert 'co2' not in math_src.lower()
+            assert token not in text, f"{path} contains banned token {token}"
+    math_src = (src / "modules" / "cbam" / "application" / "allocation_math.py").read_text()
+    assert "source_quantity * allocation_ratio" in math_src
+    assert "emission_factor" not in math_src.lower()
+    assert "co2" not in math_src.lower()

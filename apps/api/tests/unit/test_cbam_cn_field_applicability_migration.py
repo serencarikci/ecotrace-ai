@@ -20,10 +20,10 @@ from ecotrace.modules.cbam.infrastructure.models import CbamCnCode
 def _backfill_like_migration(db) -> str:
     """Mirror 0019 upgrade backfill deterministically on the open test session."""
     payload = load_cn_catalog_seed_payload()
-    expected_checksum = payload['dataset']['contentChecksum']
+    expected_checksum = payload["dataset"]["contentChecksum"]
     by_norm = {
-        row['normalizedCode']: normalize_field_applicability(row.get('fieldApplicability'))
-        for row in payload['cnCodes']
+        row["normalizedCode"]: normalize_field_applicability(row.get("fieldApplicability"))
+        for row in payload["cnCodes"]
     }
     db.execute(
         text(
@@ -46,7 +46,7 @@ WHERE d.dataset_code = 'CBAM_SEE_CN_CODES' AND d.dataset_version = 'SEE_V2.1'
         ).mappings()
     )
     for row in rows:
-        fa = by_norm.get(row['normalized_code'], empty_field_applicability())
+        fa = by_norm.get(row["normalized_code"], empty_field_applicability())
         db.execute(
             text(
                 """
@@ -55,7 +55,7 @@ SET field_applicability = CAST(:fa AS jsonb), updated_at = now()
 WHERE id = :id
 """
             ),
-            {'fa': json.dumps(fa, separators=(',', ':')), 'id': row['id']},
+            {"fa": json.dumps(fa, separators=(",", ":")), "id": row["id"]},
         )
     db.execute(
         text(
@@ -65,7 +65,7 @@ SET content_checksum = :checksum, updated_at = now()
 WHERE dataset_code = 'CBAM_SEE_CN_CODES' AND dataset_version = 'SEE_V2.1'
 """
         ),
-        {'checksum': expected_checksum},
+        {"checksum": expected_checksum},
     )
     db.flush()
     return expected_checksum
@@ -75,12 +75,10 @@ def test_field_applicability_migration_round_trip(seeded_db) -> None:
     """upgrade → downgrade → upgrade keeps deterministic backfill/checksum."""
     ensure_platform_cn_catalog(seeded_db)
     payload = load_cn_catalog_seed_payload()
-    by_norm = {
-        row['normalizedCode']: row['fieldApplicability'] for row in payload['cnCodes']
-    }
+    by_norm = {row["normalizedCode"]: row["fieldApplicability"] for row in payload["cnCodes"]}
 
     # Simulate pre-6A+ schema.
-    seeded_db.execute(text('ALTER TABLE cbam_cn_codes DROP COLUMN IF EXISTS field_applicability'))
+    seeded_db.execute(text("ALTER TABLE cbam_cn_codes DROP COLUMN IF EXISTS field_applicability"))
     seeded_db.execute(
         text(
             """
@@ -89,7 +87,7 @@ SET content_checksum = :old
 WHERE dataset_code = 'CBAM_SEE_CN_CODES' AND dataset_version = 'SEE_V2.1'
 """
         ),
-        {'old': '0' * 64},
+        {"old": "0" * 64},
     )
     seeded_db.flush()
 
@@ -98,12 +96,12 @@ WHERE dataset_code = 'CBAM_SEE_CN_CODES' AND dataset_version = 'SEE_V2.1'
 
     rows = list(
         seeded_db.execute(
-            text('SELECT normalized_code, field_applicability FROM cbam_cn_codes')
+            text("SELECT normalized_code, field_applicability FROM cbam_cn_codes")
         ).mappings()
     )
     assert len(rows) == 569
     for row in rows:
-        assert row['field_applicability'] == by_norm[row['normalized_code']]
+        assert row["field_applicability"] == by_norm[row["normalized_code"]]
     checksum = seeded_db.execute(
         text(
             """
@@ -115,7 +113,7 @@ WHERE dataset_code = 'CBAM_SEE_CN_CODES' AND dataset_version = 'SEE_V2.1'
     assert checksum == expected_checksum
 
     # Downgrade
-    seeded_db.execute(text('ALTER TABLE cbam_cn_codes DROP COLUMN IF EXISTS field_applicability'))
+    seeded_db.execute(text("ALTER TABLE cbam_cn_codes DROP COLUMN IF EXISTS field_applicability"))
     seeded_db.flush()
     col = seeded_db.execute(
         text(
@@ -137,7 +135,7 @@ SELECT field_applicability FROM cbam_cn_codes WHERE normalized_code = '73181595'
 """
         )
     ).scalar_one()
-    assert steel['reducingAgent'] is True
+    assert steel["reducingAgent"] is True
     cement = seeded_db.execute(
         text(
             """
@@ -145,8 +143,8 @@ SELECT field_applicability FROM cbam_cn_codes WHERE normalized_code = '25232900'
 """
         )
     ).scalar_one()
-    assert cement['reducingAgent'] is False
+    assert cement["reducingAgent"] is False
     orm_steel = seeded_db.execute(
-        select(CbamCnCode).where(CbamCnCode.normalized_code == '73181595')
+        select(CbamCnCode).where(CbamCnCode.normalized_code == "73181595")
     ).scalar_one()
-    assert orm_steel.field_applicability['percentOtherMaterials'] is True
+    assert orm_steel.field_applicability["percentOtherMaterials"] is True

@@ -97,7 +97,7 @@ def _to_response(row: CbamAllocationRule) -> AllocationRuleResponse:
 def _get_rule(db: Session, organization_id: uuid.UUID, rule_id: uuid.UUID) -> CbamAllocationRule:
     row = db.get(CbamAllocationRule, rule_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM allocation rule not found.')
+        raise NotFoundError("CBAM allocation rule not found.")
     return row
 
 
@@ -106,7 +106,7 @@ def _get_production(
 ) -> CbamProductionRecord:
     row = db.get(CbamProductionRecord, record_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM production record not found.')
+        raise NotFoundError("CBAM production record not found.")
     return row
 
 
@@ -137,7 +137,7 @@ def _assert_no_other_active(
         CbamAllocationRule.organization_id == organization_id,
         CbamAllocationRule.reporting_period_binding_id == binding_id,
         CbamAllocationRule.installation_profile_id == installation_id,
-        CbamAllocationRule.status == 'ACTIVE',
+        CbamAllocationRule.status == "ACTIVE",
     )
     if product_profile_version_id is None:
         stmt = stmt.where(CbamAllocationRule.product_profile_version_id.is_(None))
@@ -149,17 +149,19 @@ def _assert_no_other_active(
         stmt = stmt.where(CbamAllocationRule.id != exclude_rule_id)
     if db.execute(stmt.limit(1)).scalar_one_or_none() is not None:
         raise ConflictError(
-            'An ACTIVE allocation rule already exists for this allocation scope.',
-            details=[{'code': 'ACTIVE_RULE_EXISTS'}],
+            "An ACTIVE allocation rule already exists for this allocation scope.",
+            details=[{"code": "ACTIVE_RULE_EXISTS"}],
         )
 
 
-def _apply_method_fields(row: CbamAllocationRule, *, db: Session, organization_id: uuid.UUID) -> None:
+def _apply_method_fields(
+    row: CbamAllocationRule, *, db: Session, organization_id: uuid.UUID
+) -> None:
     method = row.allocation_method
     if method not in ALLOCATION_METHODS:
-        raise ValidationAppError(f'Unsupported allocationMethod: {method}')
+        raise ValidationAppError(f"Unsupported allocationMethod: {method}")
 
-    if method == 'DIRECT_ASSIGNMENT':
+    if method == "DIRECT_ASSIGNMENT":
         row.allocation_ratio = direct_assignment_ratio()
         row.numerator_production_record_id = None
         row.denominator_production_record_id = None
@@ -168,23 +170,23 @@ def _apply_method_fields(row: CbamAllocationRule, *, db: Session, organization_i
         row.quantity_unit = None
         return
 
-    if method == 'MANUAL_RATIO':
+    if method == "MANUAL_RATIO":
         if row.allocation_ratio is None:
             raise ValidationAppError(
-                'Manual allocation requires allocationRatio.',
-                details=[{'field': 'allocationRatio', 'message': 'Required.'}],
+                "Manual allocation requires allocationRatio.",
+                details=[{"field": "allocationRatio", "message": "Required."}],
             )
-        rationale = (row.rationale or '').strip()
+        rationale = (row.rationale or "").strip()
         if not rationale:
             raise ValidationAppError(
-                'Manual allocation requires a non-empty rationale.',
-                details=[{'field': 'rationale', 'message': 'Required.'}],
+                "Manual allocation requires a non-empty rationale.",
+                details=[{"field": "rationale", "message": "Required."}],
             )
-        source_ref = (row.source_reference or '').strip()
+        source_ref = (row.source_reference or "").strip()
         if not source_ref:
             raise ValidationAppError(
-                'Manual allocation requires sourceReference or explanation.',
-                details=[{'field': 'sourceReference', 'message': 'Required.'}],
+                "Manual allocation requires sourceReference or explanation.",
+                details=[{"field": "sourceReference", "message": "Required."}],
             )
         row.rationale = rationale
         row.source_reference = source_ref
@@ -198,37 +200,37 @@ def _apply_method_fields(row: CbamAllocationRule, *, db: Session, organization_i
 
     if row.numerator_production_record_id is None or row.denominator_production_record_id is None:
         raise ValidationAppError(
-            'Production quantity ratio requires numerator and denominator production records.',
+            "Production quantity ratio requires numerator and denominator production records.",
             details=[
-                {'field': 'numeratorProductionRecordId', 'message': 'Required.'},
-                {'field': 'denominatorProductionRecordId', 'message': 'Required.'},
+                {"field": "numeratorProductionRecordId", "message": "Required."},
+                {"field": "denominatorProductionRecordId", "message": "Required."},
             ],
         )
     numerator = _get_production(db, organization_id, row.numerator_production_record_id)
     denominator = _get_production(db, organization_id, row.denominator_production_record_id)
-    if numerator.status == 'archived' or denominator.status == 'archived':
-        raise BusinessRuleError('Archived production records cannot be used for allocation rules.')
+    if numerator.status == "archived" or denominator.status == "archived":
+        raise BusinessRuleError("Archived production records cannot be used for allocation rules.")
     if numerator.reporting_period_binding_id != row.reporting_period_binding_id:
         raise ValidationAppError(
-            'Numerator production record must belong to the same reporting-period binding.'
+            "Numerator production record must belong to the same reporting-period binding."
         )
     if denominator.reporting_period_binding_id != row.reporting_period_binding_id:
         raise ValidationAppError(
-            'Denominator production record must belong to the same reporting-period binding.'
+            "Denominator production record must belong to the same reporting-period binding."
         )
     if numerator.installation_profile_id != row.installation_profile_id:
         raise ValidationAppError(
-            'Numerator production record must belong to the rule installation.'
+            "Numerator production record must belong to the rule installation."
         )
     if denominator.installation_profile_id != row.installation_profile_id:
         raise ValidationAppError(
-            'Denominator production record must belong to the rule installation.'
+            "Denominator production record must belong to the rule installation."
         )
     if numerator.unit != denominator.unit:
         raise ValidationAppError(
-            'Numerator and denominator production units must match exactly '
-            '(no silent unit conversion).',
-            details=[{'field': 'unit', 'message': 'Incompatible units.'}],
+            "Numerator and denominator production units must match exactly "
+            "(no silent unit conversion).",
+            details=[{"field": "unit", "message": "Incompatible units."}],
         )
     ratio = compute_production_quantity_ratio(
         numerator=numerator.quantity,
@@ -242,11 +244,11 @@ def _apply_method_fields(row: CbamAllocationRule, *, db: Session, organization_i
 
 def validate_rule(db: Session, organization_id: uuid.UUID, rule: CbamAllocationRule) -> None:
     if not rule.name or not rule.name.strip():
-        raise ValidationAppError('Allocation rule name is required.')
+        raise ValidationAppError("Allocation rule name is required.")
     rule.name = rule.name.strip()
     _apply_method_fields(rule, db=db, organization_id=organization_id)
     if rule.allocation_ratio is None:
-        raise ValidationAppError('Allocation rule is missing a resolved allocationRatio.')
+        raise ValidationAppError("Allocation rule is missing a resolved allocationRatio.")
 
 
 def list_allocation_rules(
@@ -266,7 +268,7 @@ def list_allocation_rules(
         CbamAllocationRule.reporting_period_binding_id == binding_id,
     )
     if not include_archived:
-        stmt = stmt.where(CbamAllocationRule.status != 'ARCHIVED')
+        stmt = stmt.where(CbamAllocationRule.status != "ARCHIVED")
     total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
     rows = list(
         db.execute(
@@ -322,7 +324,7 @@ def create_allocation_rule(
         denominator_production_record_id=payload.denominator_production_record_id,
         rationale=payload.rationale,
         source_reference=payload.source_reference,
-        status='DRAFT',
+        status="DRAFT",
         row_version=1,
         created_by_user_id=user.id,
         updated_by_user_id=user.id,
@@ -332,19 +334,19 @@ def create_allocation_rule(
     db.flush()
     write_audit_log(
         db,
-        action='cbam.allocation_rule.created',
+        action="cbam.allocation_rule.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_allocation_rule',
+        entity_type="cbam_allocation_rule",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'ruleId': str(row.id),
-            'method': row.allocation_method,
-            'ratio': str(row.allocation_ratio) if row.allocation_ratio is not None else None,
-            'status': row.status,
+            "ruleId": str(row.id),
+            "method": row.allocation_method,
+            "ratio": str(row.allocation_ratio) if row.allocation_ratio is not None else None,
+            "status": row.status,
         },
     )
     db.commit()
@@ -365,33 +367,33 @@ def update_allocation_rule(
 ) -> AllocationRuleResponse:
     require_cbam_configure(db, user, organization_id)
     row = _get_rule(db, organization_id, rule_id)
-    if row.status != 'DRAFT':
+    if row.status != "DRAFT":
         raise BusinessRuleError(
-            'Only DRAFT allocation rules can be updated. Archive and create a new draft '
-            'instead of mutating an ACTIVE rule that may have retained results.'
+            "Only DRAFT allocation rules can be updated. Archive and create a new draft "
+            "instead of mutating an ACTIVE rule that may have retained results."
         )
     if _has_current_results(db, row.id):
         raise BusinessRuleError(
-            'Allocation rules with retained current results cannot be silently mutated.'
+            "Allocation rules with retained current results cannot be silently mutated."
         )
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM allocation rule')
-    data = payload.model_dump(exclude_unset=True, exclude={'row_version'})
-    if 'product_profile_version_id' in data:
-        pid = data['product_profile_version_id']
+    check_row_version(row.row_version, payload.row_version, entity="CBAM allocation rule")
+    data = payload.model_dump(exclude_unset=True, exclude={"row_version"})
+    if "product_profile_version_id" in data:
+        pid = data["product_profile_version_id"]
         if pid is not None:
             get_product_profile_for_org(db, organization_id, pid)
         row.product_profile_version_id = pid
     for field in (
-        'name',
-        'description',
-        'allocation_method',
-        'allocation_ratio',
-        'numerator_production_record_id',
-        'denominator_production_record_id',
-        'rationale',
-        'source_reference',
+        "name",
+        "description",
+        "allocation_method",
+        "allocation_ratio",
+        "numerator_production_record_id",
+        "denominator_production_record_id",
+        "rationale",
+        "source_reference",
     ):
         if field in data:
             setattr(row, field, data[field])
@@ -400,20 +402,20 @@ def update_allocation_rule(
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.allocation_rule.updated',
+        action="cbam.allocation_rule.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_allocation_rule',
+        entity_type="cbam_allocation_rule",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'ruleId': str(row.id),
-            'method': row.allocation_method,
-            'ratio': str(row.allocation_ratio) if row.allocation_ratio is not None else None,
-            'fields': list(data.keys()),
-            'rowVersion': row.row_version,
+            "ruleId": str(row.id),
+            "method": row.allocation_method,
+            "ratio": str(row.allocation_ratio) if row.allocation_ratio is not None else None,
+            "fields": list(data.keys()),
+            "rowVersion": row.row_version,
         },
     )
     db.commit()
@@ -436,11 +438,11 @@ def activate_allocation_rule(
     row = _get_rule(db, organization_id, rule_id)
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM allocation rule')
-    if row.status == 'ARCHIVED':
-        raise BusinessRuleError('Archived allocation rules cannot be activated.')
-    if row.status == 'ACTIVE':
-        raise BusinessRuleError('Allocation rule is already ACTIVE.')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM allocation rule")
+    if row.status == "ARCHIVED":
+        raise BusinessRuleError("Archived allocation rules cannot be activated.")
+    if row.status == "ACTIVE":
+        raise BusinessRuleError("Allocation rule is already ACTIVE.")
     validate_rule(db, organization_id, row)
     _assert_no_other_active(
         db,
@@ -450,23 +452,23 @@ def activate_allocation_rule(
         product_profile_version_id=row.product_profile_version_id,
         exclude_rule_id=row.id,
     )
-    row.status = 'ACTIVE'
+    row.status = "ACTIVE"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.allocation_rule.activated',
+        action="cbam.allocation_rule.activated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_allocation_rule',
+        entity_type="cbam_allocation_rule",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'ruleId': str(row.id),
-            'method': row.allocation_method,
-            'ratio': str(row.allocation_ratio) if row.allocation_ratio is not None else None,
+            "ruleId": str(row.id),
+            "method": row.allocation_method,
+            "ratio": str(row.allocation_ratio) if row.allocation_ratio is not None else None,
         },
     )
     db.commit()
@@ -489,27 +491,27 @@ def archive_allocation_rule(
     row = _get_rule(db, organization_id, rule_id)
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM allocation rule')
-    if row.status == 'ARCHIVED':
-        raise BusinessRuleError('Allocation rule is already archived.')
-    row.status = 'ARCHIVED'
+    check_row_version(row.row_version, payload.row_version, entity="CBAM allocation rule")
+    if row.status == "ARCHIVED":
+        raise BusinessRuleError("Allocation rule is already archived.")
+    row.status = "ARCHIVED"
     row.archived_at = datetime.now(UTC)
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.allocation_rule.archived',
+        action="cbam.allocation_rule.archived",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_allocation_rule',
+        entity_type="cbam_allocation_rule",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'ruleId': str(row.id),
-            'method': row.allocation_method,
-            'ratio': str(row.allocation_ratio) if row.allocation_ratio is not None else None,
+            "ruleId": str(row.id),
+            "method": row.allocation_method,
+            "ratio": str(row.allocation_ratio) if row.allocation_ratio is not None else None,
         },
     )
     db.commit()

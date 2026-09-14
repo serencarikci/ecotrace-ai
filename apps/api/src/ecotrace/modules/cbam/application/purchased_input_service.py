@@ -42,7 +42,7 @@ class PurchasedInputCreate(CamelModel):
     consumed_unit: str | None = None
     embedded_emission_value: Decimal | None = None
     embedded_emission_unit: str | None = None
-    embedded_emission_source_type: str = 'NOT_PROVIDED'
+    embedded_emission_source_type: str = "NOT_PROVIDED"
     source_reference: str | None = None
     notes: str | None = None
 
@@ -99,7 +99,7 @@ def _get_row(
 ) -> CbamPurchasedInputRecord:
     row = db.get(CbamPurchasedInputRecord, record_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM purchased input record not found.')
+        raise NotFoundError("CBAM purchased input record not found.")
     return row
 
 
@@ -112,21 +112,19 @@ def _validate_consumed(
     if consumed_quantity is None and consumed_unit is None:
         return None, None
     if consumed_quantity is None or consumed_unit is None:
-        raise ValidationAppError(
-            'consumedQuantity and consumedUnit must be provided together.'
-        )
-    require_non_negative(consumed_quantity, field='consumedQuantity')
+        raise ValidationAppError("consumedQuantity and consumedUnit must be provided together.")
+    require_non_negative(consumed_quantity, field="consumedQuantity")
     consumed_unit = require_unit(consumed_unit)
     if not same_unit_family(unit, consumed_unit):
         raise BusinessRuleError(
-            'consumedUnit must exactly match purchased unit for Phase 3 '
-            '(unit conversion and stock accounting are BLOCKED — B-09/B-10).',
-            details=[{'code': 'BLOCKED_DOMAIN', 'decision': 'B-09'}],
+            "consumedUnit must exactly match purchased unit for Phase 3 "
+            "(unit conversion and stock accounting are BLOCKED — B-09/B-10).",
+            details=[{"code": "BLOCKED_DOMAIN", "decision": "B-09"}],
         )
     if consumed_quantity > quantity:
         raise ValidationAppError(
-            'consumedQuantity cannot exceed purchased quantity when units match.',
-            details=[{'field': 'consumedQuantity', 'message': 'Must be <= quantity.'}],
+            "consumedQuantity cannot exceed purchased quantity when units match.",
+            details=[{"field": "consumedQuantity", "message": "Must be <= quantity."}],
         )
     return consumed_quantity, consumed_unit
 
@@ -137,16 +135,16 @@ def _validate_embedded(
     source_type: str,
 ) -> None:
     if source_type not in EMBEDDED_EMISSION_SOURCE_TYPES:
-        raise ValidationAppError('Invalid embeddedEmissionSourceType.')
+        raise ValidationAppError("Invalid embeddedEmissionSourceType.")
     if value is None:
-        if source_type == 'PRIMARY':
+        if source_type == "PRIMARY":
             raise ValidationAppError(
-                'embeddedEmissionValue is required when source type is PRIMARY.'
+                "embeddedEmissionValue is required when source type is PRIMARY."
             )
         return
-    require_positive_quantity(value, field='embeddedEmissionValue')
+    require_positive_quantity(value, field="embeddedEmissionValue")
     if not unit or not unit.strip():
-        raise ValidationAppError('embeddedEmissionUnit is required when a value is supplied.')
+        raise ValidationAppError("embeddedEmissionUnit is required when a value is supplied.")
 
 
 def list_purchased_inputs(
@@ -166,7 +164,7 @@ def list_purchased_inputs(
         CbamPurchasedInputRecord.reporting_period_binding_id == binding_id,
     )
     if not include_archived:
-        stmt = stmt.where(CbamPurchasedInputRecord.status == 'active')
+        stmt = stmt.where(CbamPurchasedInputRecord.status == "active")
     total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
     rows = list(
         db.execute(
@@ -210,7 +208,7 @@ def create_purchased_input(
         get_product_profile_for_org(db, organization_id, product_profile_id)
     name = payload.input_name.strip()
     if not name:
-        raise ValidationAppError('inputName is required.')
+        raise ValidationAppError("inputName is required.")
     require_positive_quantity(payload.quantity)
     unit = require_unit(payload.unit)
     consumed_qty, consumed_unit = _validate_consumed(
@@ -240,7 +238,7 @@ def create_purchased_input(
         embedded_emission_source_type=payload.embedded_emission_source_type,
         source_reference=payload.source_reference,
         notes=payload.notes,
-        status='active',
+        status="active",
         row_version=1,
         created_by_user_id=user.id,
         updated_by_user_id=user.id,
@@ -249,19 +247,19 @@ def create_purchased_input(
     db.flush()
     write_audit_log(
         db,
-        action='cbam.purchased_input.created',
+        action="cbam.purchased_input.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_purchased_input_record',
+        entity_type="cbam_purchased_input_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'bindingId': str(binding.id),
-            'inputName': row.input_name,
-            'quantity': str(row.quantity),
-            'consumedQuantity': str(row.consumed_quantity) if row.consumed_quantity else None,
+            "bindingId": str(binding.id),
+            "inputName": row.input_name,
+            "quantity": str(row.quantity),
+            "consumedQuantity": str(row.consumed_quantity) if row.consumed_quantity else None,
         },
     )
     db.commit()
@@ -282,37 +280,37 @@ def update_purchased_input(
 ) -> PurchasedInputResponse:
     require_cbam_configure(db, user, organization_id)
     row = _get_row(db, organization_id, record_id)
-    if row.status == 'archived':
-        raise BusinessRuleError('Archived purchased input records cannot be updated.')
+    if row.status == "archived":
+        raise BusinessRuleError("Archived purchased input records cannot be updated.")
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM purchased input record')
-    data = payload.model_dump(exclude_unset=True, exclude={'row_version'})
-    if 'product_profile_version_id' in data:
-        pid = data['product_profile_version_id']
+    check_row_version(row.row_version, payload.row_version, entity="CBAM purchased input record")
+    data = payload.model_dump(exclude_unset=True, exclude={"row_version"})
+    if "product_profile_version_id" in data:
+        pid = data["product_profile_version_id"]
         if pid is not None:
             get_product_profile_for_org(db, organization_id, pid)
         row.product_profile_version_id = pid
-    if 'input_name' in data and data['input_name'] is not None:
-        name = data['input_name'].strip()
+    if "input_name" in data and data["input_name"] is not None:
+        name = data["input_name"].strip()
         if not name:
-            raise ValidationAppError('inputName cannot be empty.')
+            raise ValidationAppError("inputName cannot be empty.")
         row.input_name = name
-    if 'quantity' in data and data['quantity'] is not None:
-        require_positive_quantity(data['quantity'])
-        row.quantity = data['quantity']
-    if 'unit' in data and data['unit'] is not None:
-        row.unit = require_unit(data['unit'])
+    if "quantity" in data and data["quantity"] is not None:
+        require_positive_quantity(data["quantity"])
+        row.quantity = data["quantity"]
+    if "unit" in data and data["unit"] is not None:
+        row.unit = require_unit(data["unit"])
     for field in (
-        'supplier_name',
-        'received_date',
-        'source_reference',
-        'notes',
-        'embedded_emission_value',
-        'embedded_emission_unit',
-        'embedded_emission_source_type',
-        'consumed_quantity',
-        'consumed_unit',
+        "supplier_name",
+        "received_date",
+        "source_reference",
+        "notes",
+        "embedded_emission_value",
+        "embedded_emission_unit",
+        "embedded_emission_source_type",
+        "consumed_quantity",
+        "consumed_unit",
     ):
         if field in data:
             setattr(row, field, data[field])
@@ -330,15 +328,15 @@ def update_purchased_input(
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.purchased_input.updated',
+        action="cbam.purchased_input.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_purchased_input_record',
+        entity_type="cbam_purchased_input_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'fields': list(data.keys()), 'rowVersion': row.row_version},
+        metadata={"fields": list(data.keys()), "rowVersion": row.row_version},
     )
     db.commit()
     db.refresh(row)
@@ -360,23 +358,23 @@ def archive_purchased_input(
     row = _get_row(db, organization_id, record_id)
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM purchased input record')
-    if row.status == 'archived':
-        raise BusinessRuleError('Purchased input record is already archived.')
-    row.status = 'archived'
+    check_row_version(row.row_version, payload.row_version, entity="CBAM purchased input record")
+    if row.status == "archived":
+        raise BusinessRuleError("Purchased input record is already archived.")
+    row.status = "archived"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.purchased_input.archived',
+        action="cbam.purchased_input.archived",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_purchased_input_record',
+        entity_type="cbam_purchased_input_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'to': 'archived'},
+        metadata={"to": "archived"},
     )
     db.commit()
     db.refresh(row)

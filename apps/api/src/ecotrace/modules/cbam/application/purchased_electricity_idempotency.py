@@ -42,7 +42,7 @@ def build_purchased_electricity_request_fingerprint(
         activity_unit.strip(),
         canonicalize_decimal(factor_value),
         canonicalize_optional_str(factor_unit),
-        str(factor_value_id) if factor_value_id is not None else '-',
+        str(factor_value_id) if factor_value_id is not None else "-",
         canonicalize_decimal(exported_quantity),
         canonicalize_optional_str(exported_unit),
         canonicalize_optional_str(manual_source_name),
@@ -50,5 +50,5 @@ def build_purchased_electricity_request_fingerprint(
         canonicalize_optional_str(manual_dataset_version),
         canonicalize_optional_str(manual_reference_description),
     )
-    payload = '|'.join(parts)
-    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+    payload = "|".join(parts)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()

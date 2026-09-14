@@ -10,8 +10,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0022_cbam_dea_allocation'
-down_revision: str | None = '0021_cbam_monthly_prod_basis'
+revision: str = "0022_cbam_dea_allocation"
+down_revision: str | None = "0021_cbam_monthly_prod_basis"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -88,13 +88,13 @@ ON cbam_direct_emissions_allocation_results (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_dea_results_org_binding '
-        'ON cbam_direct_emissions_allocation_results '
-        '(organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_dea_results_org_binding "
+        "ON cbam_direct_emissions_allocation_results "
+        "(organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_dea_results_created_at '
-        'ON cbam_direct_emissions_allocation_results (created_at DESC, id DESC)'
+        "CREATE INDEX ix_cbam_dea_results_created_at "
+        "ON cbam_direct_emissions_allocation_results (created_at DESC, id DESC)"
     )
     op.execute(
         """
@@ -136,13 +136,10 @@ CREATE TABLE cbam_dea_monthly_basis_snapshots (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_dea_mb_basis_record '
-        'ON cbam_dea_monthly_basis_snapshots (basis_record_id)'
+        "CREATE INDEX ix_cbam_dea_mb_basis_record "
+        "ON cbam_dea_monthly_basis_snapshots (basis_record_id)"
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_dea_mb_result '
-        'ON cbam_dea_monthly_basis_snapshots (result_id)'
-    )
+    op.execute("CREATE INDEX ix_cbam_dea_mb_result ON cbam_dea_monthly_basis_snapshots (result_id)")
 
     op.execute(
         """
@@ -192,12 +189,9 @@ CREATE TABLE cbam_dea_source_snapshots (
 )
 """
     )
+    op.execute("CREATE INDEX ix_cbam_dea_src_result ON cbam_dea_source_snapshots (result_id)")
     op.execute(
-        'CREATE INDEX ix_cbam_dea_src_result ON cbam_dea_source_snapshots (result_id)'
-    )
-    op.execute(
-        'CREATE INDEX ix_cbam_dea_src_source_result '
-        'ON cbam_dea_source_snapshots (source_result_id)'
+        "CREATE INDEX ix_cbam_dea_src_source_result ON cbam_dea_source_snapshots (source_result_id)"
     )
 
     op.execute(
@@ -237,12 +231,10 @@ CREATE TABLE cbam_dea_product_allocations (
 )
 """
     )
+    op.execute("CREATE INDEX ix_cbam_dea_prod_result ON cbam_dea_product_allocations (result_id)")
     op.execute(
-        'CREATE INDEX ix_cbam_dea_prod_result ON cbam_dea_product_allocations (result_id)'
-    )
-    op.execute(
-        'CREATE INDEX ix_cbam_dea_prod_profile '
-        'ON cbam_dea_product_allocations (product_profile_version_id)'
+        "CREATE INDEX ix_cbam_dea_prod_profile "
+        "ON cbam_dea_product_allocations (product_profile_version_id)"
     )
 
     op.execute(
@@ -273,14 +265,14 @@ CREATE TABLE cbam_direct_emissions_allocation_current (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_dea_current_result '
-        'ON cbam_direct_emissions_allocation_current (current_result_id)'
+        "CREATE INDEX ix_cbam_dea_current_result "
+        "ON cbam_direct_emissions_allocation_current (current_result_id)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_direct_emissions_allocation_current')
-    op.execute('DROP TABLE IF EXISTS cbam_dea_product_allocations')
-    op.execute('DROP TABLE IF EXISTS cbam_dea_source_snapshots')
-    op.execute('DROP TABLE IF EXISTS cbam_dea_monthly_basis_snapshots')
-    op.execute('DROP TABLE IF EXISTS cbam_direct_emissions_allocation_results')
+    op.execute("DROP TABLE IF EXISTS cbam_direct_emissions_allocation_current")
+    op.execute("DROP TABLE IF EXISTS cbam_dea_product_allocations")
+    op.execute("DROP TABLE IF EXISTS cbam_dea_source_snapshots")
+    op.execute("DROP TABLE IF EXISTS cbam_dea_monthly_basis_snapshots")
+    op.execute("DROP TABLE IF EXISTS cbam_direct_emissions_allocation_results")

@@ -19,17 +19,17 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal, localcontext
 
-ZERO = Decimal('0')
-ONE = Decimal('1')
+ZERO = Decimal("0")
+ONE = Decimal("1")
 
 # Well above the NUMERIC(36, 18) storage scale, so elimination rounding stays far below
 # anything that can survive persistence or reporting quantization.
 SOLVER_PRECISION = 60
 
-CODE_SINGULAR = 'INTERNAL_PRODUCT_FLOW_SINGULAR'
-CODE_INVALID = 'INTERNAL_PRODUCT_FLOW_INVALID'
-CODE_DENOMINATOR_ZERO = 'INTERNAL_PRODUCT_FLOW_DENOMINATOR_ZERO'
-CODE_SELF_REFERENCE = 'INTERNAL_PRODUCT_FLOW_SELF_REFERENCE'
+CODE_SINGULAR = "INTERNAL_PRODUCT_FLOW_SINGULAR"
+CODE_INVALID = "INTERNAL_PRODUCT_FLOW_INVALID"
+CODE_DENOMINATOR_ZERO = "INTERNAL_PRODUCT_FLOW_DENOMINATOR_ZERO"
+CODE_SELF_REFERENCE = "INTERNAL_PRODUCT_FLOW_SELF_REFERENCE"
 
 
 class LeontiefError(Exception):
@@ -93,18 +93,16 @@ def build_system(
             consumer = index.get(flow.consumer_product_profile_version_id)
             supplier = index.get(flow.supplier_product_profile_version_id)
             if consumer is None or supplier is None:
-                raise LeontiefError(CODE_INVALID, 'Internal flow references an unknown product.')
+                raise LeontiefError(CODE_INVALID, "Internal flow references an unknown product.")
             if consumer == supplier:
-                raise LeontiefError(
-                    CODE_SELF_REFERENCE, 'A process cannot consume its own output.'
-                )
+                raise LeontiefError(CODE_SELF_REFERENCE, "A process cannot consume its own output.")
             if flow.quantity_tonnes < ZERO:
-                raise LeontiefError(CODE_INVALID, 'Internal flow quantity cannot be negative.')
+                raise LeontiefError(CODE_INVALID, "Internal flow quantity cannot be negative.")
             denominator = denominators.get(flow.consumer_product_profile_version_id)
             if denominator is None or denominator <= ZERO:
                 raise LeontiefError(
                     CODE_DENOMINATOR_ZERO,
-                    'Consumer produced quantity must be positive.',
+                    "Consumer produced quantity must be positive.",
                 )
             matrix[consumer][supplier] += flow.quantity_tonnes / denominator
 
@@ -137,17 +135,18 @@ def solve(
     size = len(matrix)
     for row in matrix:
         if len(row) != size:
-            raise LeontiefError(CODE_INVALID, 'Coefficient matrix must be square.')
+            raise LeontiefError(CODE_INVALID, "Coefficient matrix must be square.")
     for column in right_hand_sides:
         if len(column) != size:
-            raise LeontiefError(CODE_INVALID, 'Right-hand side length must match the matrix.')
+            raise LeontiefError(CODE_INVALID, "Right-hand side length must match the matrix.")
     if size == 0:
         return tuple(() for _ in right_hand_sides)
 
     with localcontext() as ctx:
         ctx.prec = SOLVER_PRECISION
         working = [
-            [Decimal(value) for value in row] + [Decimal(column[position]) for column in right_hand_sides]
+            [Decimal(value) for value in row]
+            + [Decimal(column[position]) for column in right_hand_sides]
             for position, row in enumerate(matrix)
         ]
         width = size + len(right_hand_sides)
@@ -160,7 +159,7 @@ def solve(
             if working[pivot_row][pivot_index] == ZERO:
                 raise LeontiefError(
                     CODE_SINGULAR,
-                    'The internal product-flow matrix (I - A) is singular.',
+                    "The internal product-flow matrix (I - A) is singular.",
                 )
             if pivot_row != pivot_index:
                 working[pivot_index], working[pivot_row] = (
@@ -181,12 +180,14 @@ def solve(
             for row_index in range(size - 1, -1, -1):
                 accumulator = working[row_index][column_offset]
                 for column_index in range(row_index + 1, size):
-                    accumulator -= working[row_index][column_index] * solutions[rhs_index][column_index]
+                    accumulator -= (
+                        working[row_index][column_index] * solutions[rhs_index][column_index]
+                    )
                 pivot = working[row_index][row_index]
                 if pivot == ZERO:
                     raise LeontiefError(
                         CODE_SINGULAR,
-                        'The internal product-flow matrix (I - A) is singular.',
+                        "The internal product-flow matrix (I - A) is singular.",
                     )
                 solutions[rhs_index][row_index] = accumulator / pivot
 
@@ -205,16 +206,16 @@ def solve_specific_embedded_emissions(
 
 
 __all__ = [
-    'CODE_DENOMINATOR_ZERO',
-    'CODE_INVALID',
-    'CODE_SELF_REFERENCE',
-    'CODE_SINGULAR',
-    'SOLVER_PRECISION',
-    'InternalFlow',
-    'LeontiefError',
-    'LeontiefSystem',
-    'build_system',
-    'order_profiles',
-    'solve',
-    'solve_specific_embedded_emissions',
+    "CODE_DENOMINATOR_ZERO",
+    "CODE_INVALID",
+    "CODE_SELF_REFERENCE",
+    "CODE_SINGULAR",
+    "SOLVER_PRECISION",
+    "InternalFlow",
+    "LeontiefError",
+    "LeontiefSystem",
+    "build_system",
+    "order_profiles",
+    "solve",
+    "solve_specific_embedded_emissions",
 ]

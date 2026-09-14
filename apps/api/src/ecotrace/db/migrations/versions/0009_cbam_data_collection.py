@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0009_cbam_data_collection'
-down_revision: str | None = '0008_cbam_foundation'
+revision: str = "0009_cbam_data_collection"
+down_revision: str | None = "0008_cbam_foundation"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -62,20 +62,18 @@ CREATE TABLE cbam_production_records (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_production_records_organization_id '
-        'ON cbam_production_records (organization_id)'
+        "CREATE INDEX ix_cbam_production_records_organization_id "
+        "ON cbam_production_records (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_production_records_org_binding '
-        'ON cbam_production_records (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_production_records_org_binding "
+        "ON cbam_production_records (organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_production_records_org_installation '
-        'ON cbam_production_records (organization_id, installation_profile_id)'
+        "CREATE INDEX ix_cbam_production_records_org_installation "
+        "ON cbam_production_records (organization_id, installation_profile_id)"
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_production_records_status ON cbam_production_records (status)'
-    )
+    op.execute("CREATE INDEX ix_cbam_production_records_status ON cbam_production_records (status)")
 
     op.execute(
         """
@@ -131,22 +129,22 @@ CREATE TABLE cbam_activity_records (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_activity_records_organization_id '
-        'ON cbam_activity_records (organization_id)'
+        "CREATE INDEX ix_cbam_activity_records_organization_id "
+        "ON cbam_activity_records (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_activity_records_org_binding '
-        'ON cbam_activity_records (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_activity_records_org_binding "
+        "ON cbam_activity_records (organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_activity_records_org_installation '
-        'ON cbam_activity_records (organization_id, installation_profile_id)'
+        "CREATE INDEX ix_cbam_activity_records_org_installation "
+        "ON cbam_activity_records (organization_id, installation_profile_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_activity_records_binding_type '
-        'ON cbam_activity_records (reporting_period_binding_id, activity_type)'
+        "CREATE INDEX ix_cbam_activity_records_binding_type "
+        "ON cbam_activity_records (reporting_period_binding_id, activity_type)"
     )
-    op.execute('CREATE INDEX ix_cbam_activity_records_status ON cbam_activity_records (status)')
+    op.execute("CREATE INDEX ix_cbam_activity_records_status ON cbam_activity_records (status)")
 
     op.execute(
         """
@@ -177,12 +175,12 @@ CREATE TABLE cbam_activity_properties (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_activity_properties_organization_id '
-        'ON cbam_activity_properties (organization_id)'
+        "CREATE INDEX ix_cbam_activity_properties_organization_id "
+        "ON cbam_activity_properties (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_activity_properties_activity_record_id '
-        'ON cbam_activity_properties (activity_record_id)'
+        "CREATE INDEX ix_cbam_activity_properties_activity_record_id "
+        "ON cbam_activity_properties (activity_record_id)"
     )
 
     op.execute(
@@ -239,25 +237,25 @@ CREATE TABLE cbam_purchased_input_records (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_purchased_input_records_organization_id '
-        'ON cbam_purchased_input_records (organization_id)'
+        "CREATE INDEX ix_cbam_purchased_input_records_organization_id "
+        "ON cbam_purchased_input_records (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_purchased_input_records_org_binding '
-        'ON cbam_purchased_input_records (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_purchased_input_records_org_binding "
+        "ON cbam_purchased_input_records (organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_purchased_input_records_org_installation '
-        'ON cbam_purchased_input_records (organization_id, installation_profile_id)'
+        "CREATE INDEX ix_cbam_purchased_input_records_org_installation "
+        "ON cbam_purchased_input_records (organization_id, installation_profile_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_purchased_input_records_status '
-        'ON cbam_purchased_input_records (status)'
+        "CREATE INDEX ix_cbam_purchased_input_records_status "
+        "ON cbam_purchased_input_records (status)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_purchased_input_records')
-    op.execute('DROP TABLE IF EXISTS cbam_activity_properties')
-    op.execute('DROP TABLE IF EXISTS cbam_activity_records')
-    op.execute('DROP TABLE IF EXISTS cbam_production_records')
+    op.execute("DROP TABLE IF EXISTS cbam_purchased_input_records")
+    op.execute("DROP TABLE IF EXISTS cbam_activity_properties")
+    op.execute("DROP TABLE IF EXISTS cbam_activity_records")
+    op.execute("DROP TABLE IF EXISTS cbam_production_records")

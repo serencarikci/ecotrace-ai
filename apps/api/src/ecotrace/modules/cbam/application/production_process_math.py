@@ -63,7 +63,7 @@ def compute_distribution_balance(
 
     distributed = marketed_tonnes + other_cbam_tonnes + non_cbam_tonnes
     remaining = produced_tonnes - distributed
-    balanced = remaining == Decimal('0')
+    balanced = remaining == Decimal("0")
     market_share: Decimal | None = None
     all_to_market: bool | None = None
     if produced_tonnes > 0:
@@ -112,7 +112,7 @@ def compute_measurable_heat_attribution(
         return HeatAttribution(
             status=HEAT_CALC_STATUS_INCOMPLETE,
             attributed_tco2=None,
-            formula_ref='D_Processes!T58=L57*L58-M57*M58',
+            formula_ref="D_Processes!T58=L57*L58-M57*M58",
         )
     assert imported_tj is not None and exported_tj is not None
     assert imported_ef is not None and exported_ef is not None
@@ -120,7 +120,7 @@ def compute_measurable_heat_attribution(
     return HeatAttribution(
         status=HEAT_CALC_STATUS_CALCULATED,
         attributed_tco2=value,
-        formula_ref='D_Processes!T58=L57*L58-M57*M58',
+        formula_ref="D_Processes!T58=L57*L58-M57*M58",
     )
 
 
@@ -155,18 +155,18 @@ def compute_waste_gas_attribution(
         return WasteGasAttribution(
             status=WASTE_GAS_CALC_STATUS_INCOMPLETE,
             attributed_tco2=None,
-            formula_ref='D_Processes!T62=L61*CONST_EFNatGas-M61*CONST_EFNatGas*0.667',
+            formula_ref="D_Processes!T62=L61*CONST_EFNatGas-M61*CONST_EFNatGas*0.667",
             ef_tco2_per_tj=CONST_EF_NAT_GAS_TCO2_PER_TJ,
-            note='L62/M62 not used by workbook T62; CONST_EFNatGas=56.1 applies.',
+            note="L62/M62 not used by workbook T62; CONST_EFNatGas=56.1 applies.",
         )
     ef = CONST_EF_NAT_GAS_TCO2_PER_TJ
     value = imported_tj * ef - exported_tj * ef * WASTE_GAS_EXPORT_FACTOR
     return WasteGasAttribution(
         status=WASTE_GAS_CALC_STATUS_CALCULATED,
         attributed_tco2=value,
-        formula_ref='D_Processes!T62=L61*CONST_EFNatGas-M61*CONST_EFNatGas*0.667',
+        formula_ref="D_Processes!T62=L61*CONST_EFNatGas-M61*CONST_EFNatGas*0.667",
         ef_tco2_per_tj=ef,
-        note='L62/M62 not used by workbook T62; CONST_EFNatGas=56.1 applies.',
+        note="L62/M62 not used by workbook T62; CONST_EFNatGas=56.1 applies.",
     )
 
 
@@ -200,8 +200,8 @@ def compute_exported_electricity_attribution(
             attributed_direct_tco2e=None,
             formula_ref=EXPORTED_ELECTRICITY_FORMULA_REF,
         )
-    if quantity_mwh < Decimal('0') or emission_factor < Decimal('0'):
-        raise ValueError('EXPORTED_ELECTRICITY_NEGATIVE')
+    if quantity_mwh < Decimal("0") or emission_factor < Decimal("0"):
+        raise ValueError("EXPORTED_ELECTRICITY_NEGATIVE")
     return ExportedElectricityAttribution(
         status=EXPORTED_ELECTRICITY_CALC_STATUS_CALCULATED,
         attributed_direct_tco2e=-(quantity_mwh * emission_factor),

@@ -10,8 +10,8 @@ from ecotrace.modules.cbam.application.official_see_export.mapping.loader import
 )
 
 __all__ = [
-    'ManifestEntry',
-    'MappingManifest',
-    'load_manifest',
-    'validate_manifest_or_raise',
+    "ManifestEntry",
+    "MappingManifest",
+    "load_manifest",
+    "validate_manifest_or_raise",
 ]

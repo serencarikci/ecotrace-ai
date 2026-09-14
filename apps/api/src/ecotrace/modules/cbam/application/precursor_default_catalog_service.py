@@ -44,11 +44,11 @@ MAX_RESOLUTION_CANDIDATES = 25
 
 
 def normalize_precursor_cn_code(value: str) -> str:
-    return re.sub(r'[^0-9]', '', value)
+    return re.sub(r"[^0-9]", "", value)
 
 
 def normalize_country_name(value: str) -> str:
-    return ' '.join(value.replace('\xa0', ' ').split())
+    return " ".join(value.replace("\xa0", " ").split())
 
 
 class PrecursorDefaultDatasetResponse(CamelModel):
@@ -180,7 +180,7 @@ def get_active_dataset(db: Session) -> CbamPrecursorDefaultDataset:
         ensure_platform_precursor_default_catalog(db)
         row = db.execute(_select_active_dataset()).scalars().first()
     if row is None:
-        raise NotFoundError('Active precursor default-value dataset not found.')
+        raise NotFoundError("Active precursor default-value dataset not found.")
     return row
 
 
@@ -227,10 +227,10 @@ def search_default_values(
         )
     if description:
         stmt = stmt.where(
-            CbamPrecursorDefaultValue.goods_description.ilike(f'%{description.strip()}%')
+            CbamPrecursorDefaultValue.goods_description.ilike(f"%{description.strip()}%")
         )
     if q:
-        needle = f'%{q.strip()}%'
+        needle = f"%{q.strip()}%"
         stmt = stmt.where(
             or_(
                 CbamPrecursorDefaultValue.goods_description.ilike(needle),
@@ -350,9 +350,7 @@ def resolve_default_value(
     if route is None:
         stmt = stmt.where(CbamPrecursorDefaultValue.production_route.is_(None))
     else:
-        stmt = stmt.where(
-            func.lower(CbamPrecursorDefaultValue.production_route) == route.lower()
-        )
+        stmt = stmt.where(func.lower(CbamPrecursorDefaultValue.production_route) == route.lower())
     rows = list(
         db.execute(stmt.order_by(CbamPrecursorDefaultValue.source_row.asc())).scalars().all()
     )
@@ -438,52 +436,52 @@ def build_default_snapshot(
 ) -> dict[str, Any]:
     """Immutable per-record snapshot. Historical reads never re-query the catalog."""
     return {
-        'snapshotVersion': 1,
-        'resolvedAt': datetime.now(UTC).isoformat(),
-        'dataset': {
-            'id': str(dataset.id),
-            'datasetCode': dataset.dataset_code,
-            'datasetVersion': dataset.dataset_version,
-            'contentChecksum': dataset.content_checksum,
-            'sourceWorkbookName': dataset.source_workbook_name,
-            'sourceWorkbookSha256': dataset.source_workbook_sha256,
-            'sourceTemplateVersion': dataset.source_template_version,
-            'regulationReference': dataset.regulation_reference,
-            'validFrom': dataset.valid_from.isoformat(),
-            'validUntil': dataset.valid_until.isoformat() if dataset.valid_until else None,
+        "snapshotVersion": 1,
+        "resolvedAt": datetime.now(UTC).isoformat(),
+        "dataset": {
+            "id": str(dataset.id),
+            "datasetCode": dataset.dataset_code,
+            "datasetVersion": dataset.dataset_version,
+            "contentChecksum": dataset.content_checksum,
+            "sourceWorkbookName": dataset.source_workbook_name,
+            "sourceWorkbookSha256": dataset.source_workbook_sha256,
+            "sourceTemplateVersion": dataset.source_template_version,
+            "regulationReference": dataset.regulation_reference,
+            "validFrom": dataset.valid_from.isoformat(),
+            "validUntil": dataset.valid_until.isoformat() if dataset.valid_until else None,
         },
-        'value': {
-            'id': str(value.id),
-            'countryName': value.country_name,
-            'isOtherCountriesGroup': value.is_other_countries_group,
-            'cnNormalizedCode': value.cn_normalized_code,
-            'cnDisplayCode': value.cn_display_code,
-            'goodsCategory': value.goods_category,
-            'goodsDescription': value.goods_description,
-            'productionRoute': value.production_route,
-            'directValue': _decimal_str(value.direct_value),
-            'directValueStatus': value.direct_value_status,
-            'indirectValue': _decimal_str(value.indirect_value),
-            'indirectValueStatus': value.indirect_value_status,
-            'totalValue': _decimal_str(value.total_value),
-            'totalValueStatus': value.total_value_status,
-            'markedUpTotals': dict(value.marked_up_totals_json or {}),
-            'sourceSheet': value.source_sheet,
-            'sourceRow': value.source_row,
-            'lookupKey': value.lookup_key,
-            'originalKeys': dict(value.original_keys_json or {}),
+        "value": {
+            "id": str(value.id),
+            "countryName": value.country_name,
+            "isOtherCountriesGroup": value.is_other_countries_group,
+            "cnNormalizedCode": value.cn_normalized_code,
+            "cnDisplayCode": value.cn_display_code,
+            "goodsCategory": value.goods_category,
+            "goodsDescription": value.goods_description,
+            "productionRoute": value.production_route,
+            "directValue": _decimal_str(value.direct_value),
+            "directValueStatus": value.direct_value_status,
+            "indirectValue": _decimal_str(value.indirect_value),
+            "indirectValueStatus": value.indirect_value_status,
+            "totalValue": _decimal_str(value.total_value),
+            "totalValueStatus": value.total_value_status,
+            "markedUpTotals": dict(value.marked_up_totals_json or {}),
+            "sourceSheet": value.source_sheet,
+            "sourceRow": value.source_row,
+            "lookupKey": value.lookup_key,
+            "originalKeys": dict(value.original_keys_json or {}),
         },
-        'units': {
-            'specificDirect': value.direct_unit or SPECIFIC_DIRECT_UNIT,
-            'specificIndirect': value.indirect_unit or SPECIFIC_INDIRECT_UNIT,
-            'unitNote': value.unit_note,
+        "units": {
+            "specificDirect": value.direct_unit or SPECIFIC_DIRECT_UNIT,
+            "specificIndirect": value.indirect_unit or SPECIFIC_INDIRECT_UNIT,
+            "unitNote": value.unit_note,
         },
-        'requestedKeys': {
-            'countryOfOrigin': requested_country,
-            'cnNormalizedCode': requested_cn,
-            'productionRoute': requested_route,
-            'goodsDescription': requested_description,
-            'lookupKey': lookup_key,
+        "requestedKeys": {
+            "countryOfOrigin": requested_country,
+            "cnNormalizedCode": requested_cn,
+            "productionRoute": requested_route,
+            "goodsDescription": requested_description,
+            "lookupKey": lookup_key,
         },
     }
 
@@ -494,16 +492,16 @@ def snapshot_specific_values(
     """Numeric specific direct/indirect values from a stored snapshot (never live data)."""
     if not snapshot:
         return None, None
-    value = snapshot.get('value')
+    value = snapshot.get("value")
     if not isinstance(value, dict):
         return None, None
     direct: Decimal | None = None
     indirect: Decimal | None = None
-    if value.get('directValueStatus') == DV_STATUS_NUMERIC and value.get('directValue') is not None:
-        direct = Decimal(str(value['directValue']))
+    if value.get("directValueStatus") == DV_STATUS_NUMERIC and value.get("directValue") is not None:
+        direct = Decimal(str(value["directValue"]))
     if (
-        value.get('indirectValueStatus') == DV_STATUS_NUMERIC
-        and value.get('indirectValue') is not None
+        value.get("indirectValueStatus") == DV_STATUS_NUMERIC
+        and value.get("indirectValue") is not None
     ):
-        indirect = Decimal(str(value['indirectValue']))
+        indirect = Decimal(str(value["indirectValue"]))
     return direct, indirect

@@ -86,7 +86,7 @@ def test_renaming_a_process_does_not_stale_the_result(seeded_db: Session) -> Non
         scenario.organization.id,
         scenario.binding.id,
         scenario.process_id,
-        ProductionProcessUpdate(row_version=process.row_version, name='Renamed process'),
+        ProductionProcessUpdate(row_version=process.row_version, name="Renamed process"),
     )
     seeded_db.commit()
 
@@ -108,7 +108,7 @@ def test_renaming_a_precursor_does_not_stale_the_result(seeded_db: Session) -> N
         scenario.organization.id,
         scenario.binding.id,
         scenario.precursor_id,
-        PurchasedPrecursorUpdate(row_version=precursor.row_version, name='Renamed precursor'),
+        PurchasedPrecursorUpdate(row_version=precursor.row_version, name="Renamed precursor"),
     )
     seeded_db.commit()
 
@@ -132,8 +132,8 @@ def test_changing_the_produced_quantity_stales_the_denominator(seeded_db: Sessio
         scenario.process_id,
         ProductionProcessUpdate(
             row_version=process.row_version,
-            produced_quantity=Decimal('12'),
-            marketed_quantity=Decimal('12'),
+            produced_quantity=Decimal("12"),
+            marketed_quantity=Decimal("12"),
         ),
     )
     seeded_db.commit()
@@ -160,7 +160,7 @@ def test_changing_a_product_use_quantity_stales_the_contribution(seeded_db: Sess
         scenario.binding.id,
         scenario.precursor_id,
         use.id,
-        PrecursorProductUseUpdate(row_version=use.row_version, quantity=Decimal('2')),
+        PrecursorProductUseUpdate(row_version=use.row_version, quantity=Decimal("2")),
     )
     # Keep the precursor balanced so it stays READY and the use change is the only delta.
     precursor = purchased_precursor_service.get_purchased_precursor(
@@ -176,9 +176,7 @@ def test_changing_a_product_use_quantity_stales_the_contribution(seeded_db: Sess
         scenario.organization.id,
         scenario.binding.id,
         scenario.precursor_id,
-        PurchasedPrecursorUpdate(
-            row_version=precursor.row_version, non_cbam_quantity=Decimal('3')
-        ),
+        PurchasedPrecursorUpdate(row_version=precursor.row_version, non_cbam_quantity=Decimal("3")),
     )
     seeded_db.commit()
 
@@ -203,7 +201,7 @@ def test_changing_precursor_specific_values_stales_the_result(seeded_db: Session
         scenario.precursor_id,
         PurchasedPrecursorUpdate(
             row_version=precursor.row_version,
-            specific_direct_embedded_emissions=Decimal('0.75'),
+            specific_direct_embedded_emissions=Decimal("0.75"),
         ),
     )
     seeded_db.commit()
@@ -236,7 +234,7 @@ def test_adding_a_second_precursor_stales_the_precursor_set(seeded_db: Session) 
         scenario.binding,
         scenario.installation,
         scenario.profile_id,
-        use_tonnes=Decimal('1'),
+        use_tonnes=Decimal("1"),
         purchased_tonnes=PRECURSOR_PURCHASED_TONNES,
     )
     seeded_db.commit()
@@ -285,7 +283,7 @@ def test_detail_of_a_superseded_result_is_never_marked_stale(seeded_db: Session)
         scenario.precursor_id,
         PurchasedPrecursorUpdate(
             row_version=precursor.row_version,
-            specific_direct_embedded_emissions=Decimal('0.75'),
+            specific_direct_embedded_emissions=Decimal("0.75"),
         ),
     )
     seeded_db.commit()
@@ -294,7 +292,9 @@ def test_detail_of_a_superseded_result_is_never_marked_stale(seeded_db: Session)
         scenario.user,
         scenario.organization.id,
         scenario.binding.id,
-        pee.ProductEmbeddedEmissionsExecuteRequest(client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE),
+        pee.ProductEmbeddedEmissionsExecuteRequest(
+            client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE
+        ),
     )
 
     old = pee.get_product_embedded_emissions_result(
@@ -309,7 +309,7 @@ def test_detail_of_a_superseded_result_is_never_marked_stale(seeded_db: Session)
     assert old.stale_reason_codes == []
 
     # The immutable snapshot keeps the original specific value.
-    assert Decimal(old.precursor_contributions[0]['specificDirect']) == Decimal('0.5')
+    assert Decimal(old.precursor_contributions[0]["specificDirect"]) == Decimal("0.5")
 
     current = pee.get_product_embedded_emissions_result(
         seeded_db,
@@ -320,7 +320,7 @@ def test_detail_of_a_superseded_result_is_never_marked_stale(seeded_db: Session)
     )
     assert current.is_current is True
     assert current.is_stale is False
-    assert Decimal(current.precursor_contributions[0]['specificDirect']) == Decimal('0.75')
+    assert Decimal(current.precursor_contributions[0]["specificDirect"]) == Decimal("0.75")
 
 
 def test_v2_stales_when_exported_electricity_changes(seeded_db: Session) -> None:
@@ -356,11 +356,11 @@ def test_v2_stales_when_exported_electricity_changes(seeded_db: Session) -> None
         ProductionProcessUpdate(
             row_version=process.row_version,
             has_exported_electricity=True,
-            exported_electricity_quantity=Decimal('1'),
-            exported_electricity_unit='MWh',
-            exported_electricity_emission_factor=Decimal('0.5'),
-            exported_electricity_ef_unit='tCO2/MWh',
-            exported_electricity_provenance='meter',
+            exported_electricity_quantity=Decimal("1"),
+            exported_electricity_unit="MWh",
+            exported_electricity_emission_factor=Decimal("0.5"),
+            exported_electricity_ef_unit="tCO2/MWh",
+            exported_electricity_provenance="meter",
         ),
     )
     seeded_db.commit()

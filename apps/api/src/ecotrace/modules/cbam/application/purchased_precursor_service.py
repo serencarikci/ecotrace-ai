@@ -120,31 +120,29 @@ from ecotrace.modules.suppliers.application.supplier_service import get_supplier
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-ReadinessStatus = Literal[
-    'EMPTY', 'INCOMPLETE', 'UNBALANCED', 'UNRESOLVED', 'AMBIGUOUS', 'READY'
-]
+ReadinessStatus = Literal["EMPTY", "INCOMPLETE", "UNBALANCED", "UNRESOLVED", "AMBIGUOUS", "READY"]
 
 SUPPLIER_EMISSION_FIELDS: tuple[str, ...] = (
-    'specific_direct_embedded_emissions',
-    'specific_direct_unit',
-    'specific_direct_source_code',
-    'electricity_consumption_intensity',
-    'electricity_intensity_unit',
-    'electricity_intensity_source_code',
-    'electricity_emission_factor',
-    'electricity_ef_unit',
-    'electricity_ef_source_code',
+    "specific_direct_embedded_emissions",
+    "specific_direct_unit",
+    "specific_direct_source_code",
+    "electricity_consumption_intensity",
+    "electricity_intensity_unit",
+    "electricity_intensity_source_code",
+    "electricity_emission_factor",
+    "electricity_ef_unit",
+    "electricity_ef_source_code",
 )
 
 SUPPLIER_NUMERIC_FIELDS: tuple[str, ...] = (
-    'specific_direct_embedded_emissions',
-    'electricity_consumption_intensity',
-    'electricity_emission_factor',
+    "specific_direct_embedded_emissions",
+    "electricity_consumption_intensity",
+    "electricity_emission_factor",
 )
 
 DEFAULT_SOURCE_FIELDS: tuple[str, ...] = (
-    'default_value_id',
-    'default_justification_code',
+    "default_value_id",
+    "default_justification_code",
 )
 
 
@@ -399,8 +397,8 @@ def _require_mass_unit(unit: str | None, *, field: str) -> str | None:
     normalized = require_unit(unit)
     if normalized not in MASS_ACTIVITY_UNITS:
         raise ValidationAppError(
-            f'{field} must use a mass unit (kg, t, or Gg).',
-            details=[{'code': CODE_INCOMPATIBLE_MASS_UNIT, 'field': field}],
+            f"{field} must use a mass unit (kg, t, or Gg).",
+            details=[{"code": CODE_INCOMPATIBLE_MASS_UNIT, "field": field}],
         )
     return normalized
 
@@ -414,9 +412,9 @@ def _optional_tonnes(quantity: Decimal | None, unit: str | None) -> Decimal | No
 def _validate_mode(mode: str) -> str:
     if mode not in SUPPORTED_DATA_SOURCE_MODES:
         raise BusinessRuleError(
-            f'Data source mode {mode} is not supported in Phase 10A. '
-            f'Use {MODE_SUPPLIER_DATA} or {MODE_EU_DEFAULT}.',
-            details=[{'code': CODE_PRECURSOR_MODE_UNSUPPORTED, 'mode': mode}],
+            f"Data source mode {mode} is not supported in Phase 10A. "
+            f"Use {MODE_SUPPLIER_DATA} or {MODE_EU_DEFAULT}.",
+            details=[{"code": CODE_PRECURSOR_MODE_UNSUPPORTED, "mode": mode}],
         )
     return mode
 
@@ -427,8 +425,8 @@ def _validate_fixed_unit(unit: str | None, expected: str, *, field: str) -> str 
     normalized = unit.strip()
     if normalized != expected:
         raise ValidationAppError(
-            f'{field} must be {expected}.',
-            details=[{'field': field, 'expected': expected}],
+            f"{field} must be {expected}.",
+            details=[{"field": field, "expected": expected}],
         )
     return normalized
 
@@ -441,24 +439,24 @@ def _validate_source_codes(
     default_justification_code: str | None,
 ) -> None:
     for value, field in (
-        (specific_direct_source_code, 'specificDirectSourceCode'),
-        (electricity_intensity_source_code, 'electricityIntensitySourceCode'),
+        (specific_direct_source_code, "specificDirectSourceCode"),
+        (electricity_intensity_source_code, "electricityIntensitySourceCode"),
     ):
         if value is not None and value not in parameter_source_codes():
             raise ValidationAppError(
-                f'Invalid parameter determination code: {value}',
-                details=[{'code': CODE_PARAMETER_SOURCE_CODE_INVALID, 'field': field}],
+                f"Invalid parameter determination code: {value}",
+                details=[{"code": CODE_PARAMETER_SOURCE_CODE_INVALID, "field": field}],
             )
     if (
         electricity_ef_source_code is not None
         and electricity_ef_source_code not in electricity_source_codes()
     ):
         raise ValidationAppError(
-            f'Invalid electricity emission-factor source code: {electricity_ef_source_code}',
+            f"Invalid electricity emission-factor source code: {electricity_ef_source_code}",
             details=[
                 {
-                    'code': CODE_ELECTRICITY_SOURCE_CODE_INVALID,
-                    'field': 'electricityEfSourceCode',
+                    "code": CODE_ELECTRICITY_SOURCE_CODE_INVALID,
+                    "field": "electricityEfSourceCode",
                 }
             ],
         )
@@ -467,9 +465,9 @@ def _validate_source_codes(
         and default_justification_code not in default_justification_codes()
     ):
         raise ValidationAppError(
-            f'Invalid default-value justification code: {default_justification_code}',
+            f"Invalid default-value justification code: {default_justification_code}",
             details=[
-                {'code': CODE_JUSTIFICATION_CODE_INVALID, 'field': 'defaultJustificationCode'}
+                {"code": CODE_JUSTIFICATION_CODE_INVALID, "field": "defaultJustificationCode"}
             ],
         )
 
@@ -479,18 +477,16 @@ def _reject_mixed_source(mode: str, submitted: dict[str, Any]) -> None:
         offending = [f for f in DEFAULT_SOURCE_FIELDS if submitted.get(f) is not None]
         if offending:
             raise BusinessRuleError(
-                'EU default-value fields cannot be combined with supplier data in one '
-                'purchased precursor.',
-                details=[
-                    {'code': CODE_MIXED_PRECURSOR_SOURCE_NOT_SUPPORTED, 'fields': offending}
-                ],
+                "EU default-value fields cannot be combined with supplier data in one "
+                "purchased precursor.",
+                details=[{"code": CODE_MIXED_PRECURSOR_SOURCE_NOT_SUPPORTED, "fields": offending}],
             )
         return
     offending = [f for f in SUPPLIER_EMISSION_FIELDS if submitted.get(f) is not None]
     if offending:
         raise BusinessRuleError(
-            'Supplier emission fields cannot be combined with the EU default-value mode.',
-            details=[{'code': CODE_MIXED_PRECURSOR_SOURCE_NOT_SUPPORTED, 'fields': offending}],
+            "Supplier emission fields cannot be combined with the EU default-value mode.",
+            details=[{"code": CODE_MIXED_PRECURSOR_SOURCE_NOT_SUPPORTED, "fields": offending}],
         )
 
 
@@ -507,8 +503,8 @@ def _require_supplier_provenance(
     ):
         return
     raise BusinessRuleError(
-        'Supplier emission values require provenanceNotes or evidenceReference.',
-        details=[{'code': CODE_SUPPLIER_PROVENANCE_REQUIRED}],
+        "Supplier emission values require provenanceNotes or evidenceReference.",
+        details=[{"code": CODE_SUPPLIER_PROVENANCE_REQUIRED}],
     )
 
 
@@ -554,7 +550,7 @@ def _get_default_value_for_dataset(
 ) -> CbamPrecursorDefaultValue:
     value = db.get(CbamPrecursorDefaultValue, value_id)
     if value is None or value.dataset_id != dataset_id:
-        raise NotFoundError('EU default value not found in the active dataset.')
+        raise NotFoundError("EU default value not found in the active dataset.")
     return value
 
 
@@ -609,19 +605,17 @@ def _require_default_value_matches_identity(
         row.country_of_origin
         and normalize_country_name(row.country_of_origin).lower() != value.country_name.lower()
     ):
-        mismatches.append(
-            {'field': 'countryOfOrigin', 'expected': value.country_name}
-        )
+        mismatches.append({"field": "countryOfOrigin", "expected": value.country_name})
     if row.cn_normalized_code and row.cn_normalized_code != value.cn_normalized_code:
-        mismatches.append({'field': 'cnCode', 'expected': value.cn_display_code})
-    row_route = (row.production_route or '').strip().lower()
-    value_route = (value.production_route or '').strip().lower()
+        mismatches.append({"field": "cnCode", "expected": value.cn_display_code})
+    row_route = (row.production_route or "").strip().lower()
+    value_route = (value.production_route or "").strip().lower()
     if row_route != value_route:
-        mismatches.append({'field': 'productionRoute', 'expected': value.production_route})
+        mismatches.append({"field": "productionRoute", "expected": value.production_route})
     if mismatches:
         raise BusinessRuleError(
-            'The selected EU default value does not match the precursor identity.',
-            details=[{'code': CODE_DEFAULT_VALUE_UNRESOLVED, 'mismatches': mismatches}],
+            "The selected EU default value does not match the precursor identity.",
+            details=[{"code": CODE_DEFAULT_VALUE_UNRESOLVED, "mismatches": mismatches}],
         )
 
 
@@ -637,7 +631,7 @@ def _get_precursor(
         or row.organization_id != organization_id
         or row.reporting_period_binding_id != binding_id
     ):
-        raise NotFoundError('CBAM purchased precursor not found.')
+        raise NotFoundError("CBAM purchased precursor not found.")
     return row
 
 
@@ -654,9 +648,9 @@ def _require_purchased_input(
         or record.reporting_period_binding_id != binding_id
     ):
         raise BusinessRuleError(
-            'The linked purchased input record must belong to the same organization and '
-            'reporting period binding.',
-            details=[{'code': CODE_PURCHASED_INPUT_INVALID}],
+            "The linked purchased input record must belong to the same organization and "
+            "reporting period binding.",
+            details=[{"code": CODE_PURCHASED_INPUT_INVALID}],
         )
     return record
 
@@ -730,9 +724,7 @@ def _validate_use_targets(
     return codes
 
 
-def _live_resolution(
-    db: Session, row: CbamPurchasedPrecursor
-) -> PrecursorDefaultResolution | None:
+def _live_resolution(db: Session, row: CbamPurchasedPrecursor) -> PrecursorDefaultResolution | None:
     """Live catalog lookup only for drafts without a snapshot."""
     if row.data_source_mode != MODE_EU_DEFAULT or row.default_snapshot_json:
         return None
@@ -774,9 +766,9 @@ def _default_source_view(
 
     snapshot = row.default_snapshot_json
     if snapshot:
-        dataset_meta = snapshot.get('dataset', {})
-        value_meta = snapshot.get('value', {})
-        units_meta = snapshot.get('units', {})
+        dataset_meta = snapshot.get("dataset", {})
+        value_meta = snapshot.get("value", {})
+        units_meta = snapshot.get("units", {})
         direct, indirect = snapshot_specific_values(snapshot)
         return PrecursorDefaultSourceView(
             applicable=True,
@@ -784,17 +776,17 @@ def _default_source_view(
             issue_code=None,
             from_snapshot=True,
             dataset_id=row.default_dataset_id,
-            dataset_code=dataset_meta.get('datasetCode'),
-            dataset_version=dataset_meta.get('datasetVersion'),
-            content_checksum=dataset_meta.get('contentChecksum'),
+            dataset_code=dataset_meta.get("datasetCode"),
+            dataset_version=dataset_meta.get("datasetVersion"),
+            content_checksum=dataset_meta.get("contentChecksum"),
             default_value_id=row.default_value_id,
-            lookup_key=value_meta.get('lookupKey'),
+            lookup_key=value_meta.get("lookupKey"),
             specific_direct_embedded_emissions=direct,
-            specific_direct_status=value_meta.get('directValueStatus'),
-            specific_direct_unit=units_meta.get('specificDirect', SPECIFIC_DIRECT_UNIT),
+            specific_direct_status=value_meta.get("directValueStatus"),
+            specific_direct_unit=units_meta.get("specificDirect", SPECIFIC_DIRECT_UNIT),
             specific_indirect_embedded_emissions=indirect,
-            specific_indirect_status=value_meta.get('indirectValueStatus'),
-            specific_indirect_unit=units_meta.get('specificIndirect', SPECIFIC_INDIRECT_UNIT),
+            specific_indirect_status=value_meta.get("indirectValueStatus"),
+            specific_indirect_unit=units_meta.get("specificIndirect", SPECIFIC_INDIRECT_UNIT),
             justification_code=row.default_justification_code,
             candidate_count=1,
             snapshot=snapshot,
@@ -846,7 +838,7 @@ def _effective_specific_values(
     return (
         default_view.specific_direct_embedded_emissions,
         default_view.specific_indirect_embedded_emissions,
-        'EU_DEFAULT_SNAPSHOT',
+        "EU_DEFAULT_SNAPSHOT",
     )
 
 
@@ -891,9 +883,7 @@ def _calculation_view(
     )
 
 
-def _is_empty(
-    row: CbamPurchasedPrecursor, uses: list[CbamPurchasedPrecursorProductUse]
-) -> bool:
+def _is_empty(row: CbamPurchasedPrecursor, uses: list[CbamPurchasedPrecursorProductUse]) -> bool:
     return (
         not row.name
         and not row.cn_normalized_code
@@ -964,9 +954,7 @@ def _compute_readiness(
             blocking.append(CODE_SUPPLIER_DIRECT_EMISSIONS_MISSING)
         if row.electricity_consumption_intensity is None or row.electricity_emission_factor is None:
             blocking.append(CODE_SUPPLIER_ELECTRICITY_DATA_INCOMPLETE)
-        numeric_present = any(
-            getattr(row, field) is not None for field in SUPPLIER_NUMERIC_FIELDS
-        )
+        numeric_present = any(getattr(row, field) is not None for field in SUPPLIER_NUMERIC_FIELDS)
         has_provenance = bool(
             (row.provenance_notes and row.provenance_notes.strip())
             or (row.evidence_reference and row.evidence_reference.strip())
@@ -1028,7 +1016,7 @@ def _to_response(
     if uses is None:
         uses = _list_uses(db, row.id)
     use_resps: list[PrecursorProductUseResponse] = []
-    use_tonnes = Decimal('0')
+    use_tonnes = Decimal("0")
     for use in uses:
         resp = _product_use_response(use)
         use_resps.append(resp)
@@ -1044,9 +1032,7 @@ def _to_response(
     )
 
     default_view = _default_source_view(row, _live_resolution(db, row))
-    specific_direct, specific_indirect, value_source = _effective_specific_values(
-        row, default_view
-    )
+    specific_direct, specific_indirect, value_source = _effective_specific_values(row, default_view)
     calculation = _calculation_view(
         quantity_tonnes=purchased_t,
         specific_direct=specific_direct,
@@ -1092,7 +1078,7 @@ def _to_response(
             distributed_tonnes=balance.distributed_tonnes,
             remaining_tonnes=balance.remaining_tonnes,
             balance_status=balance.balance_status,
-            formula_ref='E_PurchPrec!L39=L25-SUM(L28:L38)',
+            formula_ref="E_PurchPrec!L39=L25-SUM(L28:L38)",
             product_uses=use_resps,
         ),
         supplier_data=PrecursorSupplierDataView(
@@ -1150,12 +1136,12 @@ def get_purchased_precursor_metadata(
         workbook_formula_refs=WORKBOOK_FORMULA_REFS,
         supported_data_source_modes=sorted(SUPPORTED_DATA_SOURCE_MODES),
         units={
-            'quantity': CANONICAL_MASS_UNIT,
-            'specificDirect': SPECIFIC_DIRECT_UNIT,
-            'specificIndirect': SPECIFIC_INDIRECT_UNIT,
-            'electricityIntensity': ELECTRICITY_INTENSITY_UNIT,
-            'electricityEmissionFactor': ELECTRICITY_EF_UNIT,
-            'result': RESULT_UNIT_TCO2E,
+            "quantity": CANONICAL_MASS_UNIT,
+            "specificDirect": SPECIFIC_DIRECT_UNIT,
+            "specificIndirect": SPECIFIC_INDIRECT_UNIT,
+            "electricityIntensity": ELECTRICITY_INTENSITY_UNIT,
+            "electricityEmissionFactor": ELECTRICITY_EF_UNIT,
+            "result": RESULT_UNIT_TCO2E,
         },
         field_map=PRECURSOR_FIELD_MAP,
         extraction=workbook_extraction_metadata(),
@@ -1185,7 +1171,7 @@ def get_precursor_controlled_list_response(
     require_cbam_view(db, user, organization_id)
     lst = get_precursor_controlled_list(list_code)
     if lst is None:
-        raise NotFoundError(f'Controlled list not found: {list_code}')
+        raise NotFoundError(f"Controlled list not found: {list_code}")
     return PrecursorControlledListResponse(
         list_code=lst.list_code,
         title_en=lst.title_en,
@@ -1261,9 +1247,7 @@ def get_purchased_precursor_readiness(
     binding_id: uuid.UUID,
     precursor_id: uuid.UUID,
 ) -> PurchasedPrecursorReadiness:
-    return get_purchased_precursor(
-        db, user, organization_id, binding_id, precursor_id
-    ).readiness
+    return get_purchased_precursor(db, user, organization_id, binding_id, precursor_id).readiness
 
 
 def get_purchased_precursor_binding_summary(
@@ -1330,24 +1314,22 @@ def create_purchased_precursor(
         default_justification_code=payload.default_justification_code,
     )
 
-    quantity_unit = _require_mass_unit(payload.quantity_unit, field='quantityUnit')
-    non_cbam_unit = _require_mass_unit(payload.non_cbam_quantity_unit, field='nonCbamQuantityUnit')
+    quantity_unit = _require_mass_unit(payload.quantity_unit, field="quantityUnit")
+    non_cbam_unit = _require_mass_unit(payload.non_cbam_quantity_unit, field="nonCbamQuantityUnit")
     if payload.quantity is not None:
-        require_non_negative(payload.quantity, field='quantity')
+        require_non_negative(payload.quantity, field="quantity")
     if payload.non_cbam_quantity is not None:
-        require_non_negative(payload.non_cbam_quantity, field='nonCbamQuantity')
+        require_non_negative(payload.non_cbam_quantity, field="nonCbamQuantity")
     for value, field in (
-        (payload.specific_direct_embedded_emissions, 'specificDirectEmbeddedEmissions'),
-        (payload.electricity_consumption_intensity, 'electricityConsumptionIntensity'),
-        (payload.electricity_emission_factor, 'electricityEmissionFactor'),
+        (payload.specific_direct_embedded_emissions, "specificDirectEmbeddedEmissions"),
+        (payload.electricity_consumption_intensity, "electricityConsumptionIntensity"),
+        (payload.electricity_emission_factor, "electricityEmissionFactor"),
     ):
         if value is not None:
             require_non_negative(value, field=field)
 
     if payload.purchased_input_record_id is not None:
-        _require_purchased_input(
-            db, organization_id, binding_id, payload.purchased_input_record_id
-        )
+        _require_purchased_input(db, organization_id, binding_id, payload.purchased_input_record_id)
     if payload.supplier_id is not None:
         get_supplier(db, organization_id, payload.supplier_id)
 
@@ -1370,22 +1352,16 @@ def create_purchased_precursor(
         name=(payload.name.strip() if payload.name else None) or None,
         identifier=(payload.identifier.strip() if payload.identifier else None) or None,
         aggregated_goods_category=(
-            payload.aggregated_goods_category.strip()
-            if payload.aggregated_goods_category
-            else None
+            payload.aggregated_goods_category.strip() if payload.aggregated_goods_category else None
         )
         or None,
         cn_normalized_code=normalized_cn or None,
         cn_display_code=(payload.cn_code.strip() if payload.cn_code else None) or None,
         country_of_origin=(
-            normalize_country_name(payload.country_of_origin)
-            if payload.country_of_origin
-            else None
+            normalize_country_name(payload.country_of_origin) if payload.country_of_origin else None
         )
         or None,
-        production_route=(
-            payload.production_route.strip() if payload.production_route else None
-        )
+        production_route=(payload.production_route.strip() if payload.production_route else None)
         or None,
         data_source_mode=mode,
         quantity=payload.quantity,
@@ -1403,19 +1379,19 @@ def create_purchased_precursor(
     if mode == MODE_SUPPLIER_DATA:
         row.specific_direct_embedded_emissions = payload.specific_direct_embedded_emissions
         row.specific_direct_unit = _validate_fixed_unit(
-            payload.specific_direct_unit, SPECIFIC_DIRECT_UNIT, field='specificDirectUnit'
+            payload.specific_direct_unit, SPECIFIC_DIRECT_UNIT, field="specificDirectUnit"
         )
         row.specific_direct_source_code = payload.specific_direct_source_code
         row.electricity_consumption_intensity = payload.electricity_consumption_intensity
         row.electricity_intensity_unit = _validate_fixed_unit(
             payload.electricity_intensity_unit,
             ELECTRICITY_INTENSITY_UNIT,
-            field='electricityIntensityUnit',
+            field="electricityIntensityUnit",
         )
         row.electricity_intensity_source_code = payload.electricity_intensity_source_code
         row.electricity_emission_factor = payload.electricity_emission_factor
         row.electricity_ef_unit = _validate_fixed_unit(
-            payload.electricity_ef_unit, ELECTRICITY_EF_UNIT, field='electricityEfUnit'
+            payload.electricity_ef_unit, ELECTRICITY_EF_UNIT, field="electricityEfUnit"
         )
         row.electricity_ef_source_code = payload.electricity_ef_source_code
         _apply_supplier_derivation(row)
@@ -1431,13 +1407,13 @@ def create_purchased_precursor(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.purchased_precursor.created',
-        entity_type='cbam_purchased_precursor',
+        action="cbam.purchased_precursor.created",
+        entity_type="cbam_purchased_precursor",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'id': str(row.id), 'dataSourceMode': mode},
+        metadata={"id": str(row.id), "dataSourceMode": mode},
     )
     db.commit()
     db.refresh(row)
@@ -1462,69 +1438,69 @@ def update_purchased_precursor_draft(
     row = _get_precursor(db, organization_id, binding_id, precursor_id)
     if row.status == PRECURSOR_STATUS_ARCHIVED:
         raise BusinessRuleError(
-            'Archived purchased precursors cannot be edited.',
-            details=[{'code': CODE_PRECURSOR_ARCHIVED}],
+            "Archived purchased precursors cannot be edited.",
+            details=[{"code": CODE_PRECURSOR_ARCHIVED}],
         )
-    check_row_version(row.row_version, payload.row_version, entity='CBAM purchased precursor')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM purchased precursor")
     data = payload.model_dump(exclude_unset=True)
-    data.pop('row_version', None)
+    data.pop("row_version", None)
 
     previous_mode = row.data_source_mode
-    mode = _validate_mode(data.get('data_source_mode') or previous_mode)
+    mode = _validate_mode(data.get("data_source_mode") or previous_mode)
     _reject_mixed_source(mode, data)
     _validate_source_codes(
         specific_direct_source_code=data.get(
-            'specific_direct_source_code', row.specific_direct_source_code
+            "specific_direct_source_code", row.specific_direct_source_code
         ),
         electricity_intensity_source_code=data.get(
-            'electricity_intensity_source_code', row.electricity_intensity_source_code
+            "electricity_intensity_source_code", row.electricity_intensity_source_code
         ),
         electricity_ef_source_code=data.get(
-            'electricity_ef_source_code', row.electricity_ef_source_code
+            "electricity_ef_source_code", row.electricity_ef_source_code
         ),
         default_justification_code=data.get(
-            'default_justification_code', row.default_justification_code
+            "default_justification_code", row.default_justification_code
         ),
     )
 
-    if 'purchased_input_record_id' in data:
-        record_id = data['purchased_input_record_id']
+    if "purchased_input_record_id" in data:
+        record_id = data["purchased_input_record_id"]
         if record_id is not None:
             _require_purchased_input(db, organization_id, binding_id, record_id)
         row.purchased_input_record_id = record_id
-    if 'supplier_id' in data:
-        supplier_id = data['supplier_id']
+    if "supplier_id" in data:
+        supplier_id = data["supplier_id"]
         if supplier_id is not None:
             get_supplier(db, organization_id, supplier_id)
         row.supplier_id = supplier_id
 
-    if 'name' in data:
-        row.name = (data['name'].strip() if data['name'] else None) or None
-    if 'identifier' in data:
-        row.identifier = (data['identifier'].strip() if data['identifier'] else None) or None
-    if 'aggregated_goods_category' in data:
-        category = data['aggregated_goods_category']
+    if "name" in data:
+        row.name = (data["name"].strip() if data["name"] else None) or None
+    if "identifier" in data:
+        row.identifier = (data["identifier"].strip() if data["identifier"] else None) or None
+    if "aggregated_goods_category" in data:
+        category = data["aggregated_goods_category"]
         row.aggregated_goods_category = (category.strip() if category else None) or None
-    if 'cn_code' in data:
-        cn_code = data['cn_code']
+    if "cn_code" in data:
+        cn_code = data["cn_code"]
         row.cn_normalized_code = normalize_precursor_cn_code(cn_code) or None if cn_code else None
         row.cn_display_code = (cn_code.strip() if cn_code else None) or None
-    if 'country_of_origin' in data:
-        country = data['country_of_origin']
+    if "country_of_origin" in data:
+        country = data["country_of_origin"]
         row.country_of_origin = (normalize_country_name(country) if country else None) or None
-    if 'production_route' in data:
-        route = data['production_route']
+    if "production_route" in data:
+        route = data["production_route"]
         row.production_route = (route.strip() if route else None) or None
-    if 'notes' in data:
-        row.notes = data['notes']
-    if 'provenance_notes' in data:
-        row.provenance_notes = data['provenance_notes']
-    if 'evidence_reference' in data:
-        row.evidence_reference = data['evidence_reference']
+    if "notes" in data:
+        row.notes = data["notes"]
+    if "provenance_notes" in data:
+        row.provenance_notes = data["provenance_notes"]
+    if "evidence_reference" in data:
+        row.evidence_reference = data["evidence_reference"]
 
     for qty_field, unit_field in (
-        ('quantity', 'quantity_unit'),
-        ('non_cbam_quantity', 'non_cbam_quantity_unit'),
+        ("quantity", "quantity_unit"),
+        ("non_cbam_quantity", "non_cbam_quantity_unit"),
     ):
         if qty_field in data:
             quantity = data[qty_field]
@@ -1539,27 +1515,25 @@ def update_purchased_precursor_draft(
         if previous_mode != mode:
             _clear_default_fields(row)
         for field, expected_unit in (
-            ('specific_direct_unit', SPECIFIC_DIRECT_UNIT),
-            ('electricity_intensity_unit', ELECTRICITY_INTENSITY_UNIT),
-            ('electricity_ef_unit', ELECTRICITY_EF_UNIT),
+            ("specific_direct_unit", SPECIFIC_DIRECT_UNIT),
+            ("electricity_intensity_unit", ELECTRICITY_INTENSITY_UNIT),
+            ("electricity_ef_unit", ELECTRICITY_EF_UNIT),
         ):
             if field in data:
-                setattr(
-                    row, field, _validate_fixed_unit(data[field], expected_unit, field=field)
-                )
+                setattr(row, field, _validate_fixed_unit(data[field], expected_unit, field=field))
         for field in (
-            'specific_direct_embedded_emissions',
-            'electricity_consumption_intensity',
-            'electricity_emission_factor',
+            "specific_direct_embedded_emissions",
+            "electricity_consumption_intensity",
+            "electricity_emission_factor",
         ):
             if field in data:
                 if data[field] is not None:
                     require_non_negative(data[field], field=field)
                 setattr(row, field, data[field])
         for field in (
-            'specific_direct_source_code',
-            'electricity_intensity_source_code',
-            'electricity_ef_source_code',
+            "specific_direct_source_code",
+            "electricity_intensity_source_code",
+            "electricity_ef_source_code",
         ):
             if field in data:
                 setattr(row, field, data[field])
@@ -1574,12 +1548,12 @@ def update_purchased_precursor_draft(
     else:
         if previous_mode != mode:
             _clear_supplier_fields(row)
-        if 'default_justification_code' in data:
-            row.default_justification_code = data['default_justification_code']
+        if "default_justification_code" in data:
+            row.default_justification_code = data["default_justification_code"]
         identity_changed = any(
-            field in data for field in ('cn_code', 'country_of_origin', 'production_route')
+            field in data for field in ("cn_code", "country_of_origin", "production_route")
         )
-        explicit_value_id = data.get('default_value_id')
+        explicit_value_id = data.get("default_value_id")
         if explicit_value_id is None and not identity_changed:
             # Keep a value the declarant picked earlier to settle an ambiguous match.
             explicit_value_id = row.default_value_id
@@ -1591,13 +1565,13 @@ def update_purchased_precursor_draft(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.purchased_precursor.updated',
-        entity_type='cbam_purchased_precursor',
+        action="cbam.purchased_precursor.updated",
+        entity_type="cbam_purchased_precursor",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'rowVersion': row.row_version, 'dataSourceMode': mode},
+        metadata={"rowVersion": row.row_version, "dataSourceMode": mode},
     )
     db.commit()
     db.refresh(row)
@@ -1620,7 +1594,7 @@ def archive_purchased_precursor(
     binding = get_binding_for_org(db, organization_id, binding_id)
     require_writable_binding(binding)
     row = _get_precursor(db, organization_id, binding_id, precursor_id)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM purchased precursor')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM purchased precursor")
     if row.status == PRECURSOR_STATUS_ARCHIVED:
         return _to_response(db, row)
     row.status = PRECURSOR_STATUS_ARCHIVED
@@ -1630,8 +1604,8 @@ def archive_purchased_precursor(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.purchased_precursor.archived',
-        entity_type='cbam_purchased_precursor',
+        action="cbam.purchased_precursor.archived",
+        entity_type="cbam_purchased_precursor",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
@@ -1653,8 +1627,8 @@ def _require_editable_precursor(
     precursor = _get_precursor(db, organization_id, binding_id, precursor_id)
     if precursor.status == PRECURSOR_STATUS_ARCHIVED:
         raise BusinessRuleError(
-            f'Cannot {action} product uses on an archived purchased precursor.',
-            details=[{'code': CODE_PRECURSOR_ARCHIVED}],
+            f"Cannot {action} product uses on an archived purchased precursor.",
+            details=[{"code": CODE_PRECURSOR_ARCHIVED}],
         )
     return precursor
 
@@ -1675,14 +1649,14 @@ def create_precursor_product_use(
     binding = get_binding_for_org(db, organization_id, binding_id)
     require_writable_binding(binding)
     precursor = _require_editable_precursor(
-        db, organization_id, binding_id, precursor_id, action='add'
+        db, organization_id, binding_id, precursor_id, action="add"
     )
     target = require_linkable_product_profile(
         db, organization_id, payload.target_product_profile_version_id
     )
-    unit = _require_mass_unit(payload.unit, field='unit')
+    unit = _require_mass_unit(payload.unit, field="unit")
     assert unit is not None
-    require_non_negative(payload.quantity, field='quantity')
+    require_non_negative(payload.quantity, field="quantity")
 
     existing = db.execute(
         select(CbamPurchasedPrecursorProductUse).where(
@@ -1692,8 +1666,8 @@ def create_precursor_product_use(
     ).scalar_one_or_none()
     if existing is not None:
         raise BusinessRuleError(
-            'A product-use row for this target profile already exists on the precursor.',
-            details=[{'code': 'PRODUCT_USE_DUPLICATE'}],
+            "A product-use row for this target profile already exists on the precursor.",
+            details=[{"code": "PRODUCT_USE_DUPLICATE"}],
         )
 
     use = CbamPurchasedPrecursorProductUse(
@@ -1715,8 +1689,8 @@ def create_precursor_product_use(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.purchased_precursor.product_use.created',
-        entity_type='cbam_purchased_precursor_product_use',
+        action="cbam.purchased_precursor.product_use.created",
+        entity_type="cbam_purchased_precursor_product_use",
         entity_id=str(use.id),
         request_id=request_id,
         ip_address=ip_address,
@@ -1741,7 +1715,7 @@ def _get_product_use(
         or use.reporting_period_binding_id != binding_id
         or use.precursor_id != precursor_id
     ):
-        raise NotFoundError('Precursor product-use distribution row not found.')
+        raise NotFoundError("Precursor product-use distribution row not found.")
     return use
 
 
@@ -1762,28 +1736,28 @@ def update_precursor_product_use(
     binding = get_binding_for_org(db, organization_id, binding_id)
     require_writable_binding(binding)
     precursor = _require_editable_precursor(
-        db, organization_id, binding_id, precursor_id, action='update'
+        db, organization_id, binding_id, precursor_id, action="update"
     )
     use = _get_product_use(db, organization_id, binding_id, precursor_id, use_id)
     check_row_version(
-        use.row_version, payload.row_version, entity='CBAM purchased precursor product use'
+        use.row_version, payload.row_version, entity="CBAM purchased precursor product use"
     )
     data = payload.model_dump(exclude_unset=True)
-    data.pop('row_version', None)
-    if data.get('target_product_profile_version_id'):
+    data.pop("row_version", None)
+    if data.get("target_product_profile_version_id"):
         target = require_linkable_product_profile(
-            db, organization_id, data['target_product_profile_version_id']
+            db, organization_id, data["target_product_profile_version_id"]
         )
         use.target_product_profile_version_id = target.id
-    if 'quantity' in data and data['quantity'] is not None:
-        require_non_negative(data['quantity'], field='quantity')
-        use.quantity = data['quantity']
-    if 'unit' in data and data['unit'] is not None:
-        unit = _require_mass_unit(data['unit'], field='unit')
+    if "quantity" in data and data["quantity"] is not None:
+        require_non_negative(data["quantity"], field="quantity")
+        use.quantity = data["quantity"]
+    if "unit" in data and data["unit"] is not None:
+        unit = _require_mass_unit(data["unit"], field="unit")
         assert unit is not None
         use.unit = unit
-    if 'notes' in data:
-        use.notes = data['notes']
+    if "notes" in data:
+        use.notes = data["notes"]
     use.row_version += 1
     use.updated_by_user_id = user.id
     precursor.row_version += 1
@@ -1792,8 +1766,8 @@ def update_precursor_product_use(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.purchased_precursor.product_use.updated',
-        entity_type='cbam_purchased_precursor_product_use',
+        action="cbam.purchased_precursor.product_use.updated",
+        entity_type="cbam_purchased_precursor_product_use",
         entity_id=str(use.id),
         request_id=request_id,
         ip_address=ip_address,
@@ -1820,7 +1794,7 @@ def delete_precursor_product_use(
     binding = get_binding_for_org(db, organization_id, binding_id)
     require_writable_binding(binding)
     precursor = _require_editable_precursor(
-        db, organization_id, binding_id, precursor_id, action='delete'
+        db, organization_id, binding_id, precursor_id, action="delete"
     )
     use = _get_product_use(db, organization_id, binding_id, precursor_id, use_id)
     db.delete(use)
@@ -1830,8 +1804,8 @@ def delete_precursor_product_use(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.purchased_precursor.product_use.deleted',
-        entity_type='cbam_purchased_precursor_product_use',
+        action="cbam.purchased_precursor.product_use.deleted",
+        entity_type="cbam_purchased_precursor_product_use",
         entity_id=str(use_id),
         request_id=request_id,
         ip_address=ip_address,

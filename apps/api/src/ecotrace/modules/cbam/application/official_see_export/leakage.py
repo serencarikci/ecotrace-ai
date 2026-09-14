@@ -16,12 +16,12 @@ from ecotrace.modules.cbam.application.official_see_export.mapping.loader import
 # Only EcoTrace-owned data entry sheets are scanned for example residue.
 _DATA_SHEETS = frozenset(
     {
-        'A_InstData',
-        'B_EmInst',
-        'C_Emissions&Energy',
-        'D_Processes',
-        'E_PurchPrec',
-        'Summary_Products',
+        "A_InstData",
+        "B_EmInst",
+        "C_Emissions&Energy",
+        "D_Processes",
+        "E_PurchPrec",
+        "Summary_Products",
     }
 )
 
@@ -41,9 +41,7 @@ def scan_example_leakage(
     used_input_keys: set[tuple[str, str]],
     identifiers: tuple[str, ...] = EXAMPLE_IDENTIFIERS,
 ) -> list[LeakageFinding]:
-    workbook = (
-        load_workbook(Path(wb), data_only=False) if isinstance(wb, (str, Path)) else wb
-    )
+    workbook = load_workbook(Path(wb), data_only=False) if isinstance(wb, (str, Path)) else wb
 
     findings: list[LeakageFinding] = []
     lower_needles = tuple(n.lower() for n in identifiers)
@@ -51,13 +49,13 @@ def scan_example_leakage(
     watch_keys = {
         (e.sheet, e.cell)
         for e in manifest.entries
-        if e.direction in {'CLEAR_EXAMPLE', 'INPUT'} and e.sheet in _DATA_SHEETS
+        if e.direction in {"CLEAR_EXAMPLE", "INPUT"} and e.sheet in _DATA_SHEETS
     }
     for sheet, cell in watch_keys:
         if sheet not in workbook.sheetnames:
             continue
         value = workbook[sheet][cell].value
-        if not isinstance(value, str) or value.startswith('='):
+        if not isinstance(value, str) or value.startswith("="):
             continue
         low = value.lower().strip()
         for needle, needle_low in zip(identifiers, lower_needles, strict=True):
@@ -66,15 +64,15 @@ def scan_example_leakage(
             if low == needle_low:
                 findings.append(
                     LeakageFinding(
-                        kind='EXAMPLE_IDENTIFIER',
+                        kind="EXAMPLE_IDENTIFIER",
                         sheet=sheet,
                         cell=cell,
-                        detail=f'{needle!r} in {value!r}',
+                        detail=f"{needle!r} in {value!r}",
                     )
                 )
                 break
 
-    for entry in manifest.by_direction('INPUT'):
+    for entry in manifest.by_direction("INPUT"):
         if entry.sheet not in _DATA_SHEETS:
             continue
         key = (entry.sheet, entry.cell)
@@ -85,11 +83,11 @@ def scan_example_leakage(
         value = workbook[entry.sheet][entry.cell].value
         if value is None:
             continue
-        if isinstance(value, str) and value.startswith('='):
+        if isinstance(value, str) and value.startswith("="):
             continue
         findings.append(
             LeakageFinding(
-                kind='UNUSED_SLOT_VALUE',
+                kind="UNUSED_SLOT_VALUE",
                 sheet=entry.sheet,
                 cell=entry.cell,
                 detail=repr(value)[:200],

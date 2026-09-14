@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0013_cbam_excel_export'
-down_revision: str | None = '0012_cbam_minimal_calculation'
+revision: str = "0013_cbam_excel_export"
+down_revision: str | None = "0012_cbam_minimal_calculation"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -47,12 +47,10 @@ CREATE TABLE cbam_export_templates (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_export_templates_organization_id '
-        'ON cbam_export_templates (organization_id)'
+        "CREATE INDEX ix_cbam_export_templates_organization_id "
+        "ON cbam_export_templates (organization_id)"
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_export_templates_status ON cbam_export_templates (status)'
-    )
+    op.execute("CREATE INDEX ix_cbam_export_templates_status ON cbam_export_templates (status)")
     op.execute(
         """
 CREATE UNIQUE INDEX uq_cbam_export_template_org_code_version
@@ -114,8 +112,8 @@ CREATE TABLE cbam_export_mappings (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_export_mappings_template_id '
-        'ON cbam_export_mappings (export_template_id)'
+        "CREATE INDEX ix_cbam_export_mappings_template_id "
+        "ON cbam_export_mappings (export_template_id)"
     )
 
     op.execute(
@@ -163,13 +161,13 @@ CREATE TABLE cbam_export_runs (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_export_runs_organization_id ON cbam_export_runs (organization_id)'
+        "CREATE INDEX ix_cbam_export_runs_organization_id ON cbam_export_runs (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_export_runs_org_binding '
-        'ON cbam_export_runs (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_export_runs_org_binding "
+        "ON cbam_export_runs (organization_id, reporting_period_binding_id)"
     )
-    op.execute('CREATE INDEX ix_cbam_export_runs_status ON cbam_export_runs (status)')
+    op.execute("CREATE INDEX ix_cbam_export_runs_status ON cbam_export_runs (status)")
 
     op.execute(
         """
@@ -198,17 +196,17 @@ CREATE TABLE cbam_export_artifacts (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_export_artifacts_organization_id '
-        'ON cbam_export_artifacts (organization_id)'
+        "CREATE INDEX ix_cbam_export_artifacts_organization_id "
+        "ON cbam_export_artifacts (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_export_artifacts_export_run_id '
-        'ON cbam_export_artifacts (export_run_id)'
+        "CREATE INDEX ix_cbam_export_artifacts_export_run_id "
+        "ON cbam_export_artifacts (export_run_id)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_export_artifacts')
-    op.execute('DROP TABLE IF EXISTS cbam_export_runs')
-    op.execute('DROP TABLE IF EXISTS cbam_export_mappings')
-    op.execute('DROP TABLE IF EXISTS cbam_export_templates')
+    op.execute("DROP TABLE IF EXISTS cbam_export_artifacts")
+    op.execute("DROP TABLE IF EXISTS cbam_export_runs")
+    op.execute("DROP TABLE IF EXISTS cbam_export_mappings")
+    op.execute("DROP TABLE IF EXISTS cbam_export_templates")

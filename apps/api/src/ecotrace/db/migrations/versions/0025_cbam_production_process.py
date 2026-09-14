@@ -10,8 +10,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0025_cbam_production_process'
-down_revision: str | None = '0024_cbam_iea_allocation'
+revision: str = "0025_cbam_production_process"
+down_revision: str | None = "0024_cbam_iea_allocation"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -202,5 +202,5 @@ ON cbam_production_process_product_uses (target_product_profile_version_id)
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_production_process_product_uses')
-    op.execute('DROP TABLE IF EXISTS cbam_production_processes')
+    op.execute("DROP TABLE IF EXISTS cbam_production_process_product_uses")
+    op.execute("DROP TABLE IF EXISTS cbam_production_processes")

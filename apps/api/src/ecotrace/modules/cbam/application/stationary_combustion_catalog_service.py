@@ -18,16 +18,16 @@ from ecotrace.modules.cbam.infrastructure.models import (
 )
 from ecotrace.shared.domain.schemas import CamelModel
 
-RESOLUTION_RESOLVED = 'RESOLVED'
-RESOLUTION_UNRESOLVED = 'UNRESOLVED'
-RESOLUTION_AMBIGUOUS = 'AMBIGUOUS'
+RESOLUTION_RESOLVED = "RESOLVED"
+RESOLUTION_UNRESOLVED = "UNRESOLVED"
+RESOLUTION_AMBIGUOUS = "AMBIGUOUS"
 
-ALLOWED_NCV_UNITS = frozenset({'TJ/Gg'})
-ALLOWED_CO2_UNITS = frozenset({'kgCO2/TJ'})
-ALLOWED_DENSITY_UNITS = frozenset({'kg/Sm3', 'kg/m3'})
-ALLOWED_INPUT_BASIS = frozenset({'VOLUME', 'MASS'})
-ALLOWED_ACTIVITY_UNITS = frozenset({'Sm3', 'm3', 'kg', 't', 'Gg'})
-ALLOWED_PARAM_STATUSES = frozenset({'DRAFT', 'ACTIVE', 'ARCHIVED'})
+ALLOWED_NCV_UNITS = frozenset({"TJ/Gg"})
+ALLOWED_CO2_UNITS = frozenset({"kgCO2/TJ"})
+ALLOWED_DENSITY_UNITS = frozenset({"kg/Sm3", "kg/m3"})
+ALLOWED_INPUT_BASIS = frozenset({"VOLUME", "MASS"})
+ALLOWED_ACTIVITY_UNITS = frozenset({"Sm3", "m3", "kg", "t", "Gg"})
+ALLOWED_PARAM_STATUSES = frozenset({"DRAFT", "ACTIVE", "ARCHIVED"})
 
 
 class ProvenanceDTO(CamelModel):
@@ -71,7 +71,7 @@ class StationaryCombustionFuelCreate(CamelModel):
     name: str
     input_basis: str
     default_activity_unit: str
-    status: str = 'ACTIVE'
+    status: str = "ACTIVE"
     description: str | None = None
 
 
@@ -81,7 +81,7 @@ class StationaryCombustionParameterSetCreate(CamelModel):
     dataset_version: str
     valid_from: date
     valid_until: date | None = None
-    status: str = 'DRAFT'
+    status: str = "DRAFT"
     net_calorific_value: Decimal
     net_calorific_value_unit: str
     fossil_co2_emission_factor: Decimal
@@ -115,35 +115,35 @@ def _periods_overlap(
 def _validate_parameter_payload(payload: StationaryCombustionParameterSetCreate) -> None:
     if payload.valid_until is not None and payload.valid_until < payload.valid_from:
         raise ValidationAppError(
-            'valid_until must be on or after valid_from.',
-            details=[{'field': 'validUntil', 'message': 'Must be >= validFrom.'}],
+            "valid_until must be on or after valid_from.",
+            details=[{"field": "validUntil", "message": "Must be >= validFrom."}],
         )
     if payload.status not in ALLOWED_PARAM_STATUSES:
-        raise ValidationAppError(f'Invalid parameter-set status: {payload.status}')
+        raise ValidationAppError(f"Invalid parameter-set status: {payload.status}")
     if payload.net_calorific_value <= 0:
         raise ValidationAppError(
-            'net_calorific_value must be greater than zero.',
-            details=[{'field': 'netCalorificValue', 'message': 'Must be > 0.'}],
+            "net_calorific_value must be greater than zero.",
+            details=[{"field": "netCalorificValue", "message": "Must be > 0."}],
         )
     if payload.net_calorific_value_unit not in ALLOWED_NCV_UNITS:
         raise ValidationAppError(
-            f'Unsupported NCV unit: {payload.net_calorific_value_unit}',
-            details=[{'field': 'netCalorificValueUnit'}],
+            f"Unsupported NCV unit: {payload.net_calorific_value_unit}",
+            details=[{"field": "netCalorificValueUnit"}],
         )
     if payload.fossil_co2_emission_factor <= 0:
         raise ValidationAppError(
-            'fossil_co2_emission_factor must be greater than zero.',
-            details=[{'field': 'fossilCo2EmissionFactor', 'message': 'Must be > 0.'}],
+            "fossil_co2_emission_factor must be greater than zero.",
+            details=[{"field": "fossilCo2EmissionFactor", "message": "Must be > 0."}],
         )
     if payload.fossil_co2_emission_factor_unit not in ALLOWED_CO2_UNITS:
         raise ValidationAppError(
-            f'Unsupported CO2 factor unit: {payload.fossil_co2_emission_factor_unit}',
-            details=[{'field': 'fossilCo2EmissionFactorUnit'}],
+            f"Unsupported CO2 factor unit: {payload.fossil_co2_emission_factor_unit}",
+            details=[{"field": "fossilCo2EmissionFactorUnit"}],
         )
     if payload.oxidation_factor < 0:
         raise ValidationAppError(
-            'oxidation_factor cannot be negative.',
-            details=[{'field': 'oxidationFactor', 'message': 'Must be >= 0.'}],
+            "oxidation_factor cannot be negative.",
+            details=[{"field": "oxidationFactor", "message": "Must be >= 0."}],
         )
 
     density = payload.reference_density
@@ -152,31 +152,31 @@ def _validate_parameter_payload(payload: StationaryCombustionParameterSetCreate)
         pass
     elif density is None or density_unit is None:
         raise ValidationAppError(
-            'reference_density and reference_density_unit must both be null or both set.',
-            details=[{'field': 'referenceDensity'}],
+            "reference_density and reference_density_unit must both be null or both set.",
+            details=[{"field": "referenceDensity"}],
         )
     else:
         if density <= 0:
             raise ValidationAppError(
-                'reference_density must be greater than zero when provided.',
-                details=[{'field': 'referenceDensity', 'message': 'Must be > 0.'}],
+                "reference_density must be greater than zero when provided.",
+                details=[{"field": "referenceDensity", "message": "Must be > 0."}],
             )
         if density_unit not in ALLOWED_DENSITY_UNITS:
             raise ValidationAppError(
-                f'Unsupported density unit: {density_unit}',
-                details=[{'field': 'referenceDensityUnit'}],
+                f"Unsupported density unit: {density_unit}",
+                details=[{"field": "referenceDensityUnit"}],
             )
 
     for field, value in (
-        ('ncv_source_document', payload.ncv_source_document),
-        ('ncv_source_table', payload.ncv_source_table),
-        ('co2_source_document', payload.co2_source_document),
-        ('co2_source_table', payload.co2_source_table),
-        ('oxidation_source_document', payload.oxidation_source_document),
-        ('oxidation_source_table', payload.oxidation_source_table),
+        ("ncv_source_document", payload.ncv_source_document),
+        ("ncv_source_table", payload.ncv_source_table),
+        ("co2_source_document", payload.co2_source_document),
+        ("co2_source_table", payload.co2_source_table),
+        ("oxidation_source_document", payload.oxidation_source_document),
+        ("oxidation_source_table", payload.oxidation_source_table),
     ):
         if not value.strip():
-            raise ValidationAppError(f'{field} is required.')
+            raise ValidationAppError(f"{field} is required.")
 
 
 def _assert_no_active_overlap(
@@ -189,21 +189,21 @@ def _assert_no_active_overlap(
 ) -> None:
     stmt = select(CbamStationaryCombustionParameterSet).where(
         CbamStationaryCombustionParameterSet.fuel_id == fuel_id,
-        CbamStationaryCombustionParameterSet.status == 'ACTIVE',
+        CbamStationaryCombustionParameterSet.status == "ACTIVE",
     )
     if exclude_id is not None:
         stmt = stmt.where(CbamStationaryCombustionParameterSet.id != exclude_id)
     for row in db.execute(stmt).scalars().all():
         if _periods_overlap(valid_from, valid_until, row.valid_from, row.valid_until):
             raise ConflictError(
-                'Active stationary-combustion parameter sets cannot have overlapping '
-                'validity periods for the same fuel.',
+                "Active stationary-combustion parameter sets cannot have overlapping "
+                "validity periods for the same fuel.",
                 details=[
                     {
-                        'code': 'OVERLAPPING_ACTIVE_PARAMETER_SET',
-                        'existingParameterSetId': str(row.id),
-                        'datasetCode': row.dataset_code,
-                        'datasetVersion': row.dataset_version,
+                        "code": "OVERLAPPING_ACTIVE_PARAMETER_SET",
+                        "existingParameterSetId": str(row.id),
+                        "datasetCode": row.dataset_code,
+                        "datasetVersion": row.dataset_version,
                     }
                 ],
             )
@@ -216,18 +216,18 @@ def create_fuel(
     ensure_platform_stationary_combustion_catalog(db)
     code = payload.code.strip().upper()
     if not code:
-        raise ValidationAppError('Fuel code is required.')
+        raise ValidationAppError("Fuel code is required.")
     if payload.input_basis not in ALLOWED_INPUT_BASIS:
-        raise ValidationAppError(f'Unsupported input_basis: {payload.input_basis}')
+        raise ValidationAppError(f"Unsupported input_basis: {payload.input_basis}")
     if payload.default_activity_unit not in ALLOWED_ACTIVITY_UNITS:
         raise ValidationAppError(
-            f'Unsupported default_activity_unit: {payload.default_activity_unit}'
+            f"Unsupported default_activity_unit: {payload.default_activity_unit}"
         )
     exists = db.execute(
         select(CbamStationaryCombustionFuel.id).where(CbamStationaryCombustionFuel.code == code)
     ).scalar_one_or_none()
     if exists is not None:
-        raise ConflictError(f'Fuel code already exists: {code}')
+        raise ConflictError(f"Fuel code already exists: {code}")
     row = CbamStationaryCombustionFuel(
         code=code,
         name=payload.name.strip(),
@@ -249,30 +249,29 @@ def create_parameter_set(
     _validate_parameter_payload(payload)
     fuel = db.get(CbamStationaryCombustionFuel, payload.fuel_id)
     if fuel is None:
-        raise ValidationAppError('Fuel definition not found.')
+        raise ValidationAppError("Fuel definition not found.")
 
     duplicate = db.execute(
         select(CbamStationaryCombustionParameterSet.id).where(
             CbamStationaryCombustionParameterSet.fuel_id == payload.fuel_id,
             CbamStationaryCombustionParameterSet.dataset_code == payload.dataset_code.strip(),
-            CbamStationaryCombustionParameterSet.dataset_version
-            == payload.dataset_version.strip(),
+            CbamStationaryCombustionParameterSet.dataset_version == payload.dataset_version.strip(),
         )
     ).scalar_one_or_none()
     if duplicate is not None:
         raise ConflictError(
-            'Dataset version already exists for this fuel.',
+            "Dataset version already exists for this fuel.",
             details=[
                 {
-                    'code': 'DATASET_VERSION_NOT_UNIQUE',
-                    'fuelId': str(payload.fuel_id),
-                    'datasetCode': payload.dataset_code,
-                    'datasetVersion': payload.dataset_version,
+                    "code": "DATASET_VERSION_NOT_UNIQUE",
+                    "fuelId": str(payload.fuel_id),
+                    "datasetCode": payload.dataset_code,
+                    "datasetVersion": payload.dataset_version,
                 }
             ],
         )
 
-    if payload.status == 'ACTIVE':
+    if payload.status == "ACTIVE":
         _assert_no_active_overlap(
             db,
             fuel_id=payload.fuel_id,
@@ -362,15 +361,15 @@ def resolve_stationary_combustion_parameters(
     fuel = db.execute(
         select(CbamStationaryCombustionFuel).where(CbamStationaryCombustionFuel.code == code)
     ).scalar_one_or_none()
-    if fuel is None or fuel.status != 'ACTIVE':
+    if fuel is None or fuel.status != "ACTIVE":
         return StationaryCombustionParameterResolution(
             status=RESOLUTION_UNRESOLVED,
-            message=f'No active stationary-combustion fuel found for code {code!r}.',
+            message=f"No active stationary-combustion fuel found for code {code!r}.",
         )
 
     stmt = select(CbamStationaryCombustionParameterSet).where(
         CbamStationaryCombustionParameterSet.fuel_id == fuel.id,
-        CbamStationaryCombustionParameterSet.status == 'ACTIVE',
+        CbamStationaryCombustionParameterSet.status == "ACTIVE",
         CbamStationaryCombustionParameterSet.valid_from <= reference_date,
         or_(
             CbamStationaryCombustionParameterSet.valid_until.is_(None),
@@ -381,28 +380,30 @@ def resolve_stationary_combustion_parameters(
         stmt = stmt.where(
             CbamStationaryCombustionParameterSet.dataset_version == dataset_version.strip()
         )
-    candidates = list(db.execute(stmt.order_by(CbamStationaryCombustionParameterSet.valid_from)).scalars())
+    candidates = list(
+        db.execute(stmt.order_by(CbamStationaryCombustionParameterSet.valid_from)).scalars()
+    )
     if not candidates:
         return StationaryCombustionParameterResolution(
             status=RESOLUTION_UNRESOLVED,
             message=(
-                f'No active stationary-combustion parameter set applies for fuel {code!r} '
-                f'on {reference_date.isoformat()}.'
+                f"No active stationary-combustion parameter set applies for fuel {code!r} "
+                f"on {reference_date.isoformat()}."
             ),
         )
     if len(candidates) > 1:
         return StationaryCombustionParameterResolution(
             status=RESOLUTION_AMBIGUOUS,
             message=(
-                f'More than one active stationary-combustion parameter set applies for fuel '
-                f'{code!r} on {reference_date.isoformat()}.'
+                f"More than one active stationary-combustion parameter set applies for fuel "
+                f"{code!r} on {reference_date.isoformat()}."
             ),
             candidate_parameter_set_ids=[row.id for row in candidates],
         )
     row = candidates[0]
     return StationaryCombustionParameterResolution(
         status=RESOLUTION_RESOLVED,
-        message='Stationary-combustion parameters resolved.',
+        message="Stationary-combustion parameters resolved.",
         parameters=_to_resolved(fuel, row),
         candidate_parameter_set_ids=[row.id],
     )
@@ -423,7 +424,7 @@ def list_active_parameter_sets_for_fuel(
         db.execute(
             select(CbamStationaryCombustionParameterSet).where(
                 CbamStationaryCombustionParameterSet.fuel_id == fuel_id,
-                CbamStationaryCombustionParameterSet.status == 'ACTIVE',
+                CbamStationaryCombustionParameterSet.status == "ACTIVE",
             )
         )
         .scalars()

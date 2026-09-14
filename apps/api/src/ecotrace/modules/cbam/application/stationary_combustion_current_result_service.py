@@ -80,13 +80,13 @@ def set_current_result_pointer(
         )
         .on_conflict_do_update(
             index_elements=[
-                'organization_id',
-                'reporting_period_binding_id',
-                'activity_record_id',
+                "organization_id",
+                "reporting_period_binding_id",
+                "activity_record_id",
             ],
             set_={
-                'current_result_id': result_id,
-                'updated_at': now,
+                "current_result_id": result_id,
+                "updated_at": now,
             },
         )
     )
@@ -98,12 +98,12 @@ def decimals_equal(left: Decimal, right: Decimal) -> bool:
 
 
 # Stable codes for coverage / UI mapping (not shown raw to end users).
-STALE_REASON_OWNERSHIP_OR_BINDING = 'OWNERSHIP_OR_BINDING_MISMATCH'
-STALE_REASON_ACTIVITY_INACTIVE = 'ACTIVITY_INACTIVE'
-STALE_REASON_FUEL_TYPE_CHANGED = 'FUEL_TYPE_CHANGED'
-STALE_REASON_UNIT_CHANGED = 'UNIT_CHANGED'
-STALE_REASON_QUANTITY_CHANGED = 'QUANTITY_CHANGED'
-STALE_REASON_DATE_CHANGED = 'DATE_CHANGED'
+STALE_REASON_OWNERSHIP_OR_BINDING = "OWNERSHIP_OR_BINDING_MISMATCH"
+STALE_REASON_ACTIVITY_INACTIVE = "ACTIVITY_INACTIVE"
+STALE_REASON_FUEL_TYPE_CHANGED = "FUEL_TYPE_CHANGED"
+STALE_REASON_UNIT_CHANGED = "UNIT_CHANGED"
+STALE_REASON_QUANTITY_CHANGED = "QUANTITY_CHANGED"
+STALE_REASON_DATE_CHANGED = "DATE_CHANGED"
 
 
 def get_stationary_combustion_stale_reason_codes(
@@ -122,7 +122,7 @@ def get_stationary_combustion_stale_reason_codes(
     ):
         reasons.append(STALE_REASON_OWNERSHIP_OR_BINDING)
         return reasons
-    if activity.status != 'active':
+    if activity.status != "active":
         reasons.append(STALE_REASON_ACTIVITY_INACTIVE)
     if activity.activity_type != result.fuel_code:
         reasons.append(STALE_REASON_FUEL_TYPE_CHANGED)
@@ -130,12 +130,9 @@ def get_stationary_combustion_stale_reason_codes(
         reasons.append(STALE_REASON_UNIT_CHANGED)
     if not decimals_equal(activity.quantity, result.activity_quantity):
         reasons.append(STALE_REASON_QUANTITY_CHANGED)
-    if (
-        activity.activity_date is not None
-        and (
-            result.calculation_reference_date is None
-            or activity.activity_date != result.calculation_reference_date
-        )
+    if activity.activity_date is not None and (
+        result.calculation_reference_date is None
+        or activity.activity_date != result.calculation_reference_date
     ):
         reasons.append(STALE_REASON_DATE_CHANGED)
     return reasons

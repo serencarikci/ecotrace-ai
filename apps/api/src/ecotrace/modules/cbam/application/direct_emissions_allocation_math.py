@@ -11,18 +11,20 @@ from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 
 from ecotrace.modules.cbam.application.calculation_math import RESULT_SCALE, quantize_result
 
-ZERO = Decimal('0')
+ZERO = Decimal("0")
 
 
-def monthly_cbam_share(*, total_production_tonnes: Decimal, cbam_quantity_tonnes: Decimal) -> Decimal:
+def monthly_cbam_share(
+    *, total_production_tonnes: Decimal, cbam_quantity_tonnes: Decimal
+) -> Decimal:
     """Workbook E/D share. D=0 and E=0 → 0; D=0 and E>0 is invalid."""
     if total_production_tonnes < 0 or cbam_quantity_tonnes < 0:
-        raise ValueError('Quantities cannot be negative.')
+        raise ValueError("Quantities cannot be negative.")
     if total_production_tonnes > 0:
         return cbam_quantity_tonnes / total_production_tonnes
     if cbam_quantity_tonnes == 0:
         return ZERO
-    raise ValueError('TOTAL_PRODUCTION_MUST_BE_POSITIVE')
+    raise ValueError("TOTAL_PRODUCTION_MUST_BE_POSITIVE")
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,10 +62,10 @@ def allocate_pool_with_largest_remainder(
     Returns (pool_final, rows). Tie-break uses group_id string ascending.
     """
     if not groups:
-        raise ValueError('NO_ELIGIBLE_PRODUCTION')
+        raise ValueError("NO_ELIGIBLE_PRODUCTION")
     denominator = sum((qty for _, qty in groups), ZERO)
     if denominator <= 0:
-        raise ValueError('ZERO_ALLOCATION_DENOMINATOR')
+        raise ValueError("ZERO_ALLOCATION_DENOMINATOR")
 
     pool_final = quantize_result(pool_raw)
     provisional: list[tuple[uuid.UUID, Decimal, Decimal, Decimal, Decimal]] = []
@@ -75,7 +77,9 @@ def allocate_pool_with_largest_remainder(
         provisional.append((group_id, qty, share, exact, floored))
 
     assigned = sum((row[4] for row in provisional), ZERO)
-    remainder_units = int(((pool_final - assigned) / RESULT_SCALE).to_integral_value(rounding=ROUND_HALF_UP))
+    remainder_units = int(
+        ((pool_final - assigned) / RESULT_SCALE).to_integral_value(rounding=ROUND_HALF_UP)
+    )
 
     # Rank by fractional part desc, then stable id asc.
     ranked = sorted(
@@ -102,7 +106,7 @@ def allocate_pool_with_largest_remainder(
 
     total_final = sum((r.final_allocated for r in rows), ZERO)
     if total_final != pool_final:
-        raise ValueError('UNBALANCED_ALLOCATION')
+        raise ValueError("UNBALANCED_ALLOCATION")
     return pool_final, rows
 
 

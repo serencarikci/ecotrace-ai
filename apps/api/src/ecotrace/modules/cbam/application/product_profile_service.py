@@ -43,13 +43,13 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-PERCENT_TOLERANCE = Decimal('0.00000001')
+PERCENT_TOLERANCE = Decimal("0.00000001")
 PERCENT_FIELDS = (
-    'percent_mn',
-    'percent_cr',
-    'percent_ni',
-    'percent_other_alloys',
-    'percent_other_materials',
+    "percent_mn",
+    "percent_cr",
+    "percent_ni",
+    "percent_other_alloys",
+    "percent_other_materials",
 )
 SPECIAL_WRITE_ATTRS = tuple(FIELD_ATTR_BY_KEY.values())
 
@@ -128,13 +128,13 @@ class ProductProfileResponse(CamelModel):
 
 def reject_classification_ready_true() -> None:
     raise BusinessRuleError(
-        'classificationReady is calculated by the server. You cannot set it yourself.',
-        details=[{'code': 'CLASSIFICATION_READY_CLIENT_WRITE_FORBIDDEN'}],
+        "classificationReady is calculated by the server. You cannot set it yourself.",
+        details=[{"code": "CLASSIFICATION_READY_CLIENT_WRITE_FORBIDDEN"}],
     )
 
 
 def _issue(code: str, message: str) -> dict[str, str]:
-    return {'code': code, 'message': message}
+    return {"code": code, "message": message}
 
 
 def _validate_percent(
@@ -147,15 +147,15 @@ def _validate_percent(
     if value < 0:
         issues.append(
             _issue(
-                f'{field.upper()}_BELOW_ZERO',
-                f'The {field.replace("_", " ")} must be between 0 and 100.',
+                f"{field.upper()}_BELOW_ZERO",
+                f"The {field.replace('_', ' ')} must be between 0 and 100.",
             )
         )
     elif value > 100:
         issues.append(
             _issue(
-                f'{field.upper()}_ABOVE_100',
-                f'The {field.replace("_", " ")} must be between 0 and 100.',
+                f"{field.upper()}_ABOVE_100",
+                f"The {field.replace('_', ' ')} must be between 0 and 100.",
             )
         )
 
@@ -178,78 +178,76 @@ def compute_classification_state(
     missing: list[dict[str, str]] = []
     issues: list[dict[str, str]] = []
 
-    name = (product_name or '').strip()
+    name = (product_name or "").strip()
     if not name:
-        missing.append(_issue('PRODUCT_NAME_REQUIRED', 'Enter a product name.'))
+        missing.append(_issue("PRODUCT_NAME_REQUIRED", "Enter a product name."))
     if cn is None or dataset is None:
-        missing.append(_issue('CN_CODE_REQUIRED', 'Select a valid CN code.'))
+        missing.append(_issue("CN_CODE_REQUIRED", "Select a valid CN code."))
 
     # Authoritative source: persisted CN.field_applicability (workbook-derived).
     fa = normalize_field_applicability(
-        field_applicability
-        if field_applicability is not None
-        else field_applicability_for_cn(cn)
+        field_applicability if field_applicability is not None else field_applicability_for_cn(cn)
     )
 
-    if fa['reducingAgent']:
-        if not (reducing_agent or '').strip():
+    if fa["reducingAgent"]:
+        if not (reducing_agent or "").strip():
             missing.append(
                 _issue(
-                    'REDUCING_AGENT_REQUIRED',
-                    'Select the main reducing agent used for this steel product.',
+                    "REDUCING_AGENT_REQUIRED",
+                    "Select the main reducing agent used for this steel product.",
                 )
             )
         elif reducing_agent not in allowed_reducing_agents:
             issues.append(
                 _issue(
-                    'REDUCING_AGENT_INVALID',
-                    'Choose a reducing agent from the official list.',
+                    "REDUCING_AGENT_INVALID",
+                    "Choose a reducing agent from the official list.",
                 )
             )
     elif reducing_agent:
         issues.append(
             _issue(
-                'REDUCING_AGENT_NOT_APPLICABLE',
-                'Reducing agent is not used for this CN code.',
+                "REDUCING_AGENT_NOT_APPLICABLE",
+                "Reducing agent is not used for this CN code.",
             )
         )
 
-    if fa['steelMillIdentificationNumber']:
-        if not (steel_mill_identification_number or '').strip():
+    if fa["steelMillIdentificationNumber"]:
+        if not (steel_mill_identification_number or "").strip():
             missing.append(
                 _issue(
-                    'STEEL_MILL_ID_REQUIRED',
-                    'Enter the producing installation identification number.',
+                    "STEEL_MILL_ID_REQUIRED",
+                    "Enter the producing installation identification number.",
                 )
             )
     elif steel_mill_identification_number:
         issues.append(
             _issue(
-                'STEEL_MILL_ID_NOT_APPLICABLE',
-                'Steel mill identification is not used for this CN code.',
+                "STEEL_MILL_ID_NOT_APPLICABLE",
+                "Steel mill identification is not used for this CN code.",
             )
         )
 
     values = {
-        'percent_mn': percent_mn,
-        'percent_cr': percent_cr,
-        'percent_ni': percent_ni,
-        'percent_other_alloys': percent_other_alloys,
-        'percent_other_materials': percent_other_materials,
+        "percent_mn": percent_mn,
+        "percent_cr": percent_cr,
+        "percent_ni": percent_ni,
+        "percent_other_alloys": percent_other_alloys,
+        "percent_other_materials": percent_other_materials,
     }
     applicability = {
-        'percent_mn': fa['percentMn'],
-        'percent_cr': fa['percentCr'],
-        'percent_ni': fa['percentNi'],
-        'percent_other_alloys': fa['percentOtherAlloys'],
-        'percent_other_materials': fa['percentOtherMaterials'],
+        "percent_mn": fa["percentMn"],
+        "percent_cr": fa["percentCr"],
+        "percent_ni": fa["percentNi"],
+        "percent_other_alloys": fa["percentOtherAlloys"],
+        "percent_other_materials": fa["percentOtherMaterials"],
     }
     for field, value in values.items():
         if value is not None and not applicability[field]:
             issues.append(
                 _issue(
-                    f'{field.upper()}_NOT_APPLICABLE',
-                    'This percentage is not used for the selected CN code.',
+                    f"{field.upper()}_NOT_APPLICABLE",
+                    "This percentage is not used for the selected CN code.",
                 )
             )
             continue
@@ -262,21 +260,21 @@ def compute_classification_state(
     ]
     applicable_fields = [field for field, applicable in applicability.items() if applicable]
     if applicable_entered:
-        total = sum(applicable_entered, Decimal('0'))
-        if total - Decimal('100') > PERCENT_TOLERANCE:
+        total = sum(applicable_entered, Decimal("0"))
+        if total - Decimal("100") > PERCENT_TOLERANCE:
             issues.append(
                 _issue(
-                    'PERCENTAGE_SUM_ABOVE_100',
-                    'The entered percentages add up to more than 100.',
+                    "PERCENTAGE_SUM_ABOVE_100",
+                    "The entered percentages add up to more than 100.",
                 )
             )
         elif all(values[field] is not None for field in applicable_fields) and (
-            abs(total - Decimal('100')) > PERCENT_TOLERANCE
+            abs(total - Decimal("100")) > PERCENT_TOLERANCE
         ):
             issues.append(
                 _issue(
-                    'PERCENTAGE_SUM_NOT_100',
-                    'When all composition percentages are entered, they must add up to 100.',
+                    "PERCENTAGE_SUM_NOT_100",
+                    "When all composition percentages are entered, they must add up to 100.",
                 )
             )
 
@@ -284,16 +282,14 @@ def compute_classification_state(
     return ready, missing, issues
 
 
-def _to_response(
-    db: Session, row: CbamProductProfileVersion
-) -> ProductProfileResponse:
+def _to_response(db: Session, row: CbamProductProfileVersion) -> ProductProfileResponse:
     def _issues(raw: Any) -> list[ProductProfileIssue]:
         if not isinstance(raw, list):
             return []
         out: list[ProductProfileIssue] = []
         for item in raw:
-            if isinstance(item, dict) and 'code' in item and 'message' in item:
-                out.append(ProductProfileIssue(code=item['code'], message=item['message']))
+            if isinstance(item, dict) and "code" in item and "message" in item:
+                out.append(ProductProfileIssue(code=item["code"], message=item["message"]))
         return out
 
     cn = db.get(CbamCnCode, row.cn_code_id) if row.cn_code_id else None
@@ -333,7 +329,7 @@ def _get_row(
 ) -> CbamProductProfileVersion:
     row = db.get(CbamProductProfileVersion, profile_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM product profile version not found.')
+        raise NotFoundError("CBAM product profile version not found.")
     return row
 
 
@@ -355,7 +351,7 @@ def _enforce_applicability_writes(
     errors = collect_non_applicable_write_errors(fa, explicit_attrs=explicit_attrs)
     if errors:
         raise ValidationAppError(
-            'One or more fields are not applicable to the selected CN code.',
+            "One or more fields are not applicable to the selected CN code.",
             details=errors,
         )
     # Draft CN-change rule: drop stale special-field values that no longer apply.
@@ -368,7 +364,7 @@ def _apply_readiness(db: Session, row: CbamProductProfileVersion) -> None:
     cn = db.get(CbamCnCode, row.cn_code_id) if row.cn_code_id else None
     allowed = {
         item.value_code
-        for item in list_controlled_list_values(db, list_code='REDUCING_AGENT', dataset=dataset)
+        for item in list_controlled_list_values(db, list_code="REDUCING_AGENT", dataset=dataset)
     }
     fa = field_applicability_for_cn(cn)
     ready, missing, issues = compute_classification_state(
@@ -390,9 +386,7 @@ def _apply_readiness(db: Session, row: CbamProductProfileVersion) -> None:
     row.validation_issues = issues
 
 
-def _assign_cn_snapshot(
-    db: Session, row: CbamProductProfileVersion, cn_code: str | None
-) -> None:
+def _assign_cn_snapshot(db: Session, row: CbamProductProfileVersion, cn_code: str | None) -> None:
     if cn_code is None or not str(cn_code).strip():
         row.cn_code_id = None
         row.cn_normalized_code = None
@@ -498,7 +492,7 @@ def create_product_profile(
         reject_classification_ready_true()
     product = require_product_in_organization(db, organization_id, payload.product_id)
     if payload.valid_from and payload.valid_to and payload.valid_to < payload.valid_from:
-        raise ValidationAppError('validTo must be on or after validFrom.')
+        raise ValidationAppError("validTo must be on or after validFrom.")
 
     max_version = db.execute(
         select(func.max(CbamProductProfileVersion.version)).where(
@@ -509,20 +503,20 @@ def create_product_profile(
     next_version = int(max_version or 0) + 1
 
     explicit = payload.model_dump(exclude_unset=True)
-    explicit.pop('classification_ready', None)
+    explicit.pop("classification_ready", None)
     explicit_special = {k: explicit[k] for k in SPECIAL_WRITE_ATTRS if k in explicit}
 
     row = CbamProductProfileVersion(
         organization_id=organization_id,
         product_id=product.id,
         version=next_version,
-        status='draft',
+        status="draft",
         valid_from=payload.valid_from,
         valid_to=payload.valid_to,
-        product_name=(payload.product_name or '').strip() or None,
-        reducing_agent=(payload.reducing_agent or '').strip() or None,
+        product_name=(payload.product_name or "").strip() or None,
+        reducing_agent=(payload.reducing_agent or "").strip() or None,
         steel_mill_identification_number=(
-            (payload.steel_mill_identification_number or '').strip() or None
+            (payload.steel_mill_identification_number or "").strip() or None
         ),
         percent_mn=payload.percent_mn,
         percent_cr=payload.percent_cr,
@@ -543,19 +537,19 @@ def create_product_profile(
     db.flush()
     write_audit_log(
         db,
-        action='cbam.product_profile.created',
+        action="cbam.product_profile.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_product_profile_version',
+        entity_type="cbam_product_profile_version",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'productId': str(row.product_id),
-            'version': row.version,
-            'status': row.status,
-            'classificationReady': row.classification_ready,
+            "productId": str(row.product_id),
+            "version": row.version,
+            "status": row.status,
+            "classificationReady": row.classification_ready,
         },
     )
     db.commit()
@@ -578,34 +572,34 @@ def update_product_profile_draft(
     if payload.classification_ready is True:
         reject_classification_ready_true()
     row = _get_row(db, organization_id, profile_id)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM product profile version')
-    if row.status != 'draft':
+    check_row_version(row.row_version, payload.row_version, entity="CBAM product profile version")
+    if row.status != "draft":
         raise BusinessRuleError(
-            'Only draft product profiles can be edited. Publish a new version to make changes.',
-            details=[{'code': 'PROFILE_NOT_DRAFT'}],
+            "Only draft product profiles can be edited. Publish a new version to make changes.",
+            details=[{"code": "PROFILE_NOT_DRAFT"}],
         )
     data = payload.model_dump(exclude_unset=True)
-    data.pop('row_version', None)
-    data.pop('classification_ready', None)
-    if 'product_name' in data:
-        row.product_name = (data['product_name'] or '').strip() or None
-    if 'cn_code' in data:
-        _assign_cn_snapshot(db, row, data['cn_code'])
-    if 'reducing_agent' in data:
-        row.reducing_agent = (data['reducing_agent'] or '').strip() or None
-    if 'steel_mill_identification_number' in data:
+    data.pop("row_version", None)
+    data.pop("classification_ready", None)
+    if "product_name" in data:
+        row.product_name = (data["product_name"] or "").strip() or None
+    if "cn_code" in data:
+        _assign_cn_snapshot(db, row, data["cn_code"])
+    if "reducing_agent" in data:
+        row.reducing_agent = (data["reducing_agent"] or "").strip() or None
+    if "steel_mill_identification_number" in data:
         row.steel_mill_identification_number = (
-            (data['steel_mill_identification_number'] or '').strip() or None
-        )
+            data["steel_mill_identification_number"] or ""
+        ).strip() or None
     for field in PERCENT_FIELDS:
         if field in data:
             setattr(row, field, data[field])
-    if 'valid_from' in data:
-        row.valid_from = data['valid_from']
-    if 'valid_to' in data:
-        row.valid_to = data['valid_to']
+    if "valid_from" in data:
+        row.valid_from = data["valid_from"]
+    if "valid_to" in data:
+        row.valid_to = data["valid_to"]
     if row.valid_from and row.valid_to and row.valid_to < row.valid_from:
-        raise ValidationAppError('validTo must be on or after validFrom.')
+        raise ValidationAppError("validTo must be on or after validFrom.")
 
     explicit_special = {k: data[k] for k in SPECIAL_WRITE_ATTRS if k in data}
     # When only CN changes, still clear stale non-applicable values (no reject).
@@ -615,15 +609,15 @@ def update_product_profile_draft(
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.product_profile.updated',
+        action="cbam.product_profile.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_product_profile_version',
+        entity_type="cbam_product_profile_version",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'version': row.version, 'classificationReady': row.classification_ready},
+        metadata={"version": row.version, "classificationReady": row.classification_ready},
     )
     db.commit()
     db.refresh(row)
@@ -643,20 +637,20 @@ def publish_product_profile(
 ) -> ProductProfileResponse:
     require_cbam_configure(db, user, organization_id)
     row = _get_row(db, organization_id, profile_id)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM product profile version')
-    if row.status != 'draft':
+    check_row_version(row.row_version, payload.row_version, entity="CBAM product profile version")
+    if row.status != "draft":
         raise BusinessRuleError(
-            'Only a draft product profile can be published.',
-            details=[{'code': 'PROFILE_NOT_DRAFT'}],
+            "Only a draft product profile can be published.",
+            details=[{"code": "PROFILE_NOT_DRAFT"}],
         )
     _apply_readiness(db, row)
     if not row.classification_ready:
         raise BusinessRuleError(
-            'This product profile is not ready to publish. Fix the missing or invalid fields.',
+            "This product profile is not ready to publish. Fix the missing or invalid fields.",
             details=[
-                {'code': 'PROFILE_NOT_READY'},
-                {'missingRequirements': row.missing_requirements},
-                {'validationIssues': row.validation_issues},
+                {"code": "PROFILE_NOT_READY"},
+                {"missingRequirements": row.missing_requirements},
+                {"validationIssues": row.validation_issues},
             ],
         )
     current_active = list(
@@ -664,7 +658,7 @@ def publish_product_profile(
             select(CbamProductProfileVersion).where(
                 CbamProductProfileVersion.organization_id == organization_id,
                 CbamProductProfileVersion.product_id == row.product_id,
-                CbamProductProfileVersion.status == 'active',
+                CbamProductProfileVersion.status == "active",
                 CbamProductProfileVersion.id != row.id,
             )
         )
@@ -672,23 +666,23 @@ def publish_product_profile(
         .all()
     )
     for active in current_active:
-        active.status = 'superseded'
+        active.status = "superseded"
         active.updated_by_user_id = user.id
         active.row_version += 1
-    row.status = 'active'
+    row.status = "active"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.product_profile.published',
+        action="cbam.product_profile.published",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_product_profile_version',
+        entity_type="cbam_product_profile_version",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'version': row.version, 'classificationReady': True},
+        metadata={"version": row.version, "classificationReady": True},
     )
     db.commit()
     db.refresh(row)
@@ -708,24 +702,24 @@ def archive_product_profile(
 ) -> ProductProfileResponse:
     require_cbam_configure(db, user, organization_id)
     row = _get_row(db, organization_id, profile_id)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM product profile version')
-    if row.status not in ('draft', 'active', 'superseded'):
-        raise BusinessRuleError('This product profile cannot be archived.')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM product profile version")
+    if row.status not in ("draft", "active", "superseded"):
+        raise BusinessRuleError("This product profile cannot be archived.")
     previous = row.status
-    row.status = 'archived'
+    row.status = "archived"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.product_profile.archived',
+        action="cbam.product_profile.archived",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_product_profile_version',
+        entity_type="cbam_product_profile_version",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'previousStatus': previous, 'version': row.version},
+        metadata={"previousStatus": previous, "version": row.version},
     )
     db.commit()
     db.refresh(row)

@@ -54,21 +54,21 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-RECORD_STATUS = Literal['INCOMPLETE', 'INVALID', 'READY']
-RECONCILIATION_STATUS = Literal['EXACT_MATCH', 'MISMATCH', 'UNAVAILABLE']
-MONTH_COVERAGE = Literal['MISSING', 'INCOMPLETE', 'INVALID', 'READY']
-COMBUSTION_COMPAT = Literal['READY', 'BLOCKED']
+RECORD_STATUS = Literal["INCOMPLETE", "INVALID", "READY"]
+RECONCILIATION_STATUS = Literal["EXACT_MATCH", "MISMATCH", "UNAVAILABLE"]
+MONTH_COVERAGE = Literal["MISSING", "INCOMPLETE", "INVALID", "READY"]
+COMBUSTION_COMPAT = Literal["READY", "BLOCKED"]
 
-SHARE_QUANTUM = Decimal('0.000000000001')
-SOURCE_TYPES = frozenset({'MANUAL', 'IMPORT', 'SYSTEM'})
+SHARE_QUANTUM = Decimal("0.000000000001")
+SOURCE_TYPES = frozenset({"MANUAL", "IMPORT", "SYSTEM"})
 
 
 class MonthlyProductionBasisCreate(CamelModel):
     month_start: date
     total_production_quantity: Decimal | None = None
     cbam_quantity: Decimal | None = None
-    quantity_unit: str = 't'
-    source_type: str = 'MANUAL'
+    quantity_unit: str = "t"
+    source_type: str = "MANUAL"
     notes: str | None = None
 
 
@@ -173,8 +173,8 @@ def require_mass_unit(unit: str) -> str:
     normalized = require_unit(unit)
     if normalized not in MASS_ACTIVITY_UNITS:
         raise ValidationAppError(
-            'Monthly production-basis quantities must use a mass unit (kg, t, or Gg).',
-            details=[{'code': 'INCOMPATIBLE_PRODUCTION_UNIT', 'field': 'quantityUnit'}],
+            "Monthly production-basis quantities must use a mass unit (kg, t, or Gg).",
+            details=[{"code": "INCOMPATIBLE_PRODUCTION_UNIT", "field": "quantityUnit"}],
         )
     return normalized
 
@@ -183,8 +183,8 @@ def to_tonnes(quantity: Decimal, unit: str) -> Decimal:
     kg = mass_to_kg(quantity, unit)
     if kg is None:
         raise ValidationAppError(
-            'Unsupported mass unit for tonne normalization.',
-            details=[{'code': 'INCOMPATIBLE_PRODUCTION_UNIT'}],
+            "Unsupported mass unit for tonne normalization.",
+            details=[{"code": "INCOMPATIBLE_PRODUCTION_UNIT"}],
         )
     return kg_to_tonnes(kg)
 
@@ -198,25 +198,25 @@ def _validate_quantities(
     codes: list[str] = []
     if total is not None and total < 0:
         raise ValidationAppError(
-            'Total production quantity cannot be negative.',
-            details=[{'code': 'INVALID_QUANTITY', 'field': 'totalProductionQuantity'}],
+            "Total production quantity cannot be negative.",
+            details=[{"code": "INVALID_QUANTITY", "field": "totalProductionQuantity"}],
         )
     if cbam is not None and cbam < 0:
         raise ValidationAppError(
-            'CBAM quantity cannot be negative.',
-            details=[{'code': 'INVALID_QUANTITY', 'field': 'cbamQuantity'}],
+            "CBAM quantity cannot be negative.",
+            details=[{"code": "INVALID_QUANTITY", "field": "cbamQuantity"}],
         )
     if total is None:
-        codes.append('TOTAL_PRODUCTION_REQUIRED')
+        codes.append("TOTAL_PRODUCTION_REQUIRED")
     if cbam is None:
-        codes.append('CBAM_QUANTITY_REQUIRED')
+        codes.append("CBAM_QUANTITY_REQUIRED")
     if total is not None and cbam is not None:
         total_t = to_tonnes(total, unit)
         cbam_t = to_tonnes(cbam, unit)
         if cbam_t > 0 and total_t <= 0:
-            codes.append('TOTAL_PRODUCTION_MUST_BE_POSITIVE')
+            codes.append("TOTAL_PRODUCTION_MUST_BE_POSITIVE")
         if cbam_t > total_t:
-            codes.append('CBAM_QUANTITY_EXCEEDS_TOTAL')
+            codes.append("CBAM_QUANTITY_EXCEEDS_TOTAL")
     return codes
 
 
@@ -230,8 +230,8 @@ def _compute_status_and_share(
         require_mass_unit(unit)
     except ValidationAppError:
         return (
-            'INVALID',
-            ['INCOMPATIBLE_PRODUCTION_UNIT'],
+            "INVALID",
+            ["INCOMPATIBLE_PRODUCTION_UNIT"],
             None,
             None,
             None,
@@ -240,19 +240,19 @@ def _compute_status_and_share(
     total_t = to_tonnes(total, unit) if total is not None else None
     cbam_t = to_tonnes(cbam, unit) if cbam is not None else None
     hard = {
-        'TOTAL_PRODUCTION_MUST_BE_POSITIVE',
-        'CBAM_QUANTITY_EXCEEDS_TOTAL',
-        'INCOMPATIBLE_PRODUCTION_UNIT',
+        "TOTAL_PRODUCTION_MUST_BE_POSITIVE",
+        "CBAM_QUANTITY_EXCEEDS_TOTAL",
+        "INCOMPATIBLE_PRODUCTION_UNIT",
     }
     if any(c in hard for c in issue_codes):
-        return 'INVALID', issue_codes, total_t, cbam_t, None
+        return "INVALID", issue_codes, total_t, cbam_t, None
     if total is None or cbam is None:
-        return 'INCOMPLETE', issue_codes, total_t, cbam_t, None
+        return "INCOMPLETE", issue_codes, total_t, cbam_t, None
     if total_t is None or total_t == 0:
-        return 'READY', [], total_t, cbam_t, None
+        return "READY", [], total_t, cbam_t, None
     assert cbam_t is not None
     share = (cbam_t / total_t).quantize(SHARE_QUANTUM)
-    return 'READY', [], total_t, cbam_t, share
+    return "READY", [], total_t, cbam_t, share
 
 
 def _to_response(row: CbamMonthlyProductionBasis) -> MonthlyProductionBasisResponse:
@@ -285,7 +285,7 @@ def _get_row(
 ) -> CbamMonthlyProductionBasis:
     row = db.get(CbamMonthlyProductionBasis, record_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM monthly production-basis record not found.')
+        raise NotFoundError("CBAM monthly production-basis record not found.")
     return row
 
 
@@ -307,21 +307,21 @@ def _reject_hard_invalid_on_write(
     require_mass_unit(unit)
     codes = _validate_quantities(total=total, cbam=cbam, unit=unit)
     hard = {
-        'TOTAL_PRODUCTION_MUST_BE_POSITIVE',
-        'CBAM_QUANTITY_EXCEEDS_TOTAL',
+        "TOTAL_PRODUCTION_MUST_BE_POSITIVE",
+        "CBAM_QUANTITY_EXCEEDS_TOTAL",
     }
     for code in codes:
         if code in hard:
             messages = {
-                'TOTAL_PRODUCTION_MUST_BE_POSITIVE': (
-                    'Total production (workbook D) must be greater than zero when '
-                    'CBAM quantity (workbook E) is greater than zero.'
+                "TOTAL_PRODUCTION_MUST_BE_POSITIVE": (
+                    "Total production (workbook D) must be greater than zero when "
+                    "CBAM quantity (workbook E) is greater than zero."
                 ),
-                'CBAM_QUANTITY_EXCEEDS_TOTAL': (
-                    'CBAM quantity (workbook E) cannot exceed total production (workbook D).'
+                "CBAM_QUANTITY_EXCEEDS_TOTAL": (
+                    "CBAM quantity (workbook E) cannot exceed total production (workbook D)."
                 ),
             }
-            raise BusinessRuleError(messages[code], details=[{'code': code}])
+            raise BusinessRuleError(messages[code], details=[{"code": code}])
 
 
 def list_monthly_production_basis(
@@ -374,17 +374,17 @@ def create_monthly_production_basis(
     period = _period_for_binding(db, organization_id, binding)
     if payload.month_start != canonical_month_start(payload.month_start):
         raise ValidationAppError(
-            'monthStart must be the first calendar day of the month.',
-            details=[{'code': 'MONTH_OUTSIDE_REPORTING_PERIOD', 'field': 'monthStart'}],
+            "monthStart must be the first calendar day of the month.",
+            details=[{"code": "MONTH_OUTSIDE_REPORTING_PERIOD", "field": "monthStart"}],
         )
     if not month_overlaps_period(payload.month_start, period.start_date, period.end_date):
         raise BusinessRuleError(
-            'Month is outside the reporting period.',
-            details=[{'code': 'MONTH_OUTSIDE_REPORTING_PERIOD'}],
+            "Month is outside the reporting period.",
+            details=[{"code": "MONTH_OUTSIDE_REPORTING_PERIOD"}],
         )
     unit = require_mass_unit(payload.quantity_unit)
     if payload.source_type not in SOURCE_TYPES:
-        raise ValidationAppError('Invalid sourceType.')
+        raise ValidationAppError("Invalid sourceType.")
     _reject_hard_invalid_on_write(
         total=payload.total_production_quantity,
         cbam=payload.cbam_quantity,
@@ -399,8 +399,8 @@ def create_monthly_production_basis(
     ).scalar_one_or_none()
     if existing is not None:
         raise ConflictError(
-            'A monthly production-basis row already exists for this month.',
-            details=[{'code': 'MONTHLY_PRODUCTION_BASIS_DUPLICATE'}],
+            "A monthly production-basis row already exists for this month.",
+            details=[{"code": "MONTHLY_PRODUCTION_BASIS_DUPLICATE"}],
         )
     row = CbamMonthlyProductionBasis(
         organization_id=organization_id,
@@ -421,22 +421,22 @@ def create_monthly_production_basis(
             db.flush()
     except IntegrityError as exc:
         raise ConflictError(
-            'A monthly production-basis row already exists for this month.',
-            details=[{'code': 'MONTHLY_PRODUCTION_BASIS_DUPLICATE'}],
+            "A monthly production-basis row already exists for this month.",
+            details=[{"code": "MONTHLY_PRODUCTION_BASIS_DUPLICATE"}],
         ) from exc
     write_audit_log(
         db,
-        action='cbam.monthly_production_basis.created',
+        action="cbam.monthly_production_basis.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_monthly_production_basis',
+        entity_type="cbam_monthly_production_basis",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'bindingId': str(binding.id),
-            'monthStart': row.month_start.isoformat(),
+            "bindingId": str(binding.id),
+            "monthStart": row.month_start.isoformat(),
         },
     )
     db.commit()
@@ -459,22 +459,22 @@ def update_monthly_production_basis(
     row = _get_row(db, organization_id, record_id)
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM monthly production basis')
-    data = payload.model_dump(exclude_unset=True, exclude={'row_version'})
+    check_row_version(row.row_version, payload.row_version, entity="CBAM monthly production basis")
+    data = payload.model_dump(exclude_unset=True, exclude={"row_version"})
     unit = row.quantity_unit
-    if 'quantity_unit' in data and data['quantity_unit'] is not None:
-        unit = require_mass_unit(data['quantity_unit'])
+    if "quantity_unit" in data and data["quantity_unit"] is not None:
+        unit = require_mass_unit(data["quantity_unit"])
         row.quantity_unit = unit
-    if 'source_type' in data and data['source_type'] is not None:
-        if data['source_type'] not in SOURCE_TYPES:
-            raise ValidationAppError('Invalid sourceType.')
-        row.source_type = data['source_type']
-    if 'notes' in data:
-        row.notes = data['notes']
-    if 'total_production_quantity' in data:
-        row.total_production_quantity = data['total_production_quantity']
-    if 'cbam_quantity' in data:
-        row.cbam_quantity = data['cbam_quantity']
+    if "source_type" in data and data["source_type"] is not None:
+        if data["source_type"] not in SOURCE_TYPES:
+            raise ValidationAppError("Invalid sourceType.")
+        row.source_type = data["source_type"]
+    if "notes" in data:
+        row.notes = data["notes"]
+    if "total_production_quantity" in data:
+        row.total_production_quantity = data["total_production_quantity"]
+    if "cbam_quantity" in data:
+        row.cbam_quantity = data["cbam_quantity"]
     _reject_hard_invalid_on_write(
         total=row.total_production_quantity,
         cbam=row.cbam_quantity,
@@ -484,15 +484,15 @@ def update_monthly_production_basis(
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.monthly_production_basis.updated',
+        action="cbam.monthly_production_basis.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_monthly_production_basis',
+        entity_type="cbam_monthly_production_basis",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'fields': list(data.keys()), 'rowVersion': row.row_version},
+        metadata={"fields": list(data.keys()), "rowVersion": row.row_version},
     )
     db.commit()
     db.refresh(row)
@@ -518,20 +518,18 @@ def delete_monthly_production_basis(
         assert_monthly_basis_not_referenced,
     )
 
-    assert_monthly_basis_not_referenced(
-        db, organization_id=organization_id, basis_record_id=row.id
-    )
+    assert_monthly_basis_not_referenced(db, organization_id=organization_id, basis_record_id=row.id)
     write_audit_log(
         db,
-        action='cbam.monthly_production_basis.deleted',
+        action="cbam.monthly_production_basis.deleted",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_monthly_production_basis',
+        entity_type="cbam_monthly_production_basis",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'monthStart': row.month_start.isoformat()},
+        metadata={"monthStart": row.month_start.isoformat()},
     )
     db.delete(row)
     db.commit()
@@ -564,7 +562,7 @@ def _combustion_compatibility(
         db, organization_id=organization_id, binding_id=binding_id
     )
     if not pointer_map:
-        return 'READY', [], []
+        return "READY", [], []
     activity_ids = list(pointer_map.keys())
     activities = {
         a.id: a
@@ -582,25 +580,25 @@ def _combustion_compatibility(
         act_date = activity.activity_date if activity is not None else None
         month: date | None = None
         if act_date is None:
-            codes.append('COMBUSTION_ACTIVITY_DATE_REQUIRED')
+            codes.append("COMBUSTION_ACTIVITY_DATE_REQUIRED")
         else:
             month = canonical_month_start(act_date)
             if month not in expected:
-                codes.append('COMBUSTION_MONTH_NOT_COVERED')
+                codes.append("COMBUSTION_MONTH_NOT_COVERED")
             else:
                 basis = rows_by_month.get(month)
                 if basis is None:
-                    codes.append('MONTHLY_PRODUCTION_BASIS_NOT_READY')
-                    codes.append('MONTHLY_PRODUCTION_BASIS_MISSING')
+                    codes.append("MONTHLY_PRODUCTION_BASIS_NOT_READY")
+                    codes.append("MONTHLY_PRODUCTION_BASIS_MISSING")
                 else:
                     row_status, _, *_rest = _compute_status_and_share(
                         total=basis.total_production_quantity,
                         cbam=basis.cbam_quantity,
                         unit=basis.quantity_unit,
                     )
-                    if row_status != 'READY':
-                        codes.append('MONTHLY_PRODUCTION_BASIS_NOT_READY')
-        item_status: COMBUSTION_COMPAT = 'BLOCKED' if codes else 'READY'
+                    if row_status != "READY":
+                        codes.append("MONTHLY_PRODUCTION_BASIS_NOT_READY")
+        item_status: COMBUSTION_COMPAT = "BLOCKED" if codes else "READY"
         if codes:
             for c in codes:
                 if c not in blocking:
@@ -615,7 +613,7 @@ def _combustion_compatibility(
                 issue_codes=codes,
             )
         )
-    overall: COMBUSTION_COMPAT = 'BLOCKED' if blocking else 'READY'
+    overall: COMBUSTION_COMPAT = "BLOCKED" if blocking else "READY"
     return overall, blocking, items
 
 
@@ -631,7 +629,7 @@ def _production_reconciliation(
             select(CbamProductionRecord).where(
                 CbamProductionRecord.organization_id == organization_id,
                 CbamProductionRecord.reporting_period_binding_id == binding_id,
-                CbamProductionRecord.status == 'active',
+                CbamProductionRecord.status == "active",
             )
         )
         .scalars()
@@ -664,11 +662,11 @@ def _production_reconciliation(
                     explicit_cbam_quantity_tonnes=explicit,
                     recorded_cbam_production_tonnes=None,
                     difference_tonnes=None,
-                    reconciliation_status='UNAVAILABLE',
+                    reconciliation_status="UNAVAILABLE",
                 )
             )
             continue
-        recorded = Decimal('0')
+        recorded = Decimal("0")
         unavailable = False
         for prod in eligible:
             assert prod.production_date is not None
@@ -686,7 +684,7 @@ def _production_reconciliation(
                     explicit_cbam_quantity_tonnes=explicit,
                     recorded_cbam_production_tonnes=None,
                     difference_tonnes=None,
-                    reconciliation_status='UNAVAILABLE',
+                    reconciliation_status="UNAVAILABLE",
                 )
             )
         elif explicit is None:
@@ -696,12 +694,12 @@ def _production_reconciliation(
                     explicit_cbam_quantity_tonnes=None,
                     recorded_cbam_production_tonnes=recorded,
                     difference_tonnes=None,
-                    reconciliation_status='UNAVAILABLE',
+                    reconciliation_status="UNAVAILABLE",
                 )
             )
         else:
             diff = explicit - recorded
-            status: RECONCILIATION_STATUS = 'EXACT_MATCH' if diff == 0 else 'MISMATCH'
+            status: RECONCILIATION_STATUS = "EXACT_MATCH" if diff == 0 else "MISMATCH"
             out.append(
                 ProductionReconciliationMonth(
                     month_start=month,
@@ -732,8 +730,8 @@ def get_monthly_production_basis_summary(
     invalid = 0
     missing = 0
     blocking: list[str] = []
-    info_total = Decimal('0')
-    info_cbam = Decimal('0')
+    info_total = Decimal("0")
+    info_cbam = Decimal("0")
     has_total = False
     has_cbam = False
 
@@ -744,27 +742,27 @@ def get_monthly_production_basis_summary(
             coverage.append(
                 MonthCoverageItem(
                     month_start=month,
-                    coverage='MISSING',
+                    coverage="MISSING",
                     record_id=None,
-                    issue_codes=['MONTHLY_PRODUCTION_BASIS_MISSING'],
+                    issue_codes=["MONTHLY_PRODUCTION_BASIS_MISSING"],
                 )
             )
-            if 'MONTHLY_PRODUCTION_BASIS_MISSING' not in blocking:
-                blocking.append('MONTHLY_PRODUCTION_BASIS_MISSING')
+            if "MONTHLY_PRODUCTION_BASIS_MISSING" not in blocking:
+                blocking.append("MONTHLY_PRODUCTION_BASIS_MISSING")
             continue
         resp = _to_response(row)
-        if resp.status == 'READY':
+        if resp.status == "READY":
             completed += 1
-            cov: MONTH_COVERAGE = 'READY'
-        elif resp.status == 'INVALID':
+            cov: MONTH_COVERAGE = "READY"
+        elif resp.status == "INVALID":
             invalid += 1
-            cov = 'INVALID'
+            cov = "INVALID"
             for code in resp.issue_codes:
                 if code not in blocking:
                     blocking.append(code)
         else:
             incomplete += 1
-            cov = 'INCOMPLETE'
+            cov = "INCOMPLETE"
             for code in resp.issue_codes:
                 if code not in blocking:
                     blocking.append(code)
@@ -796,17 +794,17 @@ def get_monthly_production_basis_summary(
         and invalid == 0
         and completed == len(expected)
         and len(expected) > 0
-        and comb_status == 'READY'
+        and comb_status == "READY"
     )
     if len(expected) == 0:
-        blocking.append('MONTHLY_PRODUCTION_BASIS_MISSING')
-        status: RECORD_STATUS = 'INVALID'
+        blocking.append("MONTHLY_PRODUCTION_BASIS_MISSING")
+        status: RECORD_STATUS = "INVALID"
     elif allocation_ready:
-        status = 'READY'
+        status = "READY"
     elif invalid > 0:
-        status = 'INVALID'
+        status = "INVALID"
     else:
-        status = 'INCOMPLETE'
+        status = "INCOMPLETE"
 
     reconciliation = _production_reconciliation(
         db, organization_id, binding_id, expected, rows_by_month

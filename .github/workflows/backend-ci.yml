@@ -89,7 +89,13 @@ jobs:
       - name: Verify migration head
         run: |
           alembic current | tee /tmp/alembic-current.txt
-          grep -q "0007_intelligence" /tmp/alembic-current.txt
+          alembic heads | tee /tmp/alembic-heads.txt
+          # Require a single head and that `alembic current` is that head (no stale hardcoded rev).
+          head_count="$(wc -l < /tmp/alembic-heads.txt | tr -d ' ')"
+          test "$head_count" = "1"
+          head_id="$(awk '{print $1; exit}' /tmp/alembic-heads.txt)"
+          test -n "$head_id"
+          grep -E "^${head_id}([[:space:]]|\\(|$)" /tmp/alembic-current.txt
 
       - name: Pytest with coverage
         run: pytest tests/ -v --cov=ecotrace --cov-report=term-missing --cov-fail-under=55

@@ -44,8 +44,8 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-_FORMULA_INJECTION_PREFIXES = ('=', '+', '-', '@', '\t', '\r', '\n')
+XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+_FORMULA_INJECTION_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
 
 
 def _excel_safe_cell_value(value: object | None) -> object | None:
@@ -107,55 +107,53 @@ def _collect_formula_cells(wb: Workbook) -> dict[str, str]:
         for row in ws.iter_rows():
             for cell in row:
                 value = cell.value
-                if isinstance(value, str) and value.startswith('='):
-                    formulas[f'{ws.title}!{cell.coordinate}'] = value
+                if isinstance(value, str) and value.startswith("="):
+                    formulas[f"{ws.title}!{cell.coordinate}"] = value
     return formulas
 
 
 def _transform(value: object | None, transformation: str | None) -> object | None:
     if value is None:
         return None
-    code = transformation or 'NONE'
-    if code in {'NONE', 'UNIT_DISPLAY', 'ENUM_TO_DISPLAY_LABEL'}:
+    code = transformation or "NONE"
+    if code in {"NONE", "UNIT_DISPLAY", "ENUM_TO_DISPLAY_LABEL"}:
         return value if not isinstance(value, Decimal) else float(value)
-    if code == 'DECIMAL_TO_NUMBER':
+    if code == "DECIMAL_TO_NUMBER":
         if isinstance(value, Decimal):
             return float(value)
         if isinstance(value, (int, float)):
             return value
         return float(str(value))
-    if code == 'DATE_TO_EXCEL_DATE':
+    if code == "DATE_TO_EXCEL_DATE":
         if isinstance(value, datetime):
             return value.date()
         return value
-    if code == 'DATETIME_TO_EXCEL_DATETIME':
+    if code == "DATETIME_TO_EXCEL_DATETIME":
         return value
-    if code == 'BOOLEAN_TO_YES_NO':
-        return 'YES' if bool(value) else 'NO'
-    raise ValidationAppError(f'Unsupported transformation: {code}')
+    if code == "BOOLEAN_TO_YES_NO":
+        return "YES" if bool(value) else "NO"
+    raise ValidationAppError(f"Unsupported transformation: {code}")
 
 
 def _write_cell(wb: Workbook, worksheet_name: str, reference: str, value: object | None) -> None:
     if worksheet_name not in wb.sheetnames:
-        raise ValidationAppError(f'Worksheet missing: {worksheet_name}')
+        raise ValidationAppError(f"Worksheet missing: {worksheet_name}")
     ws = wb[worksheet_name]
     cell = ws[reference]
-    if isinstance(cell.value, str) and cell.value.startswith('='):
-        raise ValidationAppError(
-            f'Refusing to overwrite formula cell {worksheet_name}!{reference}'
-        )
+    if isinstance(cell.value, str) and cell.value.startswith("="):
+        raise ValidationAppError(f"Refusing to overwrite formula cell {worksheet_name}!{reference}")
     cell.value = _excel_safe_cell_value(value)
 
 
 def _write_named_range(wb: Workbook, name: str, value: object | None) -> None:
     defined = wb.defined_names.get(name)
     if defined is None:
-        raise ValidationAppError(f'Named range missing: {name}')
+        raise ValidationAppError(f"Named range missing: {name}")
     destinations = list(defined.destinations)
     if not destinations:
-        raise ValidationAppError(f'Named range has no destination: {name}')
+        raise ValidationAppError(f"Named range has no destination: {name}")
     sheet_title, coord = destinations[0]
-    _write_cell(wb, sheet_title, coord.replace('$', ''), value)
+    _write_cell(wb, sheet_title, coord.replace("$", ""), value)
 
 
 def _write_repeating(
@@ -163,21 +161,19 @@ def _write_repeating(
     mapping: CbamExportMapping,
     rows: list[dict[str, object | None]],
 ) -> None:
-    if '|' not in mapping.destination_reference:
-        raise ValidationAppError(
-            f'Invalid repeating destination for {mapping.mapping_code}'
-        )
-    start_raw, cols_raw = mapping.destination_reference.split('|', 1)
+    if "|" not in mapping.destination_reference:
+        raise ValidationAppError(f"Invalid repeating destination for {mapping.mapping_code}")
+    start_raw, cols_raw = mapping.destination_reference.split("|", 1)
     start_row = int(start_raw)
-    columns = [c.strip() for c in cols_raw.split(',') if c.strip()]
+    columns = [c.strip() for c in cols_raw.split(",") if c.strip()]
     ws = wb[mapping.worksheet_name]
     for offset, row in enumerate(rows):
         excel_row = start_row + offset
         for col_idx, key in enumerate(columns, start=1):
             cell = ws.cell(row=excel_row, column=col_idx)
-            if isinstance(cell.value, str) and cell.value.startswith('='):
+            if isinstance(cell.value, str) and cell.value.startswith("="):
                 raise ValidationAppError(
-                    f'Refusing to overwrite formula at {mapping.worksheet_name}!{cell.coordinate}'
+                    f"Refusing to overwrite formula at {mapping.worksheet_name}!{cell.coordinate}"
                 )
             value = row.get(key)
             if isinstance(value, Decimal):
@@ -195,7 +191,7 @@ def _populate_workbook(
 ) -> list[str]:
     mapped_fields: list[str] = []
     for mapping in mappings:
-        if mapping.destination_type == 'REPEATING_ROW':
+        if mapping.destination_type == "REPEATING_ROW":
             rows = repeating_rows(ctx, mapping.source_path)
             _write_repeating(wb, mapping, rows)
             mapped_fields.append(mapping.mapping_code)
@@ -203,14 +199,14 @@ def _populate_workbook(
         value = scalar_source_value(ctx, mapping.source_path)
         transformed = _transform(value, mapping.transformation_code)
         if mapping.required and transformed is None:
-            raise ValidationAppError(f'Required mapping missing value: {mapping.mapping_code}')
-        if mapping.destination_type == 'CELL':
+            raise ValidationAppError(f"Required mapping missing value: {mapping.mapping_code}")
+        if mapping.destination_type == "CELL":
             _write_cell(wb, mapping.worksheet_name, mapping.destination_reference, transformed)
-        elif mapping.destination_type == 'NAMED_RANGE':
+        elif mapping.destination_type == "NAMED_RANGE":
             _write_named_range(wb, mapping.destination_reference, transformed)
         else:
             raise ValidationAppError(
-                f'Unsupported destination type for Phase 6: {mapping.destination_type}'
+                f"Unsupported destination type for Phase 6: {mapping.destination_type}"
             )
         mapped_fields.append(mapping.mapping_code)
     return mapped_fields
@@ -239,18 +235,18 @@ def create_export_run(
         template_id=payload.export_template_id,
         calculation_run_id=payload.calculation_run_id,
     )
-    if readiness.status == 'NOT_READY':
+    if readiness.status == "NOT_READY":
         raise ValidationAppError(
-            'Export is not ready.',
-            details=[{'field': 'readiness', 'message': '; '.join(readiness.blocking_issues)}],
+            "Export is not ready.",
+            details=[{"field": "readiness", "message": "; ".join(readiness.blocking_issues)}],
         )
 
     template = get_active_template_for_org(
         db, organization_id, payload.export_template_id or readiness.suggested_template_id
     )
-    if template.template_type == 'OFFICIAL_CBAM_TEMPLATE':
+    if template.template_type == "OFFICIAL_CBAM_TEMPLATE":
         raise ValidationAppError(
-            'Official CBAM workbook mapping is BLOCKED pending domain-expert/template delivery.'
+            "Official CBAM workbook mapping is BLOCKED pending domain-expert/template delivery."
         )
 
     template_path = verify_template_file(template)
@@ -263,7 +259,7 @@ def create_export_run(
         reporting_period_binding_id=binding_id,
         export_template_id=template.id,
         calculation_run_id=calc_run_id,
-        status='RUNNING',
+        status="RUNNING",
         template_version=template.version,
         mapping_version=template.mapping_version,
         mapping_checksum=map_checksum,
@@ -271,7 +267,7 @@ def create_export_run(
         started_at=datetime.now(UTC),
         application_version=get_settings().app_version,
         created_by_user_id=user.id,
-        warning_summary='; '.join(readiness.warnings) if readiness.warnings else None,
+        warning_summary="; ".join(readiness.warnings) if readiness.warnings else None,
     )
     db.add(run)
     db.flush()
@@ -281,7 +277,7 @@ def create_export_run(
         binding_id=binding_id,
         export_run_id=run.id,
     )
-    output_xlsx = out_dir / f'skdm-export-{run.id}.xlsx'
+    output_xlsx = out_dir / f"skdm-export-{run.id}.xlsx"
     try:
         shutil.copy2(template_path, output_xlsx)
         before_wb = load_workbook(template_path)
@@ -289,8 +285,8 @@ def create_export_run(
         before_count = len(before_formulas)
 
         wb = load_workbook(output_xlsx)
-        wb.properties.creator = 'EcoTrace AI CBAM Export'
-        wb.properties.lastModifiedBy = 'EcoTrace AI CBAM Export'
+        wb.properties.creator = "EcoTrace AI CBAM Export"
+        wb.properties.lastModifiedBy = "EcoTrace AI CBAM Export"
 
         ctx = load_export_context(
             db,
@@ -298,7 +294,7 @@ def create_export_run(
             binding_id=binding_id,
             calculation_run_id=calc_run_id,
         )
-        ctx.summary_metrics['export_readiness'] = readiness.status
+        ctx.summary_metrics["export_readiness"] = readiness.status
         mapped_fields = _populate_workbook(wb, mappings, ctx)
         wb.save(output_xlsx)
 
@@ -306,18 +302,18 @@ def create_export_run(
         after_formulas = _collect_formula_cells(after_wb)
         if len(after_formulas) != before_count:
             raise ValidationAppError(
-                f'Formula preservation failed: before={before_count} after={len(after_formulas)}'
+                f"Formula preservation failed: before={before_count} after={len(after_formulas)}"
             )
         for key, formula in before_formulas.items():
             if after_formulas.get(key) != formula:
-                raise ValidationAppError(f'Formula cell changed unexpectedly: {key}')
+                raise ValidationAppError(f"Formula cell changed unexpectedly: {key}")
 
         xlsx_checksum = sha256_file(output_xlsx)
         run.input_checksum = xlsx_checksum
         artifact_xlsx = CbamExportArtifact(
             organization_id=organization_id,
             export_run_id=run.id,
-            artifact_type='XLSX',
+            artifact_type="XLSX",
             file_name=output_xlsx.name,
             storage_uri=relative_uri(output_xlsx),
             mime_type=XLSX_MIME,
@@ -327,37 +323,37 @@ def create_export_run(
         db.add(artifact_xlsx)
 
         manifest = {
-            'exportRunId': str(run.id),
-            'organizationId': str(organization_id),
-            'reportingPeriodBindingId': str(binding_id),
-            'templateCode': template.code,
-            'templateVersion': template.version,
-            'templateChecksum': template.checksum,
-            'mappingVersion': template.mapping_version,
-            'mappingChecksum': map_checksum,
-            'calculationRunId': str(calc_run_id) if calc_run_id else None,
-            'generatedAt': datetime.now(UTC).isoformat(),
-            'applicationVersion': get_settings().app_version,
-            'mappedFields': mapped_fields,
-            'warnings': readiness.warnings,
-            'artifactChecksum': xlsx_checksum,
-            'traceability': ctx.mapped_trace_ids,
-            'officialMappingBlocked': True,
-            'disclaimer': (
-                'INTERNAL DEVELOPMENT TEMPLATE — NOT AN OFFICIAL CBAM SUBMISSION FORMAT'
+            "exportRunId": str(run.id),
+            "organizationId": str(organization_id),
+            "reportingPeriodBindingId": str(binding_id),
+            "templateCode": template.code,
+            "templateVersion": template.version,
+            "templateChecksum": template.checksum,
+            "mappingVersion": template.mapping_version,
+            "mappingChecksum": map_checksum,
+            "calculationRunId": str(calc_run_id) if calc_run_id else None,
+            "generatedAt": datetime.now(UTC).isoformat(),
+            "applicationVersion": get_settings().app_version,
+            "mappedFields": mapped_fields,
+            "warnings": readiness.warnings,
+            "artifactChecksum": xlsx_checksum,
+            "traceability": ctx.mapped_trace_ids,
+            "officialMappingBlocked": True,
+            "disclaimer": (
+                "INTERNAL DEVELOPMENT TEMPLATE — NOT AN OFFICIAL CBAM SUBMISSION FORMAT"
             ),
         }
-        manifest_path = out_dir / 'export-manifest.json'
-        manifest_bytes = json.dumps(manifest, indent=2, sort_keys=True).encode('utf-8')
+        manifest_path = out_dir / "export-manifest.json"
+        manifest_bytes = json.dumps(manifest, indent=2, sort_keys=True).encode("utf-8")
         manifest_path.write_bytes(manifest_bytes)
         db.add(
             CbamExportArtifact(
                 organization_id=organization_id,
                 export_run_id=run.id,
-                artifact_type='JSON_SUMMARY',
+                artifact_type="JSON_SUMMARY",
                 file_name=manifest_path.name,
                 storage_uri=relative_uri(manifest_path),
-                mime_type='application/json',
+                mime_type="application/json",
                 file_size_bytes=len(manifest_bytes),
                 sha256=sha256_file(manifest_path),
             )
@@ -369,56 +365,56 @@ def create_export_run(
         )
 
         summary = render_summary_json(ctx, readiness.status)
-        summary_path = out_dir / 'skdm-period-summary.json'
-        summary_bytes = json.dumps(summary, indent=2, sort_keys=True, default=str).encode('utf-8')
+        summary_path = out_dir / "skdm-period-summary.json"
+        summary_bytes = json.dumps(summary, indent=2, sort_keys=True, default=str).encode("utf-8")
         summary_path.write_bytes(summary_bytes)
         db.add(
             CbamExportArtifact(
                 organization_id=organization_id,
                 export_run_id=run.id,
-                artifact_type='JSON_SUMMARY',
+                artifact_type="JSON_SUMMARY",
                 file_name=summary_path.name,
                 storage_uri=relative_uri(summary_path),
-                mime_type='application/json',
+                mime_type="application/json",
                 file_size_bytes=len(summary_bytes),
                 sha256=sha256_file(summary_path),
             )
         )
         html = render_summary_html(summary)
-        html_path = out_dir / 'skdm-period-summary.html'
-        html_bytes = html.encode('utf-8')
+        html_path = out_dir / "skdm-period-summary.html"
+        html_bytes = html.encode("utf-8")
         html_path.write_bytes(html_bytes)
         db.add(
             CbamExportArtifact(
                 organization_id=organization_id,
                 export_run_id=run.id,
-                artifact_type='HTML_REPORT',
+                artifact_type="HTML_REPORT",
                 file_name=html_path.name,
                 storage_uri=relative_uri(html_path),
-                mime_type='text/html',
+                mime_type="text/html",
                 file_size_bytes=len(html_bytes),
                 sha256=sha256_file(html_path),
             )
         )
 
         run.status = (
-            'COMPLETED_WITH_WARNINGS' if readiness.status == 'READY_WITH_WARNINGS' else 'COMPLETED'
+            "COMPLETED_WITH_WARNINGS" if readiness.status == "READY_WITH_WARNINGS" else "COMPLETED"
         )
         run.completed_at = datetime.now(UTC)
         write_audit_log(
             db,
-            action='cbam.export.generated',
+            action="cbam.export.generated",
             actor_user_id=user.id,
             organization_id=organization_id,
-            entity_type='cbam_export_run',
+            entity_type="cbam_export_run",
             entity_id=str(run.id),
             metadata={
-                'reportingPeriodBindingId': str(binding_id),
-                'templateId': str(template.id),
-                'templateVersion': template.version,
-                'calculationRunId': str(calc_run_id) if calc_run_id else None,
-                'artifactChecksum': xlsx_checksum,
-                'status': run.status,
+                "reportingPeriodBindingId": str(binding_id),
+                "templateId": str(template.id),
+                "templateVersion": template.version,
+                "calculationRunId": str(calc_run_id) if calc_run_id else None,
+                "artifactChecksum": xlsx_checksum,
+                "status": run.status,
             },
             request_id=request_id,
             ip_address=ip_address,
@@ -428,20 +424,20 @@ def create_export_run(
         db.refresh(run)
         return _run_response(run)
     except Exception as exc:
-        run.status = 'FAILED'
+        run.status = "FAILED"
         run.error_message = str(exc)
         run.completed_at = datetime.now(UTC)
         write_audit_log(
             db,
-            action='cbam.export.failed',
+            action="cbam.export.failed",
             actor_user_id=user.id,
             organization_id=organization_id,
-            entity_type='cbam_export_run',
+            entity_type="cbam_export_run",
             entity_id=str(run.id),
             metadata={
-                'reportingPeriodBindingId': str(binding_id),
-                'templateId': str(template.id),
-                'error': str(exc),
+                "reportingPeriodBindingId": str(binding_id),
+                "templateId": str(template.id),
+                "error": str(exc),
             },
             request_id=request_id,
             ip_address=ip_address,
@@ -498,7 +494,7 @@ def get_export_run(
         )
     ).scalar_one_or_none()
     if row is None:
-        raise NotFoundError('Export run not found.')
+        raise NotFoundError("Export run not found.")
     return _run_response(row)
 
 
@@ -541,21 +537,21 @@ def download_export_artifact(
         )
     ).scalar_one_or_none()
     if row is None:
-        raise NotFoundError('Export artifact not found.')
+        raise NotFoundError("Export artifact not found.")
     path = resolve_uri(row.storage_uri)
     if not path.is_file():
-        raise NotFoundError('Export artifact file not found.')
+        raise NotFoundError("Export artifact file not found.")
     write_audit_log(
         db,
-        action='cbam.export.downloaded',
+        action="cbam.export.downloaded",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_export_artifact',
+        entity_type="cbam_export_artifact",
         entity_id=str(row.id),
         metadata={
-            'exportRunId': str(row.export_run_id),
-            'artifactType': row.artifact_type,
-            'checksum': row.sha256,
+            "exportRunId": str(row.export_run_id),
+            "artifactType": row.artifact_type,
+            "checksum": row.sha256,
         },
         request_id=request_id,
         ip_address=ip_address,

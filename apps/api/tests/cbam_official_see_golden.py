@@ -65,33 +65,49 @@ from tests.cbam_iea_helpers import _manual
 from tests.cbam_profile_helpers import ensure_org_product
 
 # CN codes present in BOTH EcoTrace catalog and workbook Parameters_CNCodes.
-CN_SCREWS = '73181595'
-CN_NUTS = '73181699'
+CN_SCREWS = "73181595"
+CN_NUTS = "73181699"
 
 PERIOD_START = date(2024, 7, 1)
 PERIOD_END = date(2024, 8, 31)
 
 # Two months: (activity_day, NG Sm3, elec kWh, D tonnes, E tonnes, prod_A, prod_B)
 MONTHS = [
-    (date(2024, 7, 15), Decimal('188'), Decimal('176034.53'), Decimal('100'), Decimal('50'), Decimal('30'), Decimal('20')),
-    (date(2024, 8, 15), Decimal('183'), Decimal('180962.85'), Decimal('80'), Decimal('40'), Decimal('25'), Decimal('15')),
+    (
+        date(2024, 7, 15),
+        Decimal("188"),
+        Decimal("176034.53"),
+        Decimal("100"),
+        Decimal("50"),
+        Decimal("30"),
+        Decimal("20"),
+    ),
+    (
+        date(2024, 8, 15),
+        Decimal("183"),
+        Decimal("180962.85"),
+        Decimal("80"),
+        Decimal("40"),
+        Decimal("25"),
+        Decimal("15"),
+    ),
 ]
 
 # Process A (screws): produced 55 = marketed 50 + internal use to B 5
-PROCESS_A_PRODUCED = Decimal('55')
-PROCESS_A_MARKETED = Decimal('50')
-PROCESS_A_TO_B = Decimal('5')
+PROCESS_A_PRODUCED = Decimal("55")
+PROCESS_A_MARKETED = Decimal("50")
+PROCESS_A_TO_B = Decimal("5")
 
 # Process B (nuts): produced 35, all marketed
-PROCESS_B_PRODUCED = Decimal('35')
-PROCESS_B_MARKETED = Decimal('35')
+PROCESS_B_PRODUCED = Decimal("35")
+PROCESS_B_MARKETED = Decimal("35")
 
-PRECURSOR_PURCHASED = Decimal('4')
-PRECURSOR_USE_ON_B = Decimal('3')
-PRECURSOR_NON_CBAM = Decimal('1')
-PRECURSOR_SPECIFIC_DIRECT = Decimal('0.5')
-PRECURSOR_ELEC_INTENSITY = Decimal('0.2')
-PRECURSOR_ELEC_EF = Decimal('0.5')
+PRECURSOR_PURCHASED = Decimal("4")
+PRECURSOR_USE_ON_B = Decimal("3")
+PRECURSOR_NON_CBAM = Decimal("1")
+PRECURSOR_SPECIFIC_DIRECT = Decimal("0.5")
+PRECURSOR_ELEC_INTENSITY = Decimal("0.2")
+PRECURSOR_ELEC_EF = Decimal("0.5")
 
 
 @dataclass(slots=True)
@@ -129,12 +145,12 @@ def _publish_steel_profile(
             product_name=name,
             cn_code=cn_code,
             reducing_agent=reducing_agent,
-            steel_mill_identification_number=f'TR-{code}',
-            percent_mn=Decimal('40'),
-            percent_cr=Decimal('20'),
-            percent_ni=Decimal('10'),
-            percent_other_alloys=Decimal('10'),
-            percent_other_materials=Decimal('20'),
+            steel_mill_identification_number=f"TR-{code}",
+            percent_mn=Decimal("40"),
+            percent_cr=Decimal("20"),
+            percent_ni=Decimal("10"),
+            percent_other_alloys=Decimal("10"),
+            percent_other_materials=Decimal("20"),
         ),
     )
     published = publish_product_profile(
@@ -163,19 +179,19 @@ def seed_official_see_golden(
         db,
         user,
         organization.id,
-        code=f'SEE-A-{uuid.uuid4().hex[:6]}',
-        name='EcoTrace Screws',
+        code=f"SEE-A-{uuid.uuid4().hex[:6]}",
+        name="EcoTrace Screws",
         cn_code=CN_SCREWS,
-        reducing_agent='Natural gas',
+        reducing_agent="Natural gas",
     )
     profile_b = _publish_steel_profile(
         db,
         user,
         organization.id,
-        code=f'SEE-B-{uuid.uuid4().hex[:6]}',
-        name='EcoTrace Nuts',
+        code=f"SEE-B-{uuid.uuid4().hex[:6]}",
+        name="EcoTrace Nuts",
         cn_code=CN_NUTS,
-        reducing_agent='Coal or coke',
+        reducing_agent="Coal or coke",
     )
 
     for day, ng_qty, kwh, d_tonnes, e_tonnes, qty_a, qty_b in MONTHS:
@@ -191,11 +207,11 @@ def seed_official_see_golden(
             binding.id,
             ActivityRecordCreate(
                 installation_profile_id=installation.id,
-                activity_type='ELECTRICITY',
+                activity_type="ELECTRICITY",
                 activity_date=day,
                 quantity=kwh,
-                unit='kWh',
-                data_source_type='PRIMARY',
+                unit="kWh",
+                data_source_type="PRIMARY",
             ),
         )
         execute_purchased_electricity(
@@ -206,7 +222,7 @@ def seed_official_see_golden(
             PurchasedElectricityExecuteRequest(
                 client_request_id=uuid.uuid4(),
                 activity_record_id=electricity.id,
-                factor_source_mode='MANUAL',
+                factor_source_mode="MANUAL",
                 manual_factor=_manual(),
             ),
         )
@@ -220,7 +236,7 @@ def seed_official_see_golden(
                 month_start=date(day.year, day.month, 1),
                 total_production_quantity=d_tonnes,
                 cbam_quantity=e_tonnes,
-                quantity_unit='t',
+                quantity_unit="t",
             ),
         )
         for profile_id, qty in ((profile_a, qty_a), (profile_b, qty_b)):
@@ -233,7 +249,7 @@ def seed_official_see_golden(
                     installation_profile_id=installation.id,
                     product_profile_version_id=profile_id,
                     quantity=qty,
-                    unit='t',
+                    unit="t",
                     production_date=day,
                 ),
             )
@@ -260,33 +276,33 @@ def seed_official_see_golden(
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='EcoTrace Process Screws',
+            name="EcoTrace Process Screws",
             product_profile_version_id=profile_a,
             produced_quantity=PROCESS_A_PRODUCED,
-            produced_quantity_unit='t',
+            produced_quantity_unit="t",
             marketed_quantity=PROCESS_A_MARKETED,
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=True,
-            heat_imported_quantity=Decimal('0.1'),
-            heat_imported_unit='TJ',
-            heat_exported_quantity=Decimal('0'),
-            heat_exported_unit='TJ',
-            heat_imported_ef=Decimal('56.1'),
-            heat_exported_ef=Decimal('56.1'),
-            heat_ef_unit='tCO2/TJ',
+            heat_imported_quantity=Decimal("0.1"),
+            heat_imported_unit="TJ",
+            heat_exported_quantity=Decimal("0"),
+            heat_exported_unit="TJ",
+            heat_imported_ef=Decimal("56.1"),
+            heat_exported_ef=Decimal("56.1"),
+            heat_ef_unit="tCO2/TJ",
             has_waste_gas=True,
-            waste_gas_imported_quantity=Decimal('0.05'),
-            waste_gas_imported_unit='TJ',
-            waste_gas_exported_quantity=Decimal('0'),
-            waste_gas_exported_unit='TJ',
+            waste_gas_imported_quantity=Decimal("0.05"),
+            waste_gas_imported_unit="TJ",
+            waste_gas_exported_quantity=Decimal("0"),
+            waste_gas_exported_unit="TJ",
             has_exported_electricity=True,
-            exported_electricity_quantity=Decimal('1'),
-            exported_electricity_unit='MWh',
-            exported_electricity_emission_factor=Decimal('0.4'),
-            exported_electricity_ef_unit='tCO2/MWh',
-            exported_electricity_provenance='metered process export T72',
+            exported_electricity_quantity=Decimal("1"),
+            exported_electricity_unit="MWh",
+            exported_electricity_emission_factor=Decimal("0.4"),
+            exported_electricity_ef_unit="tCO2/MWh",
+            exported_electricity_provenance="metered process export T72",
         ),
     )
     production_process_service.create_product_use(
@@ -298,7 +314,7 @@ def seed_official_see_golden(
         ProductUseCreate(
             target_product_profile_version_id=profile_b,
             quantity=PROCESS_A_TO_B,
-            unit='t',
+            unit="t",
         ),
     )
 
@@ -309,14 +325,14 @@ def seed_official_see_golden(
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='EcoTrace Process Nuts',
+            name="EcoTrace Process Nuts",
             product_profile_version_id=profile_b,
             produced_quantity=PROCESS_B_PRODUCED,
-            produced_quantity_unit='t',
+            produced_quantity_unit="t",
             marketed_quantity=PROCESS_B_MARKETED,
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
@@ -329,18 +345,18 @@ def seed_official_see_golden(
         binding.id,
         PurchasedPrecursorCreate(
             installation_profile_id=installation.id,
-            data_source_mode='SUPPLIER_DATA',
-            name='Golden SEE precursor',
+            data_source_mode="SUPPLIER_DATA",
+            name="Golden SEE precursor",
             quantity=PRECURSOR_PURCHASED,
-            quantity_unit='t',
+            quantity_unit="t",
             non_cbam_quantity=PRECURSOR_NON_CBAM,
-            non_cbam_quantity_unit='t',
+            non_cbam_quantity_unit="t",
             specific_direct_embedded_emissions=PRECURSOR_SPECIFIC_DIRECT,
             electricity_consumption_intensity=PRECURSOR_ELEC_INTENSITY,
             electricity_emission_factor=PRECURSOR_ELEC_EF,
-            provenance_notes='Supplier declaration SEE golden',
-            country_of_origin='Albania',
-            aggregated_goods_category='Iron or steel products',
+            provenance_notes="Supplier declaration SEE golden",
+            country_of_origin="Albania",
+            aggregated_goods_category="Iron or steel products",
         ),
     )
     purchased_precursor_service.create_precursor_product_use(
@@ -352,7 +368,7 @@ def seed_official_see_golden(
         PrecursorProductUseCreate(
             target_product_profile_version_id=profile_b,
             quantity=PRECURSOR_USE_ON_B,
-            unit='t',
+            unit="t",
         ),
     )
 
@@ -368,7 +384,7 @@ def seed_official_see_golden(
             methodology_code=METHODOLOGY_CODE_V2,
         ),
     )
-    assert execution.status == 'COMPLETED', execution
+    assert execution.status == "COMPLETED", execution
     db.commit()
 
     return OfficialSeeGoldenScenario(

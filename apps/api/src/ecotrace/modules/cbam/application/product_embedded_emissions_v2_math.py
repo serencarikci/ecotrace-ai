@@ -28,16 +28,16 @@ from ecotrace.modules.cbam.application.decimal_leontief import (
 from ecotrace.modules.cbam.application.product_embedded_emissions_math import ZERO
 
 __all__ = [
-    'InternalContribution',
-    'InternalFlowInput',
-    'LeontiefRollup',
-    'ProductV2Input',
-    'ProductV2Result',
-    'ProductV2Specifics',
-    'ProductV2Totals',
-    'assert_v2_product_identities',
-    'compute_v2_rollup',
-    'golden_two_stage_internal_chain',
+    "InternalContribution",
+    "InternalFlowInput",
+    "LeontiefRollup",
+    "ProductV2Input",
+    "ProductV2Result",
+    "ProductV2Specifics",
+    "ProductV2Totals",
+    "assert_v2_product_identities",
+    "compute_v2_rollup",
+    "golden_two_stage_internal_chain",
 ]
 
 
@@ -127,21 +127,19 @@ def assert_v2_product_identities(
     if totals.total_direct_tco2e != (
         totals.own_direct_tco2e + totals.precursor_direct_tco2e + totals.internal_direct_tco2e
     ):
-        raise ValueError('DIRECT_TOTAL_IDENTITY_BROKEN')
+        raise ValueError("DIRECT_TOTAL_IDENTITY_BROKEN")
     if totals.total_indirect_tco2e != (
-        totals.own_indirect_tco2e
-        + totals.precursor_indirect_tco2e
-        + totals.internal_indirect_tco2e
+        totals.own_indirect_tco2e + totals.precursor_indirect_tco2e + totals.internal_indirect_tco2e
     ):
-        raise ValueError('INDIRECT_TOTAL_IDENTITY_BROKEN')
+        raise ValueError("INDIRECT_TOTAL_IDENTITY_BROKEN")
     if totals.total_embedded_tco2e != totals.total_direct_tco2e + totals.total_indirect_tco2e:
-        raise ValueError('EMBEDDED_TOTAL_IDENTITY_BROKEN')
+        raise ValueError("EMBEDDED_TOTAL_IDENTITY_BROKEN")
     direct = sum((c.contribution_direct_tco2e for c in contributions), ZERO)
     indirect = sum((c.contribution_indirect_tco2e for c in contributions), ZERO)
     if direct != totals.internal_direct_tco2e:
-        raise ValueError('INTERNAL_DIRECT_CONTRIBUTION_IDENTITY_BROKEN')
+        raise ValueError("INTERNAL_DIRECT_CONTRIBUTION_IDENTITY_BROKEN")
     if indirect != totals.internal_indirect_tco2e:
-        raise ValueError('INTERNAL_INDIRECT_CONTRIBUTION_IDENTITY_BROKEN')
+        raise ValueError("INTERNAL_INDIRECT_CONTRIBUTION_IDENTITY_BROKEN")
 
 
 def compute_v2_rollup(
@@ -157,7 +155,7 @@ def compute_v2_rollup(
     denominators = {p.product_profile_version_id: p.denominator_tonnes for p in products}
     for product in products:
         if product.denominator_tonnes <= ZERO:
-            raise ValueError('PRODUCT_DENOMINATOR_ZERO')
+            raise ValueError("PRODUCT_DENOMINATOR_ZERO")
 
     system = build_system(
         profile_ids=[p.product_profile_version_id for p in products],
@@ -214,9 +212,7 @@ def compute_v2_rollup(
                 InternalContribution(
                     product_use_id=flow.product_use_id,
                     consumer_product_profile_version_id=profile_id,
-                    supplier_product_profile_version_id=(
-                        flow.supplier_product_profile_version_id
-                    ),
+                    supplier_product_profile_version_id=(flow.supplier_product_profile_version_id),
                     quantity_tonnes=flow.quantity_tonnes,
                     consumer_denominator_tonnes=product.denominator_tonnes,
                     a_coefficient=system.a_matrix[position][supplier_index],
@@ -229,9 +225,7 @@ def compute_v2_rollup(
 
         internal_direct = sum((c.contribution_direct_tco2e for c in contributions), ZERO)
         internal_indirect = sum((c.contribution_indirect_tco2e for c in contributions), ZERO)
-        total_direct = (
-            product.own_direct_tco2e + product.purchased_direct_tco2e + internal_direct
-        )
+        total_direct = product.own_direct_tco2e + product.purchased_direct_tco2e + internal_direct
         total_indirect = (
             product.own_indirect_tco2e + product.purchased_indirect_tco2e + internal_indirect
         )
@@ -280,17 +274,17 @@ def golden_two_stage_internal_chain() -> LeontiefRollup:
         products=[
             ProductV2Input(
                 product_profile_version_id=first,
-                denominator_tonnes=Decimal('10'),
-                own_direct_tco2e=Decimal('20'),
-                own_indirect_tco2e=Decimal('4'),
+                denominator_tonnes=Decimal("10"),
+                own_direct_tco2e=Decimal("20"),
+                own_indirect_tco2e=Decimal("4"),
                 purchased_direct_tco2e=ZERO,
                 purchased_indirect_tco2e=ZERO,
             ),
             ProductV2Input(
                 product_profile_version_id=second,
-                denominator_tonnes=Decimal('20'),
-                own_direct_tco2e=Decimal('5'),
-                own_indirect_tco2e=Decimal('1'),
+                denominator_tonnes=Decimal("20"),
+                own_direct_tco2e=Decimal("5"),
+                own_indirect_tco2e=Decimal("1"),
                 purchased_direct_tco2e=ZERO,
                 purchased_indirect_tco2e=ZERO,
             ),
@@ -300,7 +294,7 @@ def golden_two_stage_internal_chain() -> LeontiefRollup:
                 product_use_id=uuid.UUID(int=3),
                 consumer_product_profile_version_id=second,
                 supplier_product_profile_version_id=first,
-                quantity_tonnes=Decimal('4'),
+                quantity_tonnes=Decimal("4"),
             )
         ],
     )

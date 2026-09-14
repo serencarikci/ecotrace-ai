@@ -66,7 +66,7 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-FactorSourceMode = Literal['PLATFORM_DEFAULT', 'MANUAL']
+FactorSourceMode = Literal["PLATFORM_DEFAULT", "MANUAL"]
 
 
 class PurchasedElectricityManualFactor(CamelModel):
@@ -219,8 +219,8 @@ def _electricity_definition(db: Session) -> CbamFactorDefinition:
     ).scalar_one_or_none()
     if row is None:
         raise BusinessRuleError(
-            'Electricity factor definition is missing.',
-            details=[{'code': 'FACTOR_DEFINITION_MISSING'}],
+            "Electricity factor definition is missing.",
+            details=[{"code": "FACTOR_DEFINITION_MISSING"}],
         )
     return row
 
@@ -228,14 +228,12 @@ def _electricity_definition(db: Session) -> CbamFactorDefinition:
 def _calc_definition(db: Session) -> CbamCalculationDefinition:
     ensure_platform_calculation_definitions(db)
     row = db.execute(
-        select(CbamCalculationDefinition).where(
-            CbamCalculationDefinition.code == METHODOLOGY_CODE
-        )
+        select(CbamCalculationDefinition).where(CbamCalculationDefinition.code == METHODOLOGY_CODE)
     ).scalar_one_or_none()
     if row is None:
         raise BusinessRuleError(
-            'Purchased-electricity calculation definition is missing.',
-            details=[{'code': 'CALCULATION_DEFINITION_MISSING'}],
+            "Purchased-electricity calculation definition is missing.",
+            details=[{"code": "CALCULATION_DEFINITION_MISSING"}],
         )
     return row
 
@@ -256,8 +254,8 @@ def resolve_platform_default_factor(
         db.execute(
             select(CbamFactorValue).where(
                 CbamFactorValue.factor_definition_id == definition.id,
-                CbamFactorValue.status == 'ACTIVE',
-                CbamFactorValue.data_source_type == 'DEFAULT_REFERENCE',
+                CbamFactorValue.status == "ACTIVE",
+                CbamFactorValue.data_source_type == "DEFAULT_REFERENCE",
                 CbamFactorValue.organization_id.is_(None),
             )
         ).scalars()
@@ -279,7 +277,7 @@ def resolve_platform_default_factor(
             valid_from=None,
             valid_until=None,
             reference_date=reference_date,
-            blocking_issue_codes=['UNRESOLVED_PLATFORM_DEFAULT'],
+            blocking_issue_codes=["UNRESOLVED_PLATFORM_DEFAULT"],
             informational_issue_codes=info,
         )
     if len(covering) > 1:
@@ -297,7 +295,7 @@ def resolve_platform_default_factor(
             valid_from=None,
             valid_until=None,
             reference_date=reference_date,
-            blocking_issue_codes=['AMBIGUOUS_PLATFORM_DEFAULT'],
+            blocking_issue_codes=["AMBIGUOUS_PLATFORM_DEFAULT"],
             informational_issue_codes=info,
         )
     row = covering[0]
@@ -316,7 +314,7 @@ def resolve_platform_default_factor(
             valid_from=row.valid_from,
             valid_until=row.valid_until,
             reference_date=reference_date,
-            blocking_issue_codes=['INCOMPATIBLE_FACTOR_UNIT'],
+            blocking_issue_codes=["INCOMPATIBLE_FACTOR_UNIT"],
             informational_issue_codes=info,
         )
     return PurchasedElectricityFactorResolution(
@@ -326,10 +324,10 @@ def resolve_platform_default_factor(
         factor_unit=row.unit,
         factor_value_id=row.id,
         factor_definition_id=definition.id,
-        source_name=row.supplier_name or 'PLATFORM_DEFAULT',
-        source_document=row.source_reference or 'DEFAULT_REFERENCE',
-        dataset_version=row.source_reference or 'unspecified',
-        reference_description=row.notes or row.source_reference or 'Platform default factor',
+        source_name=row.supplier_name or "PLATFORM_DEFAULT",
+        source_document=row.source_reference or "DEFAULT_REFERENCE",
+        dataset_version=row.source_reference or "unspecified",
+        reference_description=row.notes or row.source_reference or "Platform default factor",
         valid_from=row.valid_from,
         valid_until=row.valid_until,
         reference_date=reference_date,
@@ -352,8 +350,8 @@ def get_purchased_electricity_default_factor(
     ref = reference_date or period.start_date
     if ref < period.start_date or ref > period.end_date:
         raise ValidationAppError(
-            'Reference date must fall inside the reporting period.',
-            details=[{'code': 'REFERENCE_DATE_OUTSIDE_PERIOD'}],
+            "Reference date must fall inside the reporting period.",
+            details=[{"code": "REFERENCE_DATE_OUTSIDE_PERIOD"}],
         )
     return resolve_platform_default_factor(db, reference_date=ref)
 
@@ -361,40 +359,40 @@ def get_purchased_electricity_default_factor(
 def _validate_manual_factor(manual: PurchasedElectricityManualFactor | None) -> None:
     if manual is None:
         raise ValidationAppError(
-            'Manual factor provenance is required.',
-            details=[{'code': 'MANUAL_FACTOR_REQUIRED'}],
+            "Manual factor provenance is required.",
+            details=[{"code": "MANUAL_FACTOR_REQUIRED"}],
         )
     # Blank / missing value must not become zero (Pydantic rejects null; keep guard).
     if manual.value is None:
         raise ValidationAppError(
-            'Manual factor value is required.',
-            details=[{'code': 'MISSING_FACTOR'}],
+            "Manual factor value is required.",
+            details=[{"code": "MISSING_FACTOR"}],
         )
     if manual.value < ZERO:
         raise ValidationAppError(
-            'Manual factor cannot be negative.',
-            details=[{'code': 'NEGATIVE_FACTOR_VALUE'}],
+            "Manual factor cannot be negative.",
+            details=[{"code": "NEGATIVE_FACTOR_VALUE"}],
         )
-    if not (manual.unit or '').strip():
+    if not (manual.unit or "").strip():
         raise ValidationAppError(
-            'Manual factor unit is required.',
-            details=[{'code': 'MISSING_FACTOR_UNIT'}],
+            "Manual factor unit is required.",
+            details=[{"code": "MISSING_FACTOR_UNIT"}],
         )
     if manual.unit not in ELECTRICITY_FACTOR_UNITS:
         raise ValidationAppError(
-            'Manual factor unit is not a supported electricity intensity unit.',
-            details=[{'code': 'INCOMPATIBLE_FACTOR_UNIT'}],
+            "Manual factor unit is not a supported electricity intensity unit.",
+            details=[{"code": "INCOMPATIBLE_FACTOR_UNIT"}],
         )
     for field, code in (
-        (manual.source_name, 'MANUAL_FACTOR_SOURCE_REQUIRED'),
-        (manual.source_document, 'MANUAL_FACTOR_DOCUMENT_REQUIRED'),
-        (manual.dataset_version, 'MANUAL_FACTOR_DATASET_REQUIRED'),
-        (manual.reference_description, 'MANUAL_FACTOR_REFERENCE_REQUIRED'),
+        (manual.source_name, "MANUAL_FACTOR_SOURCE_REQUIRED"),
+        (manual.source_document, "MANUAL_FACTOR_DOCUMENT_REQUIRED"),
+        (manual.dataset_version, "MANUAL_FACTOR_DATASET_REQUIRED"),
+        (manual.reference_description, "MANUAL_FACTOR_REFERENCE_REQUIRED"),
     ):
-        if not (field or '').strip():
+        if not (field or "").strip():
             raise ValidationAppError(
-                'Manual factor provenance is incomplete.',
-                details=[{'code': code}],
+                "Manual factor provenance is incomplete.",
+                details=[{"code": code}],
             )
 
 
@@ -410,13 +408,13 @@ def _resolve_reference_date(
         ref = calculation_reference_date
     else:
         raise ValidationAppError(
-            'Activity date or calculationReferenceDate is required.',
-            details=[{'code': 'ACTIVITY_DATE_REQUIRED'}],
+            "Activity date or calculationReferenceDate is required.",
+            details=[{"code": "ACTIVITY_DATE_REQUIRED"}],
         )
     if ref < period.start_date or ref > period.end_date:
         raise ValidationAppError(
-            'Reference date must fall inside the reporting period.',
-            details=[{'code': 'REFERENCE_DATE_OUTSIDE_PERIOD'}],
+            "Reference date must fall inside the reporting period.",
+            details=[{"code": "REFERENCE_DATE_OUTSIDE_PERIOD"}],
         )
     return ref
 
@@ -459,11 +457,11 @@ def _set_current_pointer(
             updated_at=now,
         )
         .on_conflict_do_update(
-            constraint='uq_cbam_pe_current_org_binding_activity',
+            constraint="uq_cbam_pe_current_org_binding_activity",
             set_={
-                'current_result_id': result_id,
-                'methodology_code': METHODOLOGY_CODE,
-                'updated_at': now,
+                "current_result_id": result_id,
+                "methodology_code": METHODOLOGY_CODE,
+                "updated_at": now,
             },
         )
     )
@@ -476,13 +474,16 @@ def compute_stale_reasons(
 ) -> list[str]:
     reasons: list[str] = []
     if activity.quantity != result.activity_quantity or activity.unit != result.activity_unit:
-        reasons.append('ACTIVITY_INPUT_CHANGED')
-    if activity.activity_date is not None and activity.activity_date != result.calculation_reference_date:
-        reasons.append('ACTIVITY_DATE_CHANGED')
-    if activity.status != 'active':
-        reasons.append('ACTIVITY_NOT_ACTIVE')
+        reasons.append("ACTIVITY_INPUT_CHANGED")
+    if (
+        activity.activity_date is not None
+        and activity.activity_date != result.calculation_reference_date
+    ):
+        reasons.append("ACTIVITY_DATE_CHANGED")
+    if activity.status != "active":
+        reasons.append("ACTIVITY_NOT_ACTIVE")
     if activity.activity_type != ELECTRICITY_ACTIVITY_TYPE:
-        reasons.append('ACTIVITY_TYPE_CHANGED')
+        reasons.append("ACTIVITY_TYPE_CHANGED")
     return reasons
 
 
@@ -543,31 +544,31 @@ def execute_purchased_electricity(
 
     activity = db.get(CbamActivityRecord, payload.activity_record_id)
     if activity is None or activity.organization_id != organization_id:
-        raise NotFoundError('Activity record not found.')
+        raise NotFoundError("Activity record not found.")
     if activity.reporting_period_binding_id != binding_id:
         raise ValidationAppError(
-            'Activity does not belong to the requested reporting-period binding.',
-            details=[{'code': 'ACTIVITY_BINDING_MISMATCH'}],
+            "Activity does not belong to the requested reporting-period binding.",
+            details=[{"code": "ACTIVITY_BINDING_MISMATCH"}],
         )
-    if activity.status != 'active':
+    if activity.status != "active":
         raise ValidationAppError(
-            'Activity record is not active.',
-            details=[{'code': 'ACTIVITY_NOT_ACTIVE'}],
+            "Activity record is not active.",
+            details=[{"code": "ACTIVITY_NOT_ACTIVE"}],
         )
     if activity.activity_type != ELECTRICITY_ACTIVITY_TYPE:
         raise ValidationAppError(
-            'Activity must be ELECTRICITY.',
-            details=[{'code': 'INCOMPATIBLE_ACTIVITY_TYPE'}],
+            "Activity must be ELECTRICITY.",
+            details=[{"code": "INCOMPATIBLE_ACTIVITY_TYPE"}],
         )
     if activity.unit not in ELECTRICITY_QUANTITY_UNITS:
         raise ValidationAppError(
-            'Electricity activity unit must be kWh or MWh.',
-            details=[{'code': 'INCOMPATIBLE_ELECTRICITY_UNIT'}],
+            "Electricity activity unit must be kWh or MWh.",
+            details=[{"code": "INCOMPATIBLE_ELECTRICITY_UNIT"}],
         )
     if activity.quantity < ZERO:
         raise ValidationAppError(
-            'Electricity quantity cannot be negative.',
-            details=[{'code': 'NEGATIVE_ELECTRICITY_QUANTITY'}],
+            "Electricity quantity cannot be negative.",
+            details=[{"code": "NEGATIVE_ELECTRICITY_QUANTITY"}],
         )
 
     reference_date = _resolve_reference_date(
@@ -595,21 +596,21 @@ def execute_purchased_electricity(
             code = (
                 resolved.blocking_issue_codes[0]
                 if resolved.blocking_issue_codes
-                else 'UNRESOLVED_PLATFORM_DEFAULT'
+                else "UNRESOLVED_PLATFORM_DEFAULT"
             )
             raise BusinessRuleError(
-                'Platform electricity default factor could not be resolved.',
-                details=[{'code': code}],
+                "Platform electricity default factor could not be resolved.",
+                details=[{"code": code}],
             )
         assert resolved.factor_value is not None and resolved.factor_unit is not None
         factor_value = resolved.factor_value
         factor_unit = resolved.factor_unit
         factor_value_id = resolved.factor_value_id
         factor_definition_id = resolved.factor_definition_id
-        source_name = resolved.source_name or 'PLATFORM_DEFAULT'
-        source_document = resolved.source_document or 'DEFAULT_REFERENCE'
-        dataset_version = resolved.dataset_version or 'unspecified'
-        reference_description = resolved.reference_description or 'Platform default'
+        source_name = resolved.source_name or "PLATFORM_DEFAULT"
+        source_document = resolved.source_document or "DEFAULT_REFERENCE"
+        dataset_version = resolved.dataset_version or "unspecified"
+        reference_description = resolved.reference_description or "Platform default"
         factor_valid_from = resolved.valid_from
         factor_valid_until = resolved.valid_until
     elif mode == FACTOR_SOURCE_MANUAL:
@@ -627,8 +628,8 @@ def execute_purchased_electricity(
         factor_effective_date = manual.effective_date
     else:
         raise ValidationAppError(
-            'Unsupported factor source mode.',
-            details=[{'code': 'INVALID_FACTOR_SOURCE_MODE'}],
+            "Unsupported factor source mode.",
+            details=[{"code": "INVALID_FACTOR_SOURCE_MODE"}],
         )
 
     exported_qty = payload.exported_electricity_quantity
@@ -637,20 +638,20 @@ def execute_purchased_electricity(
     if exported_qty is not None or exported_unit is not None:
         if exported_qty is None or exported_unit is None:
             raise ValidationAppError(
-                'Exported electricity quantity and unit must be provided together.',
-                details=[{'code': 'EXPORTED_ELECTRICITY_INCOMPLETE'}],
+                "Exported electricity quantity and unit must be provided together.",
+                details=[{"code": "EXPORTED_ELECTRICITY_INCOMPLETE"}],
             )
         if exported_unit not in ELECTRICITY_QUANTITY_UNITS:
             raise ValidationAppError(
-                'Exported electricity unit must be kWh or MWh.',
-                details=[{'code': 'INCOMPATIBLE_ELECTRICITY_UNIT'}],
+                "Exported electricity unit must be kWh or MWh.",
+                details=[{"code": "INCOMPATIBLE_ELECTRICITY_UNIT"}],
             )
         try:
             exported_mwh = to_mwh(exported_qty, exported_unit)
         except ValueError as exc:
             raise ValidationAppError(
-                'Exported electricity is invalid.',
-                details=[{'code': str(exc)}],
+                "Exported electricity is invalid.",
+                details=[{"code": str(exc)}],
             ) from exc
 
     fingerprint = build_purchased_electricity_request_fingerprint(
@@ -683,13 +684,13 @@ def execute_purchased_electricity(
     if existing is not None:
         if existing.request_fingerprint != fingerprint:
             raise ConflictError(
-                'clientRequestId was already used with a different execution request.',
-                code='IDEMPOTENCY_KEY_REUSED',
+                "clientRequestId was already used with a different execution request.",
+                code="IDEMPOTENCY_KEY_REUSED",
                 details=[
                     {
-                        'code': 'IDEMPOTENCY_KEY_REUSED',
-                        'clientRequestId': str(payload.client_request_id),
-                        'existingResultId': str(existing.id),
+                        "code": "IDEMPOTENCY_KEY_REUSED",
+                        "clientRequestId": str(payload.client_request_id),
+                        "existingResultId": str(existing.id),
                     }
                 ],
             )
@@ -709,8 +710,8 @@ def execute_purchased_electricity(
     ):
         # Failed execution must not replace current.
         raise ValidationAppError(
-            outcome.error_message or 'Electricity calculation failed.',
-            details=[{'code': outcome.error_code or 'INVALID_CALCULATION_INPUT'}],
+            outcome.error_message or "Electricity calculation failed.",
+            details=[{"code": outcome.error_code or "INVALID_CALCULATION_INPUT"}],
         )
 
     calc_definition = _calc_definition(db)
@@ -718,7 +719,7 @@ def execute_purchased_electricity(
     run = CbamCalculationRun(
         organization_id=organization_id,
         reporting_period_binding_id=binding_id,
-        status='COMPLETED',
+        status="COMPLETED",
         calculation_version=FORMULA_VERSION,
         started_at=now,
         completed_at=now,
@@ -783,19 +784,19 @@ def execute_purchased_electricity(
     )
     write_audit_log(
         db,
-        action='cbam.purchased_electricity.execute',
+        action="cbam.purchased_electricity.execute",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_purchased_electricity_result',
+        entity_type="cbam_purchased_electricity_result",
         entity_id=str(result.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'resultId': str(result.id),
-            'activityRecordId': str(activity.id),
-            'indirectEmissionsTco2e': str(result.indirect_emissions_tco2e),
-            'exportedElectricityMwh': (
+            "resultId": str(result.id),
+            "activityRecordId": str(activity.id),
+            "indirectEmissionsTco2e": str(result.indirect_emissions_tco2e),
+            "exportedElectricityMwh": (
                 str(result.exported_electricity_mwh)
                 if result.exported_electricity_mwh is not None
                 else None
@@ -836,9 +837,7 @@ def list_purchased_electricity_results(
             .subquery()
         )
     ).scalar_one()
-    rows = list(
-        db.execute(stmt.offset((page - 1) * page_size).limit(page_size)).scalars()
-    )
+    rows = list(db.execute(stmt.offset((page - 1) * page_size).limit(page_size)).scalars())
     out: list[PurchasedElectricityResultSummary] = []
     for row in rows:
         pointer = _current_pointer(
@@ -892,7 +891,7 @@ def get_purchased_electricity_result(
         )
     ).scalar_one_or_none()
     if row is None:
-        raise NotFoundError('Purchased-electricity result not found.')
+        raise NotFoundError("Purchased-electricity result not found.")
     pointer = _current_pointer(
         db,
         organization_id=organization_id,
@@ -964,14 +963,12 @@ def get_purchased_electricity_summary(
                 CbamActivityRecord.organization_id == organization_id,
                 CbamActivityRecord.reporting_period_binding_id == binding_id,
                 CbamActivityRecord.activity_type == ELECTRICITY_ACTIVITY_TYPE,
-                CbamActivityRecord.status == 'active',
+                CbamActivityRecord.status == "active",
             )
         ).scalars()
     )
     eligible = [
-        a
-        for a in activities
-        if a.unit in ELECTRICITY_QUANTITY_UNITS and a.quantity >= ZERO
+        a for a in activities if a.unit in ELECTRICITY_QUANTITY_UNITS and a.quantity >= ZERO
     ]
     pointers = {
         p.activity_record_id: p
@@ -1010,16 +1007,16 @@ def get_purchased_electricity_summary(
                 total_exported += result.exported_electricity_mwh
                 has_exported = True
     if not eligible:
-        blocking.append('ELECTRICITY_ACTIVITIES_REQUIRED')
-        readiness = 'EMPTY'
+        blocking.append("ELECTRICITY_ACTIVITIES_REQUIRED")
+        readiness = "EMPTY"
     elif missing > 0:
-        blocking.append('ELECTRICITY_RESULTS_INCOMPLETE')
-        readiness = 'INCOMPLETE'
+        blocking.append("ELECTRICITY_RESULTS_INCOMPLETE")
+        readiness = "INCOMPLETE"
     elif stale_count > 0:
-        blocking.append('ELECTRICITY_RESULTS_STALE')
-        readiness = 'STALE'
+        blocking.append("ELECTRICITY_RESULTS_STALE")
+        readiness = "STALE"
     else:
-        readiness = 'READY'
+        readiness = "READY"
     # Non-blocking seed-data note always present until a provenance-backed default exists.
     info = [TURKEY_DEFAULT_FACTOR_SEED_BLOCKER]
     return PurchasedElectricityPeriodSummary(
@@ -1066,7 +1063,7 @@ def get_exported_electricity_mwh_by_installation(
                 CbamActivityRecord.organization_id == organization_id,
                 CbamActivityRecord.reporting_period_binding_id == binding_id,
                 CbamActivityRecord.activity_type == ELECTRICITY_ACTIVITY_TYPE,
-                CbamActivityRecord.status == 'active',
+                CbamActivityRecord.status == "active",
             )
         ).scalars()
     }

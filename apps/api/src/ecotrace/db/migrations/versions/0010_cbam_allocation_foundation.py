@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0010_cbam_allocation_foundation'
-down_revision: str | None = '0009_cbam_data_collection'
+revision: str = "0010_cbam_allocation_foundation"
+down_revision: str | None = "0009_cbam_data_collection"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -80,25 +80,22 @@ CREATE TABLE cbam_allocation_rules (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_rules_organization_id '
-        'ON cbam_allocation_rules (organization_id)'
+        "CREATE INDEX ix_cbam_allocation_rules_organization_id "
+        "ON cbam_allocation_rules (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_rules_org_binding '
-        'ON cbam_allocation_rules (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_allocation_rules_org_binding "
+        "ON cbam_allocation_rules (organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_rules_org_installation '
-        'ON cbam_allocation_rules (organization_id, installation_profile_id)'
+        "CREATE INDEX ix_cbam_allocation_rules_org_installation "
+        "ON cbam_allocation_rules (organization_id, installation_profile_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_rules_org_product '
-        'ON cbam_allocation_rules (organization_id, product_profile_version_id)'
+        "CREATE INDEX ix_cbam_allocation_rules_org_product "
+        "ON cbam_allocation_rules (organization_id, product_profile_version_id)"
     )
-    op.execute(
-        'CREATE INDEX ix_cbam_allocation_rules_status '
-        'ON cbam_allocation_rules (status)'
-    )
+    op.execute("CREATE INDEX ix_cbam_allocation_rules_status ON cbam_allocation_rules (status)")
     op.execute(
         """
 CREATE UNIQUE INDEX uq_cbam_allocation_one_active_per_scope
@@ -156,28 +153,28 @@ CREATE TABLE cbam_allocation_results (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_results_organization_id '
-        'ON cbam_allocation_results (organization_id)'
+        "CREATE INDEX ix_cbam_allocation_results_organization_id "
+        "ON cbam_allocation_results (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_results_org_binding '
-        'ON cbam_allocation_results (organization_id, reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_allocation_results_org_binding "
+        "ON cbam_allocation_results (organization_id, reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_results_rule_id '
-        'ON cbam_allocation_results (allocation_rule_id)'
+        "CREATE INDEX ix_cbam_allocation_results_rule_id "
+        "ON cbam_allocation_results (allocation_rule_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_results_source '
-        'ON cbam_allocation_results (source_type, source_id)'
+        "CREATE INDEX ix_cbam_allocation_results_source "
+        "ON cbam_allocation_results (source_type, source_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_allocation_results_current_lookup '
-        'ON cbam_allocation_results ('
-        'organization_id, allocation_rule_id, source_type, source_id, is_current)'
+        "CREATE INDEX ix_cbam_allocation_results_current_lookup "
+        "ON cbam_allocation_results ("
+        "organization_id, allocation_rule_id, source_type, source_id, is_current)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_allocation_results')
-    op.execute('DROP TABLE IF EXISTS cbam_allocation_rules')
+    op.execute("DROP TABLE IF EXISTS cbam_allocation_results")
+    op.execute("DROP TABLE IF EXISTS cbam_allocation_rules")

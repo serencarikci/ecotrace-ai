@@ -71,98 +71,96 @@ def assess_export_readiness(
     warnings = list(ctx.warnings)
 
     def add(code: str, label: str, status: str, message: str) -> None:
-        checks.append(
-            ReadinessCheckItem(code=code, label=label, status=status, message=message)
-        )
-        if status == 'MISSING':
+        checks.append(ReadinessCheckItem(code=code, label=label, status=status, message=message))
+        if status == "MISSING":
             blocking.append(message)
-        elif status == 'WARNING':
+        elif status == "WARNING":
             warnings.append(message)
 
     if ctx.production:
-        add('production', 'Production Data', 'OK', f'{len(ctx.production)} production record(s).')
+        add("production", "Production Data", "OK", f"{len(ctx.production)} production record(s).")
     else:
-        add('production', 'Production Data', 'WARNING', 'No production records (non-blocking).')
+        add("production", "Production Data", "WARNING", "No production records (non-blocking).")
 
     if ctx.activities:
-        add('activity', 'Activity Data', 'OK', f'{len(ctx.activities)} activity record(s).')
+        add("activity", "Activity Data", "OK", f"{len(ctx.activities)} activity record(s).")
     else:
-        add('activity', 'Activity Data', 'MISSING', 'At least one activity record is required.')
+        add("activity", "Activity Data", "MISSING", "At least one activity record is required.")
 
     if ctx.purchased:
         add(
-            'purchased',
-            'Purchased Inputs',
-            'OK',
-            f'{len(ctx.purchased)} purchased input record(s).',
+            "purchased",
+            "Purchased Inputs",
+            "OK",
+            f"{len(ctx.purchased)} purchased input record(s).",
         )
     else:
         add(
-            'purchased',
-            'Purchased Inputs',
-            'WARNING',
-            'No purchased inputs (non-blocking).',
+            "purchased",
+            "Purchased Inputs",
+            "WARNING",
+            "No purchased inputs (non-blocking).",
         )
 
     if ctx.allocation_results:
         add(
-            'allocation',
-            'Allocation',
-            'OK',
-            f'{len(ctx.allocation_results)} current allocation result(s).',
+            "allocation",
+            "Allocation",
+            "OK",
+            f"{len(ctx.allocation_results)} current allocation result(s).",
         )
     else:
-        add('allocation', 'Allocation', 'WARNING', 'No allocation results (non-blocking).')
+        add("allocation", "Allocation", "WARNING", "No allocation results (non-blocking).")
 
     if ctx.factor_resolutions:
-        unresolved = _metric_int(ctx.summary_metrics, 'unresolved_factor_count')
-        ambiguous = _metric_int(ctx.summary_metrics, 'ambiguous_factor_count')
+        unresolved = _metric_int(ctx.summary_metrics, "unresolved_factor_count")
+        ambiguous = _metric_int(ctx.summary_metrics, "ambiguous_factor_count")
         if unresolved or ambiguous:
             add(
-                'factors',
-                'Factor Resolution',
-                'WARNING',
-                f'{len(ctx.factor_resolutions)} resolutions; unresolved={unresolved}, '
-                f'ambiguous={ambiguous}.',
+                "factors",
+                "Factor Resolution",
+                "WARNING",
+                f"{len(ctx.factor_resolutions)} resolutions; unresolved={unresolved}, "
+                f"ambiguous={ambiguous}.",
             )
         else:
             add(
-                'factors',
-                'Factor Resolution',
-                'OK',
-                f'{len(ctx.factor_resolutions)} current factor resolution(s).',
+                "factors",
+                "Factor Resolution",
+                "OK",
+                f"{len(ctx.factor_resolutions)} current factor resolution(s).",
             )
     else:
-        add('factors', 'Factor Resolution', 'WARNING', 'No factor resolutions yet.')
+        add("factors", "Factor Resolution", "WARNING", "No factor resolutions yet.")
 
     if ctx.calculation_run is None:
-        add('calculation', 'Calculation', 'MISSING', 'A calculation run is required before export.')
-    elif ctx.calculation_run.status not in {'COMPLETED', 'PARTIALLY_COMPLETED'}:
+        add("calculation", "Calculation", "MISSING", "A calculation run is required before export.")
+    elif ctx.calculation_run.status not in {"COMPLETED", "PARTIALLY_COMPLETED"}:
         add(
-            'calculation',
-            'Calculation',
-            'MISSING',
-            f'Calculation run status {ctx.calculation_run.status} is not exportable.',
+            "calculation",
+            "Calculation",
+            "MISSING",
+            f"Calculation run status {ctx.calculation_run.status} is not exportable.",
         )
-    elif _metric_int(ctx.summary_metrics, 'calculated_result_count') == 0:
+    elif _metric_int(ctx.summary_metrics, "calculated_result_count") == 0:
         add(
-            'calculation',
-            'Calculation',
-            'MISSING',
-            'No CALCULATED results available to export.',
+            "calculation",
+            "Calculation",
+            "MISSING",
+            "No CALCULATED results available to export.",
         )
-    elif _metric_int(ctx.summary_metrics, 'blocked_calculation_count') > 0:
+    elif _metric_int(ctx.summary_metrics, "blocked_calculation_count") > 0:
         add(
-            'calculation',
-            'Calculation',
-            'WARNING',
-            'Blocked calculations present; they will not be exported as zero.',
+            "calculation",
+            "Calculation",
+            "WARNING",
+            "Blocked calculations present; they will not be exported as zero.",
         )
     else:
         add(
-            'calculation',
-            'Calculation',
-            'OK',
+            "calculation",
+            "Calculation",
+            "OK",
             f"Calculation run {ctx.calculation_run.id} has "
             f"{ctx.summary_metrics['calculated_result_count']} calculated result(s).",
         )
@@ -170,30 +168,30 @@ def assess_export_readiness(
     try:
         verify_template_file(template)
         if not mappings:
-            add('mappings', 'Excel Mapping', 'MISSING', 'Template has no mappings.')
+            add("mappings", "Excel Mapping", "MISSING", "Template has no mappings.")
         else:
             add(
-                'mappings',
-                'Excel Mapping',
-                'OK',
-                f'{len(mappings)} mapping(s) for {template.code} v{template.version}.',
+                "mappings",
+                "Excel Mapping",
+                "OK",
+                f"{len(mappings)} mapping(s) for {template.code} v{template.version}.",
             )
     except Exception as exc:
-        add('mappings', 'Excel Mapping', 'MISSING', str(exc))
+        add("mappings", "Excel Mapping", "MISSING", str(exc))
 
-    if template.template_type == 'INTERNAL_SKDM':
+    if template.template_type == "INTERNAL_SKDM":
         warnings.append(
-            'Official CBAM workbook mapping is BLOCKED; using internal development template only.'
+            "Official CBAM workbook mapping is BLOCKED; using internal development template only."
         )
 
-    if any(c.status == 'MISSING' for c in checks):
-        status = 'NOT_READY'
-    elif any(c.status == 'WARNING' for c in checks) or warnings:
-        status = 'READY_WITH_WARNINGS'
+    if any(c.status == "MISSING" for c in checks):
+        status = "NOT_READY"
+    elif any(c.status == "WARNING" for c in checks) or warnings:
+        status = "READY_WITH_WARNINGS"
     else:
-        status = 'READY'
+        status = "READY"
 
-    ctx.summary_metrics['export_readiness'] = status
+    ctx.summary_metrics["export_readiness"] = status
     return ExportReadinessResponse(
         status=status,
         checks=checks,

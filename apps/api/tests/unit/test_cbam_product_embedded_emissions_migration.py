@@ -8,62 +8,63 @@ from sqlalchemy import text
 
 MIGRATION = (
     Path(__file__).resolve().parents[2]
-    / 'src'
-    / 'ecotrace'
-    / 'db'
-    / 'migrations'
-    / 'versions'
-    / '0027_cbam_product_embedded_emissions.py'
+    / "src"
+    / "ecotrace"
+    / "db"
+    / "migrations"
+    / "versions"
+    / "0027_cbam_product_embedded_emissions.py"
 )
 
 TABLES = (
-    'cbam_product_embedded_emissions_results',
-    'cbam_product_embedded_emissions_products',
-    'cbam_product_embedded_emissions_precursor_contributions',
-    'cbam_product_embedded_emissions_current',
+    "cbam_product_embedded_emissions_results",
+    "cbam_product_embedded_emissions_products",
+    "cbam_product_embedded_emissions_precursor_contributions",
+    "cbam_product_embedded_emissions_current",
 )
 
 RESULT_INDEXES = {
-    'ix_cbam_pee_results_org_binding',
-    'ix_cbam_pee_results_created_at',
+    "ix_cbam_pee_results_org_binding",
+    "ix_cbam_pee_results_created_at",
 }
 PRODUCT_INDEXES = {
-    'ix_cbam_pee_products_result',
-    'ix_cbam_pee_products_profile',
-    'ix_cbam_pee_products_process',
-    'ix_cbam_pee_products_org_binding',
+    "ix_cbam_pee_products_result",
+    "ix_cbam_pee_products_profile",
+    "ix_cbam_pee_products_process",
+    "ix_cbam_pee_products_org_binding",
 }
 CONTRIBUTION_INDEXES = {
-    'ix_cbam_pee_contrib_result',
-    'ix_cbam_pee_contrib_product_row',
-    'ix_cbam_pee_contrib_precursor',
-    'ix_cbam_pee_contrib_product_use',
+    "ix_cbam_pee_contrib_result",
+    "ix_cbam_pee_contrib_product_row",
+    "ix_cbam_pee_contrib_precursor",
+    "ix_cbam_pee_contrib_product_use",
 }
 
 
 def test_migration_0027_is_chained_and_creates_all_phase_10c_tables() -> None:
-    source = MIGRATION.read_text(encoding='utf-8')
+    source = MIGRATION.read_text(encoding="utf-8")
     # alembic_version.version_num is varchar(32), so the id is abbreviated.
     assert "revision: str = '0027_cbam_pee_rollup'" in source
-    assert len('0027_cbam_pee_rollup') <= 32
+    assert len("0027_cbam_pee_rollup") <= 32
     assert "down_revision: str | None = '0026_cbam_purchased_precursor'" in source
     for table in TABLES:
-        assert f'CREATE TABLE {table}' in source
-        assert f'DROP TABLE IF EXISTS {table}' in source
+        assert f"CREATE TABLE {table}" in source
+        assert f"DROP TABLE IF EXISTS {table}" in source
 
 
 def test_migration_0027_index_names_are_globally_unique() -> None:
     """A prior phase shipped colliding ix_cbam_pp_* names; every 10C name is distinct."""
-    source = MIGRATION.read_text(encoding='utf-8')
+    source = MIGRATION.read_text(encoding="utf-8")
     declared = [
         line.split()[-1]
         for line in source.splitlines()
-        if line.startswith('CREATE INDEX ') or line.startswith('CREATE UNIQUE INDEX ')
+        if line.startswith("CREATE INDEX ") or line.startswith("CREATE UNIQUE INDEX ")
     ]
     assert declared
     assert len(declared) == len(set(declared))
-    assert all(name.startswith('ix_cbam_pee_') or name.startswith('uq_cbam_pee_')
-               for name in declared)
+    assert all(
+        name.startswith("ix_cbam_pee_") or name.startswith("uq_cbam_pee_") for name in declared
+    )
 
 
 def _check_definitions(db, table: str) -> list[str]:
@@ -80,7 +81,7 @@ WHERE contype = 'c' AND conrelid = '{table}'::regclass
 
 
 def test_phase_10c_tables_match_the_orm_metadata(seeded_db) -> None:
-    names = ', '.join(f"'{table}'" for table in TABLES)
+    names = ", ".join(f"'{table}'" for table in TABLES)
     tables = set(
         seeded_db.execute(
             text(
@@ -112,27 +113,27 @@ WHERE contype = 'u'
         ).scalars()
     )
     assert {
-        'uq_cbam_pee_result_org_binding_client_request',
-        'uq_cbam_pee_result_id_org_binding',
-        'uq_cbam_pee_products_result_profile',
-        'uq_cbam_pee_products_id_result',
-        'uq_cbam_pee_contrib_result_use',
-        'uq_cbam_pee_current_org_binding_method',
+        "uq_cbam_pee_result_org_binding_client_request",
+        "uq_cbam_pee_result_id_org_binding",
+        "uq_cbam_pee_products_result_profile",
+        "uq_cbam_pee_products_id_result",
+        "uq_cbam_pee_contrib_result_use",
+        "uq_cbam_pee_current_org_binding_method",
     } <= unique_names
 
-    checks = _check_definitions(seeded_db, 'cbam_product_embedded_emissions_results')
-    assert any('status' in d and "'COMPLETED'" in d for d in checks)
-    assert any('result_unit' in d and "'tCO2e'" in d for d in checks)
-    assert any('dea_source_unit' in d and "'tCO2'" in d for d in checks)
+    checks = _check_definitions(seeded_db, "cbam_product_embedded_emissions_results")
+    assert any("status" in d and "'COMPLETED'" in d for d in checks)
+    assert any("result_unit" in d and "'tCO2e'" in d for d in checks)
+    assert any("dea_source_unit" in d and "'tCO2'" in d for d in checks)
 
-    checks = _check_definitions(seeded_db, 'cbam_product_embedded_emissions_products')
-    assert any('denominator_tonnes' in d and '> (0)' in d for d in checks)
-    assert any('exported_electricity_direct_tco2e' in d and '= (0)' in d for d in checks)
+    checks = _check_definitions(seeded_db, "cbam_product_embedded_emissions_products")
+    assert any("denominator_tonnes" in d and "> (0)" in d for d in checks)
+    assert any("exported_electricity_direct_tco2e" in d and "= (0)" in d for d in checks)
 
     checks = _check_definitions(
-        seeded_db, 'cbam_product_embedded_emissions_precursor_contributions'
+        seeded_db, "cbam_product_embedded_emissions_precursor_contributions"
     )
-    assert any('quantity_tonnes' in d and '>= (0)' in d for d in checks)
+    assert any("quantity_tonnes" in d and ">= (0)" in d for d in checks)
     assert any("'SUPPLIER_DATA'" in d and "'EU_DEFAULT'" in d for d in checks)
 
 
@@ -152,9 +153,9 @@ WHERE contype = 'f'
             )
         ).scalars()
     )
-    assert 'cbam_production_processes' not in referenced
-    assert 'cbam_purchased_precursors' not in referenced
-    assert 'cbam_purchased_precursor_product_uses' not in referenced
+    assert "cbam_production_processes" not in referenced
+    assert "cbam_purchased_precursors" not in referenced
+    assert "cbam_purchased_precursor_product_uses" not in referenced
 
 
 def test_pee_index_migration_round_trip(seeded_db) -> None:
@@ -180,7 +181,7 @@ WHERE tablename IN (
 
     def downgrade() -> None:
         for name in expected:
-            seeded_db.execute(text(f'DROP INDEX IF EXISTS {name}'))
+            seeded_db.execute(text(f"DROP INDEX IF EXISTS {name}"))
         seeded_db.flush()
 
     def upgrade() -> None:

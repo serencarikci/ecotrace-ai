@@ -143,18 +143,22 @@ def list_active_stationary_combustion_fuels(
 ) -> list[StationaryCombustionFuelResponse]:
     require_cbam_view(db, user, organization_id)
     ensure_platform_stationary_combustion_catalog(db)
-    rows = db.execute(
-        select(CbamStationaryCombustionFuel)
-        .where(CbamStationaryCombustionFuel.status == 'ACTIVE')
-        .order_by(CbamStationaryCombustionFuel.code.asc())
-    ).scalars().all()
+    rows = (
+        db.execute(
+            select(CbamStationaryCombustionFuel)
+            .where(CbamStationaryCombustionFuel.status == "ACTIVE")
+            .order_by(CbamStationaryCombustionFuel.code.asc())
+        )
+        .scalars()
+        .all()
+    )
     return [
         StationaryCombustionFuelResponse(
             code=row.code,
             name=row.name,
             input_basis=row.input_basis,
             default_activity_unit=row.default_activity_unit,
-            density_required=row.input_basis == 'VOLUME',
+            density_required=row.input_basis == "VOLUME",
             status=row.status,
         )
         for row in rows
@@ -176,8 +180,8 @@ def get_stationary_combustion_parameters(
     fuel = db.execute(
         select(CbamStationaryCombustionFuel).where(CbamStationaryCombustionFuel.code == code)
     ).scalar_one_or_none()
-    if fuel is None or fuel.status != 'ACTIVE':
-        raise NotFoundError('Stationary-combustion fuel not found.')
+    if fuel is None or fuel.status != "ACTIVE":
+        raise NotFoundError("Stationary-combustion fuel not found.")
 
     resolution = resolve_stationary_combustion_parameters(
         db,
@@ -190,8 +194,8 @@ def get_stationary_combustion_parameters(
             resolution.message,
             details=[
                 {
-                    'code': 'AMBIGUOUS_PARAMETER_SET',
-                    'candidateParameterSetIds': [
+                    "code": "AMBIGUOUS_PARAMETER_SET",
+                    "candidateParameterSetIds": [
                         str(i) for i in resolution.candidate_parameter_set_ids
                     ],
                 }
@@ -200,12 +204,12 @@ def get_stationary_combustion_parameters(
     if resolution.status == RESOLUTION_UNRESOLVED or resolution.parameters is None:
         raise ValidationAppError(
             resolution.message,
-            details=[{'code': 'UNRESOLVED_PARAMETER_SET', 'message': resolution.message}],
+            details=[{"code": "UNRESOLVED_PARAMETER_SET", "message": resolution.message}],
         )
     if resolution.status != RESOLUTION_RESOLVED:
         raise ValidationAppError(
-            'Stationary-combustion parameters could not be resolved.',
-            details=[{'code': 'UNRESOLVED_PARAMETER_SET'}],
+            "Stationary-combustion parameters could not be resolved.",
+            details=[{"code": "UNRESOLVED_PARAMETER_SET"}],
         )
 
     params = resolution.parameters
@@ -214,7 +218,7 @@ def get_stationary_combustion_parameters(
         fuel_name=params.fuel_name,
         input_basis=params.input_basis,
         default_activity_unit=params.default_activity_unit,
-        density_required=params.input_basis == 'VOLUME',
+        density_required=params.input_basis == "VOLUME",
         reference_density=params.reference_density,
         reference_density_unit=params.reference_density_unit,
         net_calorific_value=params.net_calorific_value,
@@ -258,22 +262,25 @@ def _resolve_reference_date(
         return activity.activity_date
     if calculation_reference_date is None:
         raise ValidationAppError(
-            'calculation_reference_date is required when the activity has no activity_date.',
-            details=[{'code': 'REFERENCE_DATE_REQUIRED'}],
+            "calculation_reference_date is required when the activity has no activity_date.",
+            details=[{"code": "REFERENCE_DATE_REQUIRED"}],
         )
     binding = get_binding_for_org(db, organization_id, binding_id)
     period = require_reporting_period_in_organization(
         db, organization_id, binding.reporting_period_id
     )
-    if calculation_reference_date < period.start_date or calculation_reference_date > period.end_date:
+    if (
+        calculation_reference_date < period.start_date
+        or calculation_reference_date > period.end_date
+    ):
         raise ValidationAppError(
-            'calculation_reference_date must fall inside the reporting period.',
+            "calculation_reference_date must fall inside the reporting period.",
             details=[
                 {
-                    'code': 'REFERENCE_DATE_OUTSIDE_PERIOD',
-                    'calculationReferenceDate': calculation_reference_date.isoformat(),
-                    'periodStart': period.start_date.isoformat(),
-                    'periodEnd': period.end_date.isoformat(),
+                    "code": "REFERENCE_DATE_OUTSIDE_PERIOD",
+                    "calculationReferenceDate": calculation_reference_date.isoformat(),
+                    "periodStart": period.start_date.isoformat(),
+                    "periodEnd": period.end_date.isoformat(),
                 }
             ],
         )
@@ -302,13 +309,13 @@ def _raise_idempotency_key_reused(
     existing_result_id: uuid.UUID,
 ) -> None:
     raise ConflictError(
-        'clientRequestId was already used with a different execution request.',
-        code='IDEMPOTENCY_KEY_REUSED',
+        "clientRequestId was already used with a different execution request.",
+        code="IDEMPOTENCY_KEY_REUSED",
         details=[
             {
-                'code': 'IDEMPOTENCY_KEY_REUSED',
-                'clientRequestId': str(client_request_id),
-                'existingResultId': str(existing_result_id),
+                "code": "IDEMPOTENCY_KEY_REUSED",
+                "clientRequestId": str(client_request_id),
+                "existingResultId": str(existing_result_id),
             }
         ],
     )
@@ -324,7 +331,7 @@ def _execution_response_from_result(
     return StationaryCombustionExecutionApiResponse(
         run_id=row.calculation_run_id,
         result_id=row.id,
-        status='COMPLETED',
+        status="COMPLETED",
         calculation_type=row.calculation_type,
         calculation_version=row.formula_version,
         activity_record_id=row.activity_record_id,
@@ -373,14 +380,14 @@ def execute_stationary_combustion_api(
     get_binding_for_org(db, organization_id, binding_id)
 
     activity = db.get(CbamActivityRecord, payload.activity_record_id)
-    if activity is None or activity.status != 'active':
-        raise NotFoundError('Activity record not found.')
+    if activity is None or activity.status != "active":
+        raise NotFoundError("Activity record not found.")
     if activity.organization_id != organization_id:
-        raise NotFoundError('Activity record not found.')
+        raise NotFoundError("Activity record not found.")
     if activity.reporting_period_binding_id != binding_id:
         raise ValidationAppError(
-            'Activity does not belong to the requested reporting-period binding.',
-            details=[{'code': 'ACTIVITY_BINDING_MISMATCH'}],
+            "Activity does not belong to the requested reporting-period binding.",
+            details=[{"code": "ACTIVITY_BINDING_MISMATCH"}],
         )
 
     reference_date = _resolve_reference_date(
@@ -466,8 +473,8 @@ def execute_stationary_combustion_api(
         )
         if winner is None:
             raise ConflictError(
-                'Stationary-combustion result persistence conflict.',
-                details=[{'code': 'STATIONARY_COMBUSTION_RESULT_CONFLICT'}],
+                "Stationary-combustion result persistence conflict.",
+                details=[{"code": "STATIONARY_COMBUSTION_RESULT_CONFLICT"}],
             ) from None
         return _replay_or_conflict(
             winner,
@@ -562,7 +569,7 @@ def get_stationary_combustion_result_for_binding(
         or entity.organization_id != organization_id
         or entity.reporting_period_binding_id != binding_id
     ):
-        raise NotFoundError('Stationary-combustion result not found.')
+        raise NotFoundError("Stationary-combustion result not found.")
     pointer = get_current_pointer(
         db,
         organization_id=organization_id,

@@ -91,13 +91,13 @@ from ecotrace.shared.domain.schemas import Page, paginate
 
 # Re-export readiness helper for router convenience.
 __all__ = [
-    'create_official_see_export_run',
-    'download_official_see_export_artifact',
-    'ensure_official_see_template',
-    'get_official_see_export_readiness',
-    'get_official_see_export_run',
-    'list_official_see_export_artifacts',
-    'list_official_see_export_runs',
+    "create_official_see_export_run",
+    "download_official_see_export_artifact",
+    "ensure_official_see_template",
+    "get_official_see_export_readiness",
+    "get_official_see_export_run",
+    "list_official_see_export_artifacts",
+    "list_official_see_export_runs",
 ]
 
 
@@ -115,20 +115,20 @@ def ensure_official_see_template() -> Path:
     source = _repo_root() / LOCAL_REFERENCE_RELATIVE
     if not source.is_file():
         raise BusinessRuleError(
-            'Official SEE template file is missing from local-reference.',
+            "Official SEE template file is missing from local-reference.",
             code=CODE_MAPPING_OR_TEMPLATE_INVALID,
-            details=[{'code': CODE_MAPPING_OR_TEMPLATE_INVALID}],
+            details=[{"code": CODE_MAPPING_OR_TEMPLATE_INVALID}],
         )
     digest = sha256_file(source)
     if digest != TEMPLATE_SHA256:
         raise BusinessRuleError(
-            'Official SEE template SHA-256 mismatch.',
+            "Official SEE template SHA-256 mismatch.",
             code=CODE_MAPPING_OR_TEMPLATE_INVALID,
             details=[
                 {
-                    'code': CODE_MAPPING_OR_TEMPLATE_INVALID,
-                    'expected': TEMPLATE_SHA256,
-                    'actual': digest,
+                    "code": CODE_MAPPING_OR_TEMPLATE_INVALID,
+                    "expected": TEMPLATE_SHA256,
+                    "actual": digest,
                 }
             ],
         )
@@ -136,9 +136,9 @@ def ensure_official_see_template() -> Path:
     shutil.copy2(source, dest)
     if sha256_file(dest) != TEMPLATE_SHA256:
         raise BusinessRuleError(
-            'Official SEE template copy failed hash verify.',
+            "Official SEE template copy failed hash verify.",
             code=CODE_MAPPING_OR_TEMPLATE_INVALID,
-            details=[{'code': CODE_MAPPING_OR_TEMPLATE_INVALID}],
+            details=[{"code": CODE_MAPPING_OR_TEMPLATE_INVALID}],
         )
     return dest
 
@@ -227,14 +227,12 @@ def create_official_see_export_run(
         # If only LO is the issue among readiness, still proceed to create FAILED run below
         # when other blockers exist, reject immediately.
         non_lo = [
-            c
-            for c in assessment.blocking_issue_codes
-            if c != CODE_RECALCULATION_ENGINE_UNAVAILABLE
+            c for c in assessment.blocking_issue_codes if c != CODE_RECALCULATION_ENGINE_UNAVAILABLE
         ]
         if non_lo:
             raise BusinessRuleError(
-                'Official SEE export is not ready.',
-                details=[{'code': code} for code in assessment.blocking_issue_codes],
+                "Official SEE export is not ready.",
+                details=[{"code": code} for code in assessment.blocking_issue_codes],
             )
 
     if not soffice_available():
@@ -247,16 +245,15 @@ def create_official_see_export_run(
         )
         if existing is not None and existing.generation_status == GENERATION_STATUS_COMPLETED:
             raise ConflictError(
-                'Idempotency key already used with a different outcome.',
+                "Idempotency key already used with a different outcome.",
                 code=CODE_IDEMPOTENCY_KEY_REUSED,
-                details=[{'code': CODE_IDEMPOTENCY_KEY_REUSED}],
+                details=[{"code": CODE_IDEMPOTENCY_KEY_REUSED}],
             )
         if (
             existing is not None
             and existing.generation_status == GENERATION_STATUS_FAILED
             and existing.failure_diagnostics
-            and existing.failure_diagnostics.get('code')
-            == CODE_RECALCULATION_ENGINE_UNAVAILABLE
+            and existing.failure_diagnostics.get("code") == CODE_RECALCULATION_ENGINE_UNAVAILABLE
         ):
             return _run_response(existing, idempotent_replay=True)
 
@@ -285,8 +282,8 @@ def create_official_see_export_run(
             precursor_snapshot_ids=[str(i) for i in (ctx.precursor_ids if ctx else [])],
             source_fingerprint=ctx_fp,
             failure_diagnostics={
-                'code': CODE_RECALCULATION_ENGINE_UNAVAILABLE,
-                'message': 'LibreOffice soffice is not available; official SEE export blocked.',
+                "code": CODE_RECALCULATION_ENGINE_UNAVAILABLE,
+                "message": "LibreOffice soffice is not available; official SEE export blocked.",
             },
             generated_by_user_id=user.id,
             generated_at=datetime.now(UTC),
@@ -305,32 +302,32 @@ def create_official_see_export_run(
             if existing is not None:
                 return _run_response(existing, idempotent_replay=True)
             raise ConflictError(
-                'Official SEE export run conflict.',
-                details=[{'code': 'OFFICIAL_SEE_EXPORT_CONFLICT'}],
+                "Official SEE export run conflict.",
+                details=[{"code": "OFFICIAL_SEE_EXPORT_CONFLICT"}],
             ) from exc
         write_audit_log(
             db,
             actor_user_id=user.id,
             organization_id=organization_id,
-            action='cbam.official_see_export.failed',
-            entity_type='cbam_official_see_export_run',
+            action="cbam.official_see_export.failed",
+            entity_type="cbam_official_see_export_run",
             entity_id=str(run.id),
-            metadata={'code': CODE_RECALCULATION_ENGINE_UNAVAILABLE},
+            metadata={"code": CODE_RECALCULATION_ENGINE_UNAVAILABLE},
             request_id=request_id,
             ip_address=ip_address,
             user_agent=user_agent,
         )
         db.commit()
         raise BusinessRuleError(
-            'LibreOffice recalculation engine is unavailable.',
+            "LibreOffice recalculation engine is unavailable.",
             code=CODE_RECALCULATION_ENGINE_UNAVAILABLE,
-            details=[{'code': CODE_RECALCULATION_ENGINE_UNAVAILABLE, 'runId': str(run.id)}],
+            details=[{"code": CODE_RECALCULATION_ENGINE_UNAVAILABLE, "runId": str(run.id)}],
         )
 
     if not assessment.ready:
         raise BusinessRuleError(
-            'Official SEE export is not ready.',
-            details=[{'code': code} for code in assessment.blocking_issue_codes],
+            "Official SEE export is not ready.",
+            details=[{"code": code} for code in assessment.blocking_issue_codes],
         )
 
     ctx = load_official_see_context(db, user, organization_id, binding_id)
@@ -348,9 +345,9 @@ def create_official_see_export_run(
             return _run_response(existing, idempotent_replay=True)
         if existing.generation_status == GENERATION_STATUS_COMPLETED:
             raise ConflictError(
-                'Idempotency key reused with changed source fingerprint.',
+                "Idempotency key reused with changed source fingerprint.",
                 code=CODE_IDEMPOTENCY_KEY_REUSED,
-                details=[{'code': CODE_IDEMPOTENCY_KEY_REUSED}],
+                details=[{"code": CODE_IDEMPOTENCY_KEY_REUSED}],
             )
         if existing.generation_status == GENERATION_STATUS_FAILED:
             # Failed does not replace last success; allow new attempt only with new key
@@ -358,9 +355,9 @@ def create_official_see_export_run(
             # only if no COMPLETED run shares the key (unique constraint). Re-use failed row
             # by creating a new run requires a new clientRequestId.
             raise ConflictError(
-                'Idempotency key already used by a failed run; use a new clientRequestId.',
+                "Idempotency key already used by a failed run; use a new clientRequestId.",
                 code=CODE_IDEMPOTENCY_KEY_REUSED,
-                details=[{'code': CODE_IDEMPOTENCY_KEY_REUSED}],
+                details=[{"code": CODE_IDEMPOTENCY_KEY_REUSED}],
             )
 
     template_path = ensure_official_see_template()
@@ -371,8 +368,8 @@ def create_official_see_export_run(
         reporting_period_binding_id=binding_id,
         client_request_id=payload.client_request_id,
         generation_status=GENERATION_STATUS_RUNNING,
-        validation_status='PENDING',
-        formula_parity_status='PENDING',
+        validation_status="PENDING",
+        formula_parity_status="PENDING",
         mapping_version=MAPPING_VERSION,
         template_filename=TEMPLATE_FILENAME,
         template_version=TEMPLATE_VERSION,
@@ -399,8 +396,8 @@ def create_official_see_export_run(
         if existing is not None and existing.generation_status == GENERATION_STATUS_COMPLETED:
             return _run_response(existing, idempotent_replay=True)
         raise ConflictError(
-            'Concurrent Official SEE export with the same clientRequestId.',
-            details=[{'code': 'OFFICIAL_SEE_EXPORT_CONFLICT'}],
+            "Concurrent Official SEE export with the same clientRequestId.",
+            details=[{"code": "OFFICIAL_SEE_EXPORT_CONFLICT"}],
         ) from exc
 
     out_dir = export_run_dir(
@@ -409,12 +406,12 @@ def create_official_see_export_run(
         export_run_id=run.id,
     )
     file_name = safe_export_filename(
-        installation_name=str(ctx.installation.get('name') or 'installation'),
-        period_label=str(ctx.reporting_period.get('label') or binding_id),
+        installation_name=str(ctx.installation.get("name") or "installation"),
+        period_label=str(ctx.reporting_period.get("label") or binding_id),
         generated_on=date.today(),
     )
     # Staging path only — never publish / register artifact until LO + parity + leakage pass.
-    staging_xlsx = out_dir / f'.staging-{file_name}'
+    staging_xlsx = out_dir / f".staging-{file_name}"
     output_xlsx = out_dir / file_name
     recalc_path: Path | None = None
     published = False
@@ -440,9 +437,9 @@ def create_official_see_export_run(
             )
         except AssertionError as exc:
             raise BusinessRuleError(
-                f'Package integrity failed after LibreOffice: {exc}',
+                f"Package integrity failed after LibreOffice: {exc}",
                 code=CODE_FORMULA_PRESERVATION_FAILED,
-                details=[{'code': CODE_FORMULA_PRESERVATION_FAILED, 'message': str(exc)}],
+                details=[{"code": CODE_FORMULA_PRESERVATION_FAILED, "message": str(exc)}],
             ) from exc
         used_keys = set(build_used_input_map(ctx, manifest).keys())
         # Leakage helper loads the workbook internally (this module stays import-free of the sheet library).
@@ -453,15 +450,15 @@ def create_official_see_export_run(
         )
         if post_leaks:
             raise BusinessRuleError(
-                'Example data leakage detected after recalculation.',
+                "Example data leakage detected after recalculation.",
                 code=CODE_EXAMPLE_LEAKAGE,
                 details=[
                     {
-                        'code': CODE_EXAMPLE_LEAKAGE,
-                        'kind': f.kind,
-                        'sheet': f.sheet,
-                        'cell': f.cell,
-                        'detail': f.detail,
+                        "code": CODE_EXAMPLE_LEAKAGE,
+                        "kind": f.kind,
+                        "sheet": f.sheet,
+                        "cell": f.cell,
+                        "detail": f.detail,
                     }
                     for f in post_leaks[:50]
                 ],
@@ -475,7 +472,7 @@ def create_official_see_export_run(
         artifact = CbamOfficialSeeExportArtifact(
             organization_id=organization_id,
             export_run_id=run.id,
-            artifact_type='XLSX',
+            artifact_type="XLSX",
             file_name=file_name,
             storage_uri=relative_uri(output_xlsx),
             mime_type=XLSX_MIME,
@@ -489,16 +486,16 @@ def create_official_see_export_run(
         run.output_sha256 = digest
         run.output_size_bytes = size
         run.generated_at = datetime.now(UTC)
-        run.failure_diagnostics = {'writeMeta': write_meta}
+        run.failure_diagnostics = {"writeMeta": write_meta}
         db.commit()
         write_audit_log(
             db,
             actor_user_id=user.id,
             organization_id=organization_id,
-            action='cbam.official_see_export.completed',
-            entity_type='cbam_official_see_export_run',
+            action="cbam.official_see_export.completed",
+            entity_type="cbam_official_see_export_run",
             entity_id=str(run.id),
-            metadata={'sha256': digest},
+            metadata={"sha256": digest},
             request_id=request_id,
             ip_address=ip_address,
             user_agent=user_agent,
@@ -511,26 +508,24 @@ def create_official_see_export_run(
         run.validation_status = VALIDATION_STATUS_FAILED
         run.formula_parity_status = PARITY_STATUS_ENGINE_UNAVAILABLE
         run.failure_diagnostics = {
-            'code': CODE_RECALCULATION_ENGINE_UNAVAILABLE,
-            'message': str(exc),
+            "code": CODE_RECALCULATION_ENGINE_UNAVAILABLE,
+            "message": str(exc),
         }
         run.generated_at = datetime.now(UTC)
         db.commit()
         raise BusinessRuleError(
             str(exc),
             code=CODE_RECALCULATION_ENGINE_UNAVAILABLE,
-            details=[
-                {'code': CODE_RECALCULATION_ENGINE_UNAVAILABLE, 'runId': str(run.id)}
-            ],
+            details=[{"code": CODE_RECALCULATION_ENGINE_UNAVAILABLE, "runId": str(run.id)}],
         ) from exc
     except BusinessRuleError as exc:
         run.generation_status = GENERATION_STATUS_FAILED
         run.validation_status = VALIDATION_STATUS_FAILED
         run.formula_parity_status = PARITY_STATUS_FAILED
         run.failure_diagnostics = {
-            'code': exc.code,
-            'message': exc.message,
-            'details': exc.details,
+            "code": exc.code,
+            "message": exc.message,
+            "details": exc.details,
         }
         run.generated_at = datetime.now(UTC)
         db.commit()
@@ -540,8 +535,8 @@ def create_official_see_export_run(
         run.validation_status = VALIDATION_STATUS_FAILED
         run.formula_parity_status = PARITY_STATUS_FAILED
         run.failure_diagnostics = {
-            'code': 'OFFICIAL_SEE_EXPORT_FAILED',
-            'message': str(exc),
+            "code": "OFFICIAL_SEE_EXPORT_FAILED",
+            "message": str(exc),
         }
         run.generated_at = datetime.now(UTC)
         db.commit()
@@ -598,7 +593,7 @@ def get_official_see_export_run(
     require_cbam_view(db, user, organization_id)
     row = db.get(CbamOfficialSeeExportRun, run_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('Official SEE export run not found.')
+        raise NotFoundError("Official SEE export run not found.")
     return _run_response(row)
 
 
@@ -611,7 +606,7 @@ def list_official_see_export_artifacts(
     require_cbam_view(db, user, organization_id)
     run = db.get(CbamOfficialSeeExportRun, run_id)
     if run is None or run.organization_id != organization_id:
-        raise NotFoundError('Official SEE export run not found.')
+        raise NotFoundError("Official SEE export run not found.")
     rows = list(
         db.execute(
             select(CbamOfficialSeeExportArtifact).where(
@@ -638,31 +633,31 @@ def download_official_see_export_artifact(
     require_cbam_view(db, user, organization_id)
     artifact = db.get(CbamOfficialSeeExportArtifact, artifact_id)
     if artifact is None or artifact.organization_id != organization_id:
-        raise NotFoundError('Official SEE export artifact not found.')
+        raise NotFoundError("Official SEE export artifact not found.")
     run = db.get(CbamOfficialSeeExportRun, artifact.export_run_id)
     if run is None or run.organization_id != organization_id:
-        raise NotFoundError('Official SEE export run not found.')
+        raise NotFoundError("Official SEE export run not found.")
     if run.generation_status != GENERATION_STATUS_COMPLETED:
         raise BusinessRuleError(
-            'Official SEE artifact is not downloadable (generation not completed).',
-            details=[{'code': 'OFFICIAL_SEE_ARTIFACT_NOT_READY'}],
+            "Official SEE artifact is not downloadable (generation not completed).",
+            details=[{"code": "OFFICIAL_SEE_ARTIFACT_NOT_READY"}],
         )
     if run.formula_parity_status != PARITY_STATUS_PASSED:
         raise BusinessRuleError(
-            'Official SEE artifact is not downloadable (formula parity not passed).',
-            details=[{'code': 'OFFICIAL_SEE_PARITY_NOT_PASSED'}],
+            "Official SEE artifact is not downloadable (formula parity not passed).",
+            details=[{"code": "OFFICIAL_SEE_PARITY_NOT_PASSED"}],
         )
     path = resolve_uri(artifact.storage_uri)
     if not path.is_file():
-        raise NotFoundError('Official SEE export artifact file missing.')
+        raise NotFoundError("Official SEE export artifact file missing.")
     write_audit_log(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.official_see_export.download',
-        entity_type='cbam_official_see_export_artifact',
+        action="cbam.official_see_export.download",
+        entity_type="cbam_official_see_export_artifact",
         entity_id=str(artifact.id),
-        metadata={'runId': str(run.id)},
+        metadata={"runId": str(run.id)},
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,

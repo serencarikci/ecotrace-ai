@@ -27,8 +27,8 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-SOURCE_ACTIVITY = 'ACTIVITY_RECORD'
-SOURCE_PURCHASED = 'PURCHASED_INPUT_RECORD'
+SOURCE_ACTIVITY = "ACTIVITY_RECORD"
+SOURCE_PURCHASED = "PURCHASED_INPUT_RECORD"
 
 
 class AllocationResultResponse(CamelModel):
@@ -57,7 +57,7 @@ def _to_response(row: CbamAllocationResult) -> AllocationResultResponse:
 def _get_rule(db: Session, organization_id: uuid.UUID, rule_id: uuid.UUID) -> CbamAllocationRule:
     row = db.get(CbamAllocationRule, rule_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM allocation rule not found.')
+        raise NotFoundError("CBAM allocation rule not found.")
     return row
 
 
@@ -66,17 +66,17 @@ def _get_result(
 ) -> CbamAllocationResult:
     row = db.get(CbamAllocationResult, result_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM allocation result not found.')
+        raise NotFoundError("CBAM allocation result not found.")
     return row
 
 
 def _require_active_rule(rule: CbamAllocationRule) -> None:
-    if rule.status == 'ARCHIVED':
-        raise BusinessRuleError('Archived allocation rules cannot be used for new allocations.')
-    if rule.status != 'ACTIVE':
-        raise BusinessRuleError('Allocation rule must be ACTIVE before normal allocation.')
+    if rule.status == "ARCHIVED":
+        raise BusinessRuleError("Archived allocation rules cannot be used for new allocations.")
+    if rule.status != "ACTIVE":
+        raise BusinessRuleError("Allocation rule must be ACTIVE before normal allocation.")
     if rule.allocation_ratio is None:
-        raise BusinessRuleError('ACTIVE allocation rule is missing allocationRatio.')
+        raise BusinessRuleError("ACTIVE allocation rule is missing allocationRatio.")
 
 
 def _resolve_activity_source(
@@ -84,13 +84,13 @@ def _resolve_activity_source(
 ) -> tuple[Decimal, str]:
     row = db.get(CbamActivityRecord, activity_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM activity record not found.')
-    if row.status == 'archived':
-        raise BusinessRuleError('Archived activity records cannot be allocated.')
+        raise NotFoundError("CBAM activity record not found.")
+    if row.status == "archived":
+        raise BusinessRuleError("Archived activity records cannot be allocated.")
     if row.reporting_period_binding_id != rule.reporting_period_binding_id:
-        raise ValidationAppError('Activity record is outside the allocation rule reporting period.')
+        raise ValidationAppError("Activity record is outside the allocation rule reporting period.")
     if row.installation_profile_id != rule.installation_profile_id:
-        raise ValidationAppError('Activity record installation does not match the allocation rule.')
+        raise ValidationAppError("Activity record installation does not match the allocation rule.")
     return row.quantity, row.unit
 
 
@@ -99,25 +99,23 @@ def _resolve_purchased_source(
 ) -> tuple[Decimal, str]:
     row = db.get(CbamPurchasedInputRecord, input_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM purchased input record not found.')
-    if row.status == 'archived':
-        raise BusinessRuleError('Archived purchased input records cannot be allocated.')
+        raise NotFoundError("CBAM purchased input record not found.")
+    if row.status == "archived":
+        raise BusinessRuleError("Archived purchased input records cannot be allocated.")
     if row.reporting_period_binding_id != rule.reporting_period_binding_id:
         raise ValidationAppError(
-            'Purchased input record is outside the allocation rule reporting period.'
+            "Purchased input record is outside the allocation rule reporting period."
         )
     if row.installation_profile_id != rule.installation_profile_id:
-        raise ValidationAppError(
-            'Purchased input installation does not match the allocation rule.'
-        )
+        raise ValidationAppError("Purchased input installation does not match the allocation rule.")
     if row.consumed_quantity is None or row.consumed_unit is None:
         raise BusinessRuleError(
-            'Purchased input allocation requires an explicit consumedQuantity '
-            '(purchased quantity is not substituted).',
-            details=[{'code': 'CONSUMED_QUANTITY_REQUIRED'}],
+            "Purchased input allocation requires an explicit consumedQuantity "
+            "(purchased quantity is not substituted).",
+            details=[{"code": "CONSUMED_QUANTITY_REQUIRED"}],
         )
     if row.consumed_quantity <= 0:
-        raise ValidationAppError('consumedQuantity must be greater than zero for allocation.')
+        raise ValidationAppError("consumedQuantity must be greater than zero for allocation.")
     return row.consumed_quantity, row.consumed_unit
 
 
@@ -197,21 +195,21 @@ def _persist_result(
         action=audit_action,
         actor_user_id=user.id,
         organization_id=rule.organization_id,
-        entity_type='cbam_allocation_result',
+        entity_type="cbam_allocation_result",
         entity_id=str(result.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'ruleId': str(rule.id),
-            'sourceId': str(source_id),
-            'sourceType': source_type,
-            'method': rule.allocation_method,
-            'ratio': str(rule.allocation_ratio),
-            'sourceQuantity': str(source_quantity),
-            'allocatedQuantity': str(allocated),
-            'unit': source_unit,
-            'calculationVersion': CALCULATION_VERSION,
+            "ruleId": str(rule.id),
+            "sourceId": str(source_id),
+            "sourceType": source_type,
+            "method": rule.allocation_method,
+            "ratio": str(rule.allocation_ratio),
+            "sourceQuantity": str(source_quantity),
+            "allocatedQuantity": str(allocated),
+            "unit": source_unit,
+            "calculationVersion": CALCULATION_VERSION,
         },
     )
     return result
@@ -244,7 +242,7 @@ def allocate_activity_record(
         source_id=activity_record_id,
         source_quantity=source_quantity,
         source_unit=source_unit,
-        audit_action='cbam.allocation.executed',
+        audit_action="cbam.allocation.executed",
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
@@ -281,7 +279,7 @@ def allocate_purchased_input(
         source_id=input_record_id,
         source_quantity=source_quantity,
         source_unit=source_unit,
-        audit_action='cbam.allocation.executed',
+        audit_action="cbam.allocation.executed",
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
@@ -304,7 +302,7 @@ def recalculate_allocation_result(
     require_cbam_configure(db, user, organization_id)
     previous = _get_result(db, organization_id, result_id)
     if not previous.is_current:
-        raise BusinessRuleError('Only current allocation results can be recalculated.')
+        raise BusinessRuleError("Only current allocation results can be recalculated.")
     rule = _get_rule(db, organization_id, previous.allocation_rule_id)
     binding = get_binding_for_org(db, organization_id, rule.reporting_period_binding_id)
     require_writable_binding(binding)
@@ -318,7 +316,9 @@ def recalculate_allocation_result(
             db, organization_id, rule, previous.source_id
         )
     else:
-        raise BusinessRuleError(f'Unsupported source type for recalculation: {previous.source_type}')
+        raise BusinessRuleError(
+            f"Unsupported source type for recalculation: {previous.source_type}"
+        )
     result = _persist_result(
         db,
         user=user,
@@ -327,7 +327,7 @@ def recalculate_allocation_result(
         source_id=previous.source_id,
         source_quantity=source_quantity,
         source_unit=source_unit,
-        audit_action='cbam.allocation.recalculated',
+        audit_action="cbam.allocation.recalculated",
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,

@@ -41,19 +41,27 @@ def _demo_org(db):
 
 
 def _org_admin(db):
-    return db.execute(select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")).scalar_one()
+    return db.execute(
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
+    ).scalar_one()
 
 
 def _viewer(db):
-    return db.execute(select(User).where(User.normalized_email == "viewer@ecotrace.dev")).scalar_one()
+    return db.execute(
+        select(User).where(User.normalized_email == "viewer@ecotrace.dev")
+    ).scalar_one()
 
 
 def _facility(db, org_id: uuid.UUID) -> Facility:
-    return db.execute(select(Facility).where(Facility.organization_id == org_id).limit(1)).scalar_one()
+    return db.execute(
+        select(Facility).where(Facility.organization_id == org_id).limit(1)
+    ).scalar_one()
 
 
 def _product(db, org_id: uuid.UUID) -> Product:
-    return db.execute(select(Product).where(Product.organization_id == org_id).limit(1)).scalar_one()
+    return db.execute(
+        select(Product).where(Product.organization_id == org_id).limit(1)
+    ).scalar_one()
 
 
 def test_check_row_version_conflict() -> None:

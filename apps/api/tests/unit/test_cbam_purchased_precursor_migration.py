@@ -8,40 +8,40 @@ from sqlalchemy import text
 
 MIGRATION = (
     Path(__file__).resolve().parents[2]
-    / 'src'
-    / 'ecotrace'
-    / 'db'
-    / 'migrations'
-    / 'versions'
-    / '0026_cbam_purchased_precursor.py'
+    / "src"
+    / "ecotrace"
+    / "db"
+    / "migrations"
+    / "versions"
+    / "0026_cbam_purchased_precursor.py"
 )
 
 PRECURSOR_INDEXES = {
-    'ix_cbam_purch_prec_org',
-    'ix_cbam_purch_prec_org_binding',
-    'ix_cbam_purch_prec_status',
-    'ix_cbam_purch_prec_supplier',
-    'ix_cbam_purch_prec_cn',
+    "ix_cbam_purch_prec_org",
+    "ix_cbam_purch_prec_org_binding",
+    "ix_cbam_purch_prec_status",
+    "ix_cbam_purch_prec_supplier",
+    "ix_cbam_purch_prec_cn",
 }
 DEFAULT_VALUE_INDEXES = {
-    'ix_cbam_precursor_dv_values_dataset',
-    'ix_cbam_precursor_dv_values_lookup',
-    'ix_cbam_precursor_dv_values_country_cn',
+    "ix_cbam_precursor_dv_values_dataset",
+    "ix_cbam_precursor_dv_values_lookup",
+    "ix_cbam_precursor_dv_values_country_cn",
 }
 
 
 def test_migration_0026_is_chained_and_creates_all_phase_10a_tables() -> None:
-    source = MIGRATION.read_text(encoding='utf-8')
+    source = MIGRATION.read_text(encoding="utf-8")
     assert "revision: str = '0026_cbam_purchased_precursor'" in source
     assert "down_revision: str | None = '0025_cbam_production_process'" in source
     for table in (
-        'cbam_precursor_default_datasets',
-        'cbam_precursor_default_values',
-        'cbam_purchased_precursors',
-        'cbam_purchased_precursor_product_uses',
+        "cbam_precursor_default_datasets",
+        "cbam_precursor_default_values",
+        "cbam_purchased_precursors",
+        "cbam_purchased_precursor_product_uses",
     ):
-        assert f'CREATE TABLE {table}' in source
-        assert f'DROP TABLE IF EXISTS {table}' in source
+        assert f"CREATE TABLE {table}" in source
+        assert f"DROP TABLE IF EXISTS {table}" in source
 
 
 def test_phase_10a_tables_match_the_orm_metadata(seeded_db) -> None:
@@ -62,10 +62,10 @@ WHERE table_schema = 'public'
         ).scalars()
     )
     assert {
-        'cbam_precursor_default_datasets',
-        'cbam_precursor_default_values',
-        'cbam_purchased_precursors',
-        'cbam_purchased_precursor_product_uses',
+        "cbam_precursor_default_datasets",
+        "cbam_precursor_default_values",
+        "cbam_purchased_precursors",
+        "cbam_purchased_precursor_product_uses",
     } <= tables
 
     constraints = set(
@@ -80,10 +80,10 @@ WHERE conrelid = 'cbam_purchased_precursors'::regclass
     )
     # The ORM naming convention prefixes the table name onto declared constraint names.
     for suffix in (
-        'ck_cbam_purch_prec_status',
-        'ck_cbam_purch_prec_mode',
-        'ck_cbam_purch_prec_qty_nonneg',
-        'ck_cbam_purch_prec_non_cbam_nonneg',
+        "ck_cbam_purch_prec_status",
+        "ck_cbam_purch_prec_mode",
+        "ck_cbam_purch_prec_qty_nonneg",
+        "ck_cbam_purch_prec_non_cbam_nonneg",
     ):
         assert any(name.endswith(suffix) for name in constraints), suffix
 
@@ -97,9 +97,7 @@ WHERE conrelid = 'cbam_purchased_precursor_product_uses'::regclass
             )
         ).scalars()
     )
-    assert any(
-        name.endswith('uq_cbam_purch_prec_use_target') for name in use_constraints
-    )
+    assert any(name.endswith("uq_cbam_purch_prec_use_target") for name in use_constraints)
 
 
 def test_precursor_index_migration_round_trip(seeded_db) -> None:
@@ -122,7 +120,7 @@ WHERE tablename IN (
 
     def downgrade() -> None:
         for name in PRECURSOR_INDEXES | DEFAULT_VALUE_INDEXES:
-            seeded_db.execute(text(f'DROP INDEX IF EXISTS {name}'))
+            seeded_db.execute(text(f"DROP INDEX IF EXISTS {name}"))
         seeded_db.flush()
 
     def upgrade() -> None:

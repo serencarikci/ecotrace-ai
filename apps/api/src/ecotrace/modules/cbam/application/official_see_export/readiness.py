@@ -116,9 +116,9 @@ def assess_official_see_readiness(
     blocking: list[str] = []
     warnings: list[str] = []
     snapshot_ids: dict[str, str | None] = {
-        'peeResultId': None,
-        'deaResultId': None,
-        'ieaResultId': None,
+        "peeResultId": None,
+        "deaResultId": None,
+        "ieaResultId": None,
     }
 
     try:
@@ -153,9 +153,9 @@ def assess_official_see_readiness(
         # Fall back to any org installation for capacity messaging.
         installation_ids = set(
             db.execute(
-                select(CbamInstallationProfile.id).where(
-                    CbamInstallationProfile.organization_id == organization_id
-                ).limit(2)
+                select(CbamInstallationProfile.id)
+                .where(CbamInstallationProfile.organization_id == organization_id)
+                .limit(2)
             )
             .scalars()
             .all()
@@ -176,17 +176,15 @@ def assess_official_see_readiness(
     if dea.current_result_id is None or dea.current_is_stale:
         blocking.append(CODE_DEA_MISSING_OR_STALE)
     else:
-        snapshot_ids['deaResultId'] = str(dea.current_result_id)
+        snapshot_ids["deaResultId"] = str(dea.current_result_id)
 
     iea = get_indirect_emissions_allocation_summary(db, user, organization_id, binding_id)
     if iea.current_result_id is None or iea.current_is_stale:
         blocking.append(CODE_IEA_MISSING_OR_STALE)
     else:
-        snapshot_ids['ieaResultId'] = str(iea.current_result_id)
+        snapshot_ids["ieaResultId"] = str(iea.current_result_id)
 
-    process_summary = get_production_process_binding_summary(
-        db, user, organization_id, binding_id
-    )
+    process_summary = get_production_process_binding_summary(db, user, organization_id, binding_id)
     active_ids = {p.id for p in active_processes}
     ready_process_ids = {
         r.process_id
@@ -230,15 +228,15 @@ def assess_official_see_readiness(
         binding_id,
         methodology_code=DEFAULT_METHODOLOGY_CODE,
     )
-    if pee.status != 'READY' or pee.current_result_id is None or pee.current_is_stale:
+    if pee.status != "READY" or pee.current_result_id is None or pee.current_is_stale:
         blocking.append(CODE_PEE_V2_MISSING_OR_STALE)
     else:
-        snapshot_ids['peeResultId'] = str(pee.current_result_id)
+        snapshot_ids["peeResultId"] = str(pee.current_result_id)
 
     flow_codes = {
         CODE_INTERNAL_PRODUCT_FLOW_INVALID,
         CODE_INTERNAL_PRODUCT_FLOW_SELF_REFERENCE,
-        'INTERNAL_FLOW_INVALID',
+        "INTERNAL_FLOW_INVALID",
     }
     if any(code in flow_codes for code in pee.blocking_issue_codes):
         blocking.append(CODE_INTERNAL_FLOW_INVALID)
@@ -287,11 +285,11 @@ def get_official_see_export_readiness(
         template_version=TEMPLATE_VERSION,
         template_sha256=TEMPLATE_SHA256,
         capacity={
-            'installations': assessment.capacity_usage.installations,
-            'goods': assessment.capacity_usage.goods,
-            'processes': assessment.capacity_usage.processes,
-            'precursors': assessment.capacity_usage.precursors,
-            'fuelActivities': assessment.capacity_usage.fuel_activities,
+            "installations": assessment.capacity_usage.installations,
+            "goods": assessment.capacity_usage.goods,
+            "processes": assessment.capacity_usage.processes,
+            "precursors": assessment.capacity_usage.precursors,
+            "fuelActivities": assessment.capacity_usage.fuel_activities,
         },
         soffice_available=soffice_available(),
         snapshot_ids=assessment.snapshot_ids,

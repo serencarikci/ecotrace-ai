@@ -49,9 +49,9 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.modules.organizations.infrastructure.models import Organization
 from ecotrace.modules.reporting_periods.infrastructure.models import ReportingPeriod
 
-JANUARY_SM3 = Decimal('105437.03007518797')
-JANUARY_SM3_PERSISTED = Decimal('105437.03007519')
-DENSITY = Decimal('0.67')
+JANUARY_SM3 = Decimal("105437.03007518797")
+JANUARY_SM3_PERSISTED = Decimal("105437.03007519")
+DENSITY = Decimal("0.67")
 
 
 def _org(db):
@@ -60,18 +60,20 @@ def _org(db):
 
 def _admin(db):
     return db.execute(
-        select(User).where(User.normalized_email == 'orgadmin@ecotrace.dev')
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
     ).scalar_one()
 
 
 def _viewer(db):
     return db.execute(
-        select(User).where(User.normalized_email == 'viewer@ecotrace.dev')
+        select(User).where(User.normalized_email == "viewer@ecotrace.dev")
     ).scalar_one()
 
 
 def _facility(db, org_id):
-    return db.execute(select(Facility).where(Facility.organization_id == org_id).limit(1)).scalar_one()
+    return db.execute(
+        select(Facility).where(Facility.organization_id == org_id).limit(1)
+    ).scalar_one()
 
 
 def _setup(db, admin, org):
@@ -82,18 +84,18 @@ def _setup(db, admin, org):
         org.id,
         InstallationCreate(
             facility_id=facility.id,
-            code=f'SCCOV-{uuid.uuid4().hex[:8]}',
-            name='SC Coverage Installation',
+            code=f"SCCOV-{uuid.uuid4().hex[:8]}",
+            name="SC Coverage Installation",
         ),
     )
     period = ReportingPeriod(
         organization_id=org.id,
-        code=f'SCCOV-{uuid.uuid4().hex[:6]}',
-        name='SC Coverage Period',
-        period_type='custom',
+        code=f"SCCOV-{uuid.uuid4().hex[:6]}",
+        name="SC Coverage Period",
+        period_type="custom",
         start_date=date(2024, 1, 1),
         end_date=date(2024, 3, 31),
-        status='open',
+        status="open",
     )
     db.add(period)
     db.flush()
@@ -121,7 +123,7 @@ def _create_ng_activity(
     installation,
     *,
     quantity=JANUARY_SM3,
-    unit='Sm3',
+    unit="Sm3",
     activity_date=date(2024, 1, 15),
 ):
     return activity_record_service.create_activity_record(
@@ -131,10 +133,10 @@ def _create_ng_activity(
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='NATURAL_GAS',
+            activity_type="NATURAL_GAS",
             quantity=quantity,
             unit=unit,
-            data_source_type='PRIMARY',
+            data_source_type="PRIMARY",
             activity_date=activity_date,
         ),
     )
@@ -148,10 +150,10 @@ def _exec(db, admin, org, binding, activity, *, density=DENSITY):
             organization_id=org.id,
             reporting_period_binding_id=binding.id,
             activity_record_id=activity.id,
-            fuel_code='NATURAL_GAS',
+            fuel_code="NATURAL_GAS",
             reference_date=activity.activity_date or date(2024, 1, 15),
             density_value=density,
-            density_unit='kg/Sm3',
+            density_unit="kg/Sm3",
             requested_by_user_id=admin.id,
         ),
     )
@@ -183,7 +185,7 @@ def test_missing_current_stale_coverage_statuses(seeded_db) -> None:
     assert missing.total_items == 1
     assert missing.items[0].coverage_status == COVERAGE_MISSING
     assert missing.items[0].current_result_id is None
-    assert 'MISSING_CALCULATION' in missing.items[0].blocking_issue_codes
+    assert "MISSING_CALCULATION" in missing.items[0].blocking_issue_codes
 
     executed = _exec(seeded_db, admin, org, binding, activity)
     current = list_stationary_combustion_activity_coverage_for_binding(
@@ -195,7 +197,7 @@ def test_missing_current_stale_coverage_statuses(seeded_db) -> None:
 
     row = seeded_db.get(CbamActivityRecord, activity.id)
     assert row is not None
-    row.quantity = JANUARY_SM3_PERSISTED + Decimal('1')
+    row.quantity = JANUARY_SM3_PERSISTED + Decimal("1")
     seeded_db.flush()
     stale = list_stationary_combustion_activity_coverage_for_binding(
         seeded_db, admin, org.id, binding.id, page=1, page_size=20
@@ -210,7 +212,7 @@ def test_history_recalc_keeps_newest_current(seeded_db) -> None:
     binding, installation, _period = _setup(seeded_db, admin, org)
     activity = _create_ng_activity(seeded_db, admin, org, binding, installation)
     first = _exec(seeded_db, admin, org, binding, activity)
-    second = _exec(seeded_db, admin, org, binding, activity, density=Decimal('0.68'))
+    second = _exec(seeded_db, admin, org, binding, activity, density=Decimal("0.68"))
     coverage = list_stationary_combustion_activity_coverage_for_binding(
         seeded_db, admin, org.id, binding.id, page=1, page_size=20
     )
@@ -231,10 +233,10 @@ def test_ineligible_activity_excluded(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='ELECTRICITY',
-            quantity=Decimal('10'),
-            unit='kWh',
-            data_source_type='PRIMARY',
+            activity_type="ELECTRICITY",
+            quantity=Decimal("10"),
+            unit="kWh",
+            data_source_type="PRIMARY",
             activity_date=date(2024, 1, 10),
         ),
     )
@@ -242,19 +244,19 @@ def test_ineligible_activity_excluded(seeded_db) -> None:
         seeded_db, admin, org.id, binding.id, page=1, page_size=20
     )
     assert coverage.total_items == 1
-    assert coverage.items[0].fuel_code == 'NATURAL_GAS'
+    assert coverage.items[0].fuel_code == "NATURAL_GAS"
 
 
 @pytest.mark.parametrize(
-    ('mutate', 'reason'),
+    ("mutate", "reason"),
     [
         (
-            lambda row: setattr(row, 'quantity', JANUARY_SM3_PERSISTED + Decimal('2')),
+            lambda row: setattr(row, "quantity", JANUARY_SM3_PERSISTED + Decimal("2")),
             STALE_REASON_QUANTITY_CHANGED,
         ),
-        (lambda row: setattr(row, 'unit', 'm3'), STALE_REASON_UNIT_CHANGED),
-        (lambda row: setattr(row, 'activity_date', date(2024, 2, 1)), STALE_REASON_DATE_CHANGED),
-        (lambda row: setattr(row, 'activity_type', 'DIESEL'), STALE_REASON_FUEL_TYPE_CHANGED),
+        (lambda row: setattr(row, "unit", "m3"), STALE_REASON_UNIT_CHANGED),
+        (lambda row: setattr(row, "activity_date", date(2024, 2, 1)), STALE_REASON_DATE_CHANGED),
+        (lambda row: setattr(row, "activity_type", "DIESEL"), STALE_REASON_FUEL_TYPE_CHANGED),
     ],
 )
 def test_stale_reasons(seeded_db, mutate, reason) -> None:
@@ -268,26 +270,26 @@ def test_stale_reasons(seeded_db, mutate, reason) -> None:
     if reason == STALE_REASON_FUEL_TYPE_CHANGED:
         diesel = seeded_db.execute(
             select(CbamStationaryCombustionFuel).where(
-                CbamStationaryCombustionFuel.code == 'DIESEL'
+                CbamStationaryCombustionFuel.code == "DIESEL"
             )
         ).scalar_one_or_none()
         if diesel is None:
             seeded_db.add(
                 CbamStationaryCombustionFuel(
-                    code='DIESEL',
-                    name='Diesel',
-                    input_basis='MASS',
-                    default_activity_unit='t',
-                    status='ACTIVE',
+                    code="DIESEL",
+                    name="Diesel",
+                    input_basis="MASS",
+                    default_activity_unit="t",
+                    status="ACTIVE",
                 )
             )
             seeded_db.flush()
         else:
-            diesel.status = 'ACTIVE'
+            diesel.status = "ACTIVE"
             seeded_db.flush()
     mutate(row)
     if reason == STALE_REASON_FUEL_TYPE_CHANGED:
-        row.unit = 't'
+        row.unit = "t"
     seeded_db.flush()
     coverage = list_stationary_combustion_activity_coverage_for_binding(
         seeded_db, admin, org.id, binding.id, page=1, page_size=20
@@ -348,16 +350,19 @@ def test_coverage_reconciles_with_summary(seeded_db) -> None:
     _exec(seeded_db, admin, org, binding, a2)
     row = seeded_db.get(CbamActivityRecord, a2.id)
     assert row is not None
-    row.quantity = JANUARY_SM3_PERSISTED + Decimal('9')
+    row.quantity = JANUARY_SM3_PERSISTED + Decimal("9")
     seeded_db.flush()
 
     items = _coverage_all(seeded_db, admin, org, binding, page_size=1)
-    summary = get_stationary_combustion_summary_for_binding(
-        seeded_db, admin, org.id, binding.id
-    )
+    summary = get_stationary_combustion_summary_for_binding(seeded_db, admin, org.id, binding.id)
     assert len(items) == summary.eligible_activity_count == 3
-    assert sum(1 for i in items if i.coverage_status == COVERAGE_MISSING) == summary.missing_result_count
-    assert sum(1 for i in items if i.coverage_status == COVERAGE_STALE) == summary.stale_result_count
+    assert (
+        sum(1 for i in items if i.coverage_status == COVERAGE_MISSING)
+        == summary.missing_result_count
+    )
+    assert (
+        sum(1 for i in items if i.coverage_status == COVERAGE_STALE) == summary.stale_result_count
+    )
     assert (
         sum(1 for i in items if i.coverage_status == COVERAGE_CURRENT)
         == summary.valid_current_result_count
@@ -410,10 +415,10 @@ def test_inactive_fuel_activity_excluded(seeded_db) -> None:
     activity = _create_ng_activity(seeded_db, admin, org, binding, installation)
     fuel = seeded_db.execute(
         select(CbamStationaryCombustionFuel).where(
-            CbamStationaryCombustionFuel.code == 'NATURAL_GAS'
+            CbamStationaryCombustionFuel.code == "NATURAL_GAS"
         )
     ).scalar_one()
-    fuel.status = 'ARCHIVED'
+    fuel.status = "ARCHIVED"
     seeded_db.flush()
     coverage = list_stationary_combustion_activity_coverage_for_binding(
         seeded_db, admin, org.id, binding.id, page=1, page_size=20
@@ -449,12 +454,8 @@ def test_ordering_uses_id_tie_breaker(seeded_db) -> None:
     admin = _admin(seeded_db)
     binding, installation, _period = _setup(seeded_db, admin, org)
     same_day = date(2024, 1, 20)
-    a1 = _create_ng_activity(
-        seeded_db, admin, org, binding, installation, activity_date=same_day
-    )
-    a2 = _create_ng_activity(
-        seeded_db, admin, org, binding, installation, activity_date=same_day
-    )
+    a1 = _create_ng_activity(seeded_db, admin, org, binding, installation, activity_date=same_day)
+    a2 = _create_ng_activity(seeded_db, admin, org, binding, installation, activity_date=same_day)
     coverage = list_stationary_combustion_activity_coverage_for_binding(
         seeded_db, admin, org.id, binding.id, page=1, page_size=20
     )

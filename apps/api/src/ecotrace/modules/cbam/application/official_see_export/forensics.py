@@ -33,8 +33,8 @@ def collect_formula_map(wb: Workbook) -> dict[str, str]:
         for row in ws.iter_rows():
             for cell in row:
                 value = cell.value
-                if isinstance(value, str) and value.startswith('='):
-                    formulas[f'{ws.title}!{cell.coordinate}'] = value
+                if isinstance(value, str) and value.startswith("="):
+                    formulas[f"{ws.title}!{cell.coordinate}"] = value
     return formulas
 
 
@@ -46,10 +46,10 @@ def inspect_workbook(path: Path) -> WorkbookForensics:
         fcount = 0
         for row in ws.iter_rows():
             for cell in row:
-                if isinstance(cell.value, str) and cell.value.startswith('='):
+                if isinstance(cell.value, str) and cell.value.startswith("="):
                     fcount += 1
         total += fcount
-        dv = getattr(ws, 'data_validations', None)
+        dv = getattr(ws, "data_validations", None)
         dv_count = len(dv.dataValidation) if dv is not None else 0
         sheets.append(
             SheetForensics(
@@ -80,17 +80,17 @@ def scan_string_values(wb: Workbook, needles: tuple[str, ...]) -> list[dict[str,
         for row in ws.iter_rows():
             for cell in row:
                 value = cell.value
-                if not isinstance(value, str) or value.startswith('='):
+                if not isinstance(value, str) or value.startswith("="):
                     continue
                 low = value.lower()
                 for needle, needle_low in zip(needles, lower_needles, strict=True):
                     if needle_low in low or value == needle:
                         hits.append(
                             {
-                                'sheet': ws.title,
-                                'cell': cell.coordinate,
-                                'value': value,
-                                'needle': needle,
+                                "sheet": ws.title,
+                                "cell": cell.coordinate,
+                                "value": value,
+                                "needle": needle,
                             }
                         )
                         break

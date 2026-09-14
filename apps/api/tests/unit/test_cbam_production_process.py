@@ -56,16 +56,13 @@ from ecotrace.modules.organizations.infrastructure.models import Organization
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _DEFAULT_SEE_WORKBOOK = (
     _REPO_ROOT
-    / 'local-reference'
-    / (
-        'CBAM SEE V2.1_Example Steel 3 Screws and nuts_final '
-        'Dosyasının Kopyası- (1) (1).xlsx'
-    )
+    / "local-reference"
+    / ("CBAM SEE V2.1_Example Steel 3 Screws and nuts_final Dosyasının Kopyası- (1) (1).xlsx")
 )
-WORKBOOK = Path(os.environ.get('CBAM_SEE_WORKBOOK_PATH', str(_DEFAULT_SEE_WORKBOOK)))
+WORKBOOK = Path(os.environ.get("CBAM_SEE_WORKBOOK_PATH", str(_DEFAULT_SEE_WORKBOOK)))
 
 
-@pytest.mark.skipif(not WORKBOOK.is_file(), reason='CBAM SEE workbook not available')
+@pytest.mark.skipif(not WORKBOOK.is_file(), reason="CBAM SEE workbook not available")
 def test_workbook_d_processes_field_map_and_lists() -> None:
     import hashlib
 
@@ -74,18 +71,21 @@ def test_workbook_d_processes_field_map_and_lists() -> None:
     digest = hashlib.sha256(WORKBOOK.read_bytes()).hexdigest()
     assert digest == WORKBOOK_SHA256
     wb = load_workbook(WORKBOOK, data_only=False)
-    assert 'D_Processes' in wb.sheetnames
-    ws = wb['D_Processes']
-    assert ws['L24'].value == '=IF(G11="","",SUM(L16:L23))'
-    assert 'SUM(L27,L32:L41)' in str(ws['L42'].value)
-    assert 'CONST_EFNatGas' in str(ws['T62'].value)
-    assert 'L57*L58' in str(ws['T58'].value).replace(' ', '')
-    tr = wb['Translations']
-    assert tr.cell(1875, 3).value == 'Mostly measurements & analyses'
-    assert 'produced_quantity_total' in PROCESS_FIELD_MAP
+    assert "D_Processes" in wb.sheetnames
+    ws = wb["D_Processes"]
+    assert ws["L24"].value == '=IF(G11="","",SUM(L16:L23))'
+    assert "SUM(L27,L32:L41)" in str(ws["L42"].value)
+    assert "CONST_EFNatGas" in str(ws["T62"].value)
+    assert "L57*L58" in str(ws["T58"].value).replace(" ", "")
+    tr = wb["Translations"]
+    assert tr.cell(1875, 3).value == "Mostly measurements & analyses"
+    assert "produced_quantity_total" in PROCESS_FIELD_MAP
     codes = data_quality_codes()
-    assert 'MOSTLY_MEASUREMENTS_AND_ANALYSES' in codes
-    assert any(lst.list_code == DATA_QUALITY_LIST_CODE for lst in list_production_process_controlled_lists())
+    assert "MOSTLY_MEASUREMENTS_AND_ANALYSES" in codes
+    assert any(
+        lst.list_code == DATA_QUALITY_LIST_CODE
+        for lst in list_production_process_controlled_lists()
+    )
     wb.close()
 
 
@@ -103,15 +103,15 @@ def test_conventional_supported_and_disabled_methods_rejected(seeded_db) -> None
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='P1',
+            name="P1",
             calculation_method=METHOD_CONVENTIONAL,
             product_profile_version_id=profile.id,
-            produced_quantity=Decimal('10'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('10'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("10"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("10"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
@@ -127,7 +127,7 @@ def test_conventional_supported_and_disabled_methods_rejected(seeded_db) -> None
                 binding.id,
                 ProductionProcessCreate(
                     installation_profile_id=installation.id,
-                    name='Bad',
+                    name="Bad",
                     calculation_method=method,
                 ),
             )
@@ -147,13 +147,13 @@ def test_same_org_profile_and_cross_org_rejected(seeded_db) -> None:
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='P1',
+            name="P1",
             product_profile_version_id=profile.id,
         ),
     )
     assert process.product_profile_version_id == profile.id
 
-    other = Organization(name='Other Org', slug=f'other-{uuid.uuid4().hex[:8]}', is_active=True)
+    other = Organization(name="Other Org", slug=f"other-{uuid.uuid4().hex[:8]}", is_active=True)
     db.add(other)
     db.flush()
     foreign_product = ensure_org_product(db, other.id)
@@ -161,11 +161,11 @@ def test_same_org_profile_and_cross_org_rejected(seeded_db) -> None:
         organization_id=other.id,
         product_id=foreign_product.id,
         version=1,
-        status='active',
+        status="active",
         classification_ready=True,
-        product_name='Foreign',
-        cn_normalized_code='73181595',
-        cn_display_code='7318 15 95',
+        product_name="Foreign",
+        cn_normalized_code="73181595",
+        cn_display_code="7318 15 95",
     )
     db.add(foreign)
     db.flush()
@@ -177,7 +177,7 @@ def test_same_org_profile_and_cross_org_rejected(seeded_db) -> None:
             binding.id,
             ProductionProcessCreate(
                 installation_profile_id=installation.id,
-                name='Cross',
+                name="Cross",
                 product_profile_version_id=foreign.id,
             ),
         )
@@ -190,7 +190,7 @@ def test_distribution_market_only_mixed_non_cbam_balance(seeded_db) -> None:
     binding, installation = setup_binding(db, user, organization)
     profile = create_active_ready_profile(db, user, organization.id)
     target = create_active_ready_profile(
-        db, user, organization.id, product=ensure_org_product(db, organization.id, code='TGT')
+        db, user, organization.id, product=ensure_org_product(db, organization.id, code="TGT")
     )
 
     p1 = production_process_service.create_production_process(
@@ -200,20 +200,20 @@ def test_distribution_market_only_mixed_non_cbam_balance(seeded_db) -> None:
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='MarketOnly',
+            name="MarketOnly",
             product_profile_version_id=profile.id,
-            produced_quantity=Decimal('39.34'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('39.34'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("39.34"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("39.34"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
     )
     assert p1.distribution.balance_status == BALANCE_BALANCED
-    assert p1.distribution.remaining_tonnes == Decimal('0')
+    assert p1.distribution.remaining_tonnes == Decimal("0")
     assert p1.distribution.all_to_market is True
 
     p2 = production_process_service.create_production_process(
@@ -223,14 +223,14 @@ def test_distribution_market_only_mixed_non_cbam_balance(seeded_db) -> None:
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Mixed',
+            name="Mixed",
             product_profile_version_id=profile.id,
-            produced_quantity=Decimal('100'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('40'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('10'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("100"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("40"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("10"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
@@ -243,16 +243,16 @@ def test_distribution_market_only_mixed_non_cbam_balance(seeded_db) -> None:
         p2.id,
         ProductUseCreate(
             target_product_profile_version_id=target.id,
-            quantity=Decimal('50'),
-            unit='t',
+            quantity=Decimal("50"),
+            unit="t",
         ),
     )
     detail = production_process_service.get_production_process(
         db, user, organization.id, binding.id, p2.id
     )
     assert detail.distribution.balance_status == BALANCE_BALANCED
-    assert detail.distribution.other_cbam_tonnes == Decimal('50')
-    assert detail.distribution.non_cbam_tonnes == Decimal('10')
+    assert detail.distribution.other_cbam_tonnes == Decimal("50")
+    assert detail.distribution.non_cbam_tonnes == Decimal("10")
 
 
 def test_unbalanced_draft_save_and_readiness_blocked(seeded_db) -> None:
@@ -269,21 +269,21 @@ def test_unbalanced_draft_save_and_readiness_blocked(seeded_db) -> None:
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Unbalanced',
+            name="Unbalanced",
             product_profile_version_id=profile.id,
-            produced_quantity=Decimal('100'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('60'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("100"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("60"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
     )
-    assert process.status == 'draft'
+    assert process.status == "draft"
     assert process.distribution.balance_status == BALANCE_UNBALANCED
-    assert process.distribution.remaining_tonnes == Decimal('40')
+    assert process.distribution.remaining_tonnes == Decimal("40")
     assert process.readiness.status == READINESS_UNBALANCED
     assert CODE_PRODUCT_DISTRIBUTION_UNBALANCED in process.readiness.blocking_issue_codes
 
@@ -295,10 +295,10 @@ def test_unbalanced_draft_save_and_readiness_blocked(seeded_db) -> None:
         process.id,
         ProductionProcessUpdate(
             row_version=process.row_version,
-            marketed_quantity=Decimal('70'),
+            marketed_quantity=Decimal("70"),
         ),
     )
-    assert updated.distribution.remaining_tonnes == Decimal('30')
+    assert updated.distribution.remaining_tonnes == Decimal("30")
     assert updated.readiness.status == READINESS_UNBALANCED
 
 
@@ -315,19 +315,19 @@ def test_decimal_unit_kg_to_tonnes_exact(seeded_db) -> None:
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Kg',
+            name="Kg",
             product_profile_version_id=profile.id,
-            produced_quantity=Decimal('1000'),
-            produced_quantity_unit='kg',
-            marketed_quantity=Decimal('1'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("1000"),
+            produced_quantity_unit="kg",
+            marketed_quantity=Decimal("1"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
     )
-    assert process.distribution.produced_tonnes == Decimal('1')
+    assert process.distribution.produced_tonnes == Decimal("1")
     assert process.distribution.balance_status == BALANCE_BALANCED
 
 
@@ -344,14 +344,14 @@ def test_allocation_missing_blocks_and_exported_electricity_readonly(seeded_db) 
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Alloc',
+            name="Alloc",
             product_profile_version_id=profile.id,
-            produced_quantity=Decimal('10'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('10'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("10"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("10"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
@@ -359,8 +359,8 @@ def test_allocation_missing_blocks_and_exported_electricity_readonly(seeded_db) 
     assert CODE_DIRECT_EMISSIONS_ALLOCATION_NOT_READY in process.readiness.blocking_issue_codes
     assert CODE_INDIRECT_EMISSIONS_ALLOCATION_NOT_READY in process.readiness.blocking_issue_codes
     assert process.direct_emissions_allocation.product_allocated_value is None
-    assert process.exported_electricity.source == 'purchased_electricity_current'
-    assert 'Not subtracted' in process.exported_electricity.note
+    assert process.exported_electricity.source == "purchased_electricity_current"
+    assert "Not subtracted" in process.exported_electricity.note
 
 
 def test_heat_and_waste_conditional_validation(seeded_db) -> None:
@@ -377,10 +377,10 @@ def test_heat_and_waste_conditional_validation(seeded_db) -> None:
             binding.id,
             ProductionProcessCreate(
                 installation_profile_id=installation.id,
-                name='HeatBad',
+                name="HeatBad",
                 has_measurable_heat=False,
-                heat_imported_quantity=Decimal('1'),
-                heat_imported_unit='TJ',
+                heat_imported_quantity=Decimal("1"),
+                heat_imported_unit="TJ",
             ),
         )
     assert CODE_HEAT_FIELDS_NOT_ALLOWED in str(heat_exc.value.details)
@@ -393,10 +393,10 @@ def test_heat_and_waste_conditional_validation(seeded_db) -> None:
             binding.id,
             ProductionProcessCreate(
                 installation_profile_id=installation.id,
-                name='WasteBad',
+                name="WasteBad",
                 has_waste_gas=False,
-                waste_gas_imported_quantity=Decimal('1'),
-                waste_gas_imported_unit='TJ',
+                waste_gas_imported_quantity=Decimal("1"),
+                waste_gas_imported_unit="TJ",
             ),
         )
     assert CODE_WASTE_GAS_FIELDS_NOT_ALLOWED in str(waste_exc.value.details)
@@ -408,28 +408,28 @@ def test_heat_and_waste_conditional_validation(seeded_db) -> None:
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='HeatOk',
+            name="HeatOk",
             has_measurable_heat=True,
-            heat_imported_quantity=Decimal('2'),
-            heat_imported_unit='TJ',
-            heat_exported_quantity=Decimal('0.5'),
-            heat_exported_unit='TJ',
-            heat_imported_ef=Decimal('56.1'),
-            heat_exported_ef=Decimal('56.1'),
-            heat_ef_unit='tCO2/TJ',
+            heat_imported_quantity=Decimal("2"),
+            heat_imported_unit="TJ",
+            heat_exported_quantity=Decimal("0.5"),
+            heat_exported_unit="TJ",
+            heat_imported_ef=Decimal("56.1"),
+            heat_exported_ef=Decimal("56.1"),
+            heat_ef_unit="tCO2/TJ",
             has_waste_gas=True,
-            waste_gas_imported_quantity=Decimal('1'),
-            waste_gas_imported_unit='TJ',
-            waste_gas_exported_quantity=Decimal('0'),
-            waste_gas_exported_unit='TJ',
+            waste_gas_imported_quantity=Decimal("1"),
+            waste_gas_imported_unit="TJ",
+            waste_gas_exported_quantity=Decimal("0"),
+            waste_gas_exported_unit="TJ",
         ),
     )
-    assert process.measurable_heat.calculation_status == 'CALCULATED'
-    assert process.measurable_heat.attributed_tco2 == Decimal('2') * Decimal('56.1') - Decimal(
-        '0.5'
-    ) * Decimal('56.1')
-    assert process.waste_gas.calculation_status == 'CALCULATED'
-    expected_wg = Decimal('1') * CONST_EF_NAT_GAS_TCO2_PER_TJ
+    assert process.measurable_heat.calculation_status == "CALCULATED"
+    assert process.measurable_heat.attributed_tco2 == Decimal("2") * Decimal("56.1") - Decimal(
+        "0.5"
+    ) * Decimal("56.1")
+    assert process.waste_gas.calculation_status == "CALCULATED"
+    expected_wg = Decimal("1") * CONST_EF_NAT_GAS_TCO2_PER_TJ
     assert process.waste_gas.attributed_tco2 == expected_wg
 
     cleared = production_process_service.update_production_process_draft(
@@ -461,8 +461,8 @@ def test_controlled_lists_and_invalid_dq_code(seeded_db) -> None:
             binding.id,
             ProductionProcessCreate(
                 installation_profile_id=installation.id,
-                name='DQ',
-                data_quality_code='NOT_A_REAL_CODE',
+                name="DQ",
+                data_quality_code="NOT_A_REAL_CODE",
             ),
         )
 
@@ -488,37 +488,37 @@ def test_empty_readiness_and_archive(seeded_db) -> None:
         process.id,
         ProductionProcessVersionRequest(row_version=process.row_version),
     )
-    assert archived.status == 'archived'
+    assert archived.status == "archived"
 
 
 def test_math_helpers_exact() -> None:
     bal = compute_distribution_balance(
-        produced_tonnes=Decimal('10'),
-        marketed_tonnes=Decimal('3'),
-        other_cbam_tonnes=Decimal('4'),
-        non_cbam_tonnes=Decimal('3'),
+        produced_tonnes=Decimal("10"),
+        marketed_tonnes=Decimal("3"),
+        other_cbam_tonnes=Decimal("4"),
+        non_cbam_tonnes=Decimal("3"),
     )
     assert bal.balance_status == BALANCE_BALANCED
     under = compute_distribution_balance(
-        produced_tonnes=Decimal('10'),
-        marketed_tonnes=Decimal('3'),
-        other_cbam_tonnes=Decimal('4'),
-        non_cbam_tonnes=Decimal('2'),
+        produced_tonnes=Decimal("10"),
+        marketed_tonnes=Decimal("3"),
+        other_cbam_tonnes=Decimal("4"),
+        non_cbam_tonnes=Decimal("2"),
     )
-    assert under.remaining_tonnes == Decimal('1')
+    assert under.remaining_tonnes == Decimal("1")
     assert under.balance_status == BALANCE_UNBALANCED
     heat = compute_measurable_heat_attribution(
         has_measurable_heat=True,
-        imported_tj=Decimal('1'),
-        exported_tj=Decimal('0'),
-        imported_ef=Decimal('10'),
-        exported_ef=Decimal('10'),
+        imported_tj=Decimal("1"),
+        exported_tj=Decimal("0"),
+        imported_ef=Decimal("10"),
+        exported_ef=Decimal("10"),
     )
-    assert heat.attributed_tco2 == Decimal('10')
+    assert heat.attributed_tco2 == Decimal("10")
     waste = compute_waste_gas_attribution(
         has_waste_gas=True,
-        imported_tj=Decimal('1'),
-        exported_tj=Decimal('1'),
+        imported_tj=Decimal("1"),
+        exported_tj=Decimal("1"),
     )
     assert waste.attributed_tco2 == CONST_EF_NAT_GAS_TCO2_PER_TJ - (
         CONST_EF_NAT_GAS_TCO2_PER_TJ * WASTE_GAS_EXPORT_FACTOR
@@ -528,19 +528,19 @@ def test_math_helpers_exact() -> None:
 def test_exported_electricity_t72_formula() -> None:
     calculated = compute_exported_electricity_attribution(
         has_exported_electricity=True,
-        quantity_mwh=Decimal('2.5'),
-        emission_factor=Decimal('0.4'),
+        quantity_mwh=Decimal("2.5"),
+        emission_factor=Decimal("0.4"),
     )
-    assert calculated.status == 'CALCULATED'
-    assert calculated.attributed_direct_tco2e == Decimal('-1.0')
-    assert calculated.formula_ref == 'D_Processes!T72=-L71*L72'
+    assert calculated.status == "CALCULATED"
+    assert calculated.attributed_direct_tco2e == Decimal("-1.0")
+    assert calculated.formula_ref == "D_Processes!T72=-L71*L72"
 
     not_applicable = compute_exported_electricity_attribution(
         has_exported_electricity=False,
         quantity_mwh=None,
         emission_factor=None,
     )
-    assert not_applicable.status == 'NOT_APPLICABLE'
+    assert not_applicable.status == "NOT_APPLICABLE"
     assert not_applicable.attributed_direct_tco2e is None
 
 
@@ -549,7 +549,7 @@ def test_exported_electricity_incomplete_without_factor_or_provenance(seeded_db)
     organization = org(db)
     user = admin(db)
     binding, installation = setup_binding(db, user, organization)
-    product = ensure_org_product(db, organization.id, code=f'T72-{uuid.uuid4().hex[:6]}')
+    product = ensure_org_product(db, organization.id, code=f"T72-{uuid.uuid4().hex[:6]}")
     profile = create_active_ready_profile(db, user, organization.id, product=product)
     process = production_process_service.create_production_process(
         db,
@@ -558,24 +558,24 @@ def test_exported_electricity_incomplete_without_factor_or_provenance(seeded_db)
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Export process',
+            name="Export process",
             product_profile_version_id=profile.id,
-            produced_quantity=Decimal('10'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('10'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("10"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("10"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
             has_exported_electricity=True,
-            exported_electricity_quantity=Decimal('1'),
-            exported_electricity_unit='MWh',
+            exported_electricity_quantity=Decimal("1"),
+            exported_electricity_unit="MWh",
         ),
     )
-    assert 'EXPORTED_ELECTRICITY_FACTOR_REQUIRED' in process.readiness.blocking_issue_codes
-    assert 'EXPORTED_ELECTRICITY_PROVENANCE_REQUIRED' in process.readiness.blocking_issue_codes
-    assert process.process_exported_electricity.calculation_status == 'INCOMPLETE'
+    assert "EXPORTED_ELECTRICITY_FACTOR_REQUIRED" in process.readiness.blocking_issue_codes
+    assert "EXPORTED_ELECTRICITY_PROVENANCE_REQUIRED" in process.readiness.blocking_issue_codes
+    assert process.process_exported_electricity.calculation_status == "INCOMPLETE"
     assert process.process_exported_electricity.attributed_direct_tco2e is None
 
 
@@ -583,8 +583,8 @@ def test_production_process_migration_round_trip(seeded_db) -> None:
     db = seeded_db
 
     def downgrade() -> None:
-        db.execute(text('DROP TABLE IF EXISTS cbam_production_process_product_uses CASCADE'))
-        db.execute(text('DROP TABLE IF EXISTS cbam_production_processes CASCADE'))
+        db.execute(text("DROP TABLE IF EXISTS cbam_production_process_product_uses CASCADE"))
+        db.execute(text("DROP TABLE IF EXISTS cbam_production_processes CASCADE"))
         db.flush()
 
     def upgrade() -> None:
@@ -683,8 +683,8 @@ WHERE schemaname = 'public'
     downgrade()
     assert table_names() == set()
     upgrade()
-    assert 'cbam_production_processes' in table_names()
+    assert "cbam_production_processes" in table_names()
     downgrade()
     assert table_names() == set()
     upgrade()
-    assert 'cbam_production_process_product_uses' in table_names()
+    assert "cbam_production_process_product_uses" in table_names()

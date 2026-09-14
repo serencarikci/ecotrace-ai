@@ -39,7 +39,7 @@ class ActivityPropertyInput(CamelModel):
     property_code: str
     numeric_value: Decimal
     unit: str
-    source_type: str = 'PRIMARY'
+    source_type: str = "PRIMARY"
     source_reference: str | None = None
 
 
@@ -120,14 +120,10 @@ class ActivityRecordResponse(CamelModel):
     properties: list[ActivityPropertyResponse] = Field(default_factory=list)
 
 
-def _load_properties(
-    db: Session, record_id: uuid.UUID
-) -> list[ActivityPropertyResponse]:
+def _load_properties(db: Session, record_id: uuid.UUID) -> list[ActivityPropertyResponse]:
     rows = (
         db.execute(
-            select(CbamActivityProperty).where(
-                CbamActivityProperty.activity_record_id == record_id
-            )
+            select(CbamActivityProperty).where(CbamActivityProperty.activity_record_id == record_id)
         )
         .scalars()
         .all()
@@ -151,24 +147,22 @@ def _to_response(db: Session, row: CbamActivityRecord) -> ActivityRecordResponse
     return base
 
 
-def _get_row(
-    db: Session, organization_id: uuid.UUID, record_id: uuid.UUID
-) -> CbamActivityRecord:
+def _get_row(db: Session, organization_id: uuid.UUID, record_id: uuid.UUID) -> CbamActivityRecord:
     row = db.get(CbamActivityRecord, record_id)
     if row is None or row.organization_id != organization_id:
-        raise NotFoundError('CBAM activity record not found.')
+        raise NotFoundError("CBAM activity record not found.")
     return row
 
 
 def _validate_activity_and_unit(activity_type: str, unit: str) -> tuple[str, str, str]:
     type_def = get_activity_type(activity_type.strip())
     if type_def is None:
-        raise ValidationAppError(f'Unsupported activityType: {activity_type}')
+        raise ValidationAppError(f"Unsupported activityType: {activity_type}")
     unit_code = require_unit(unit)
     if not unit_compatible(unit_code, type_def.allowed_unit_family):
         raise ValidationAppError(
-            f'Unit {unit_code} is not compatible with activity type {type_def.code} '
-            f'(expected family {type_def.allowed_unit_family}).'
+            f"Unit {unit_code} is not compatible with activity type {type_def.code} "
+            f"(expected family {type_def.allowed_unit_family})."
         )
     return type_def.code, type_def.activity_group, unit_code
 
@@ -180,18 +174,18 @@ def _validate_process_fields(
     biogenic_status: str | None,
 ) -> None:
     if biogenic_status is not None and biogenic_status not in BIOGENIC_STATUSES:
-        raise ValidationAppError('Invalid biogenicStatus.')
-    if activity_group != 'PROCESS':
+        raise ValidationAppError("Invalid biogenicStatus.")
+    if activity_group != "PROCESS":
         return
     if not process_type_code:
-        raise ValidationAppError('processTypeCode is required for PROCESS activities.')
+        raise ValidationAppError("processTypeCode is required for PROCESS activities.")
     if process_type_code not in PROCESS_TYPE_CODES:
         raise ValidationAppError(
-            'Unsupported processTypeCode. Use OTHER_PROCESS with a description '
-            '(sector-specific codes are BLOCKED until B-12).'
+            "Unsupported processTypeCode. Use OTHER_PROCESS with a description "
+            "(sector-specific codes are BLOCKED until B-12)."
         )
-    if process_type_code == 'OTHER_PROCESS' and not (process_description or '').strip():
-        raise ValidationAppError('processDescription is required for OTHER_PROCESS.')
+    if process_type_code == "OTHER_PROCESS" and not (process_description or "").strip():
+        raise ValidationAppError("processDescription is required for OTHER_PROCESS.")
 
 
 def _add_properties(
@@ -205,23 +199,23 @@ def _add_properties(
 ) -> None:
     if not properties:
         return
-    if data_source_type != 'PRIMARY':
+    if data_source_type != "PRIMARY":
         raise ValidationAppError(
-            'Activity properties may only be supplied when dataSourceType is PRIMARY.'
+            "Activity properties may only be supplied when dataSourceType is PRIMARY."
         )
     seen: set[str] = set()
     for prop in properties:
         code = prop.property_code.strip()
         if code not in ACTIVITY_PROPERTY_CODES:
-            raise ValidationAppError(f'Unsupported propertyCode: {code}')
+            raise ValidationAppError(f"Unsupported propertyCode: {code}")
         if code in seen:
-            raise ValidationAppError(f'Duplicate propertyCode: {code}')
+            raise ValidationAppError(f"Duplicate propertyCode: {code}")
         seen.add(code)
-        require_positive_quantity(prop.numeric_value, field='numericValue')
+        require_positive_quantity(prop.numeric_value, field="numericValue")
         if get_property_unit(prop.unit.strip()) is None:
-            raise ValidationAppError(f'Unsupported property unit: {prop.unit}')
+            raise ValidationAppError(f"Unsupported property unit: {prop.unit}")
         if prop.source_type not in DATA_SOURCE_TYPES:
-            raise ValidationAppError('Invalid property sourceType.')
+            raise ValidationAppError("Invalid property sourceType.")
         db.add(
             CbamActivityProperty(
                 organization_id=organization_id,
@@ -249,13 +243,13 @@ def add_activity_property(
 ) -> ActivityPropertyResponse:
     require_cbam_configure(db, user, organization_id)
     row = _get_row(db, organization_id, record_id)
-    if row.status == 'archived':
-        raise BusinessRuleError('Archived activity records cannot receive properties.')
+    if row.status == "archived":
+        raise BusinessRuleError("Archived activity records cannot receive properties.")
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    if row.data_source_type != 'PRIMARY':
+    if row.data_source_type != "PRIMARY":
         raise ValidationAppError(
-            'Activity properties may only be supplied when dataSourceType is PRIMARY.'
+            "Activity properties may only be supplied when dataSourceType is PRIMARY."
         )
     _add_properties(
         db,
@@ -274,20 +268,20 @@ def add_activity_property(
     ).scalar_one()
     write_audit_log(
         db,
-        action='cbam.activity_property.created',
+        action="cbam.activity_property.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_activity_property',
+        entity_type="cbam_activity_property",
         entity_id=str(prop.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'activityRecordId': str(row.id),
-            'propertyCode': prop.property_code,
-            'numericValue': str(prop.numeric_value),
-            'unit': prop.unit,
-            'sourceType': prop.source_type,
+            "activityRecordId": str(row.id),
+            "propertyCode": prop.property_code,
+            "numericValue": str(prop.numeric_value),
+            "unit": prop.unit,
+            "sourceType": prop.source_type,
         },
     )
     db.commit()
@@ -322,7 +316,7 @@ def list_activity_records(
     if activity_type:
         stmt = stmt.where(CbamActivityRecord.activity_type == activity_type)
     if not include_archived:
-        stmt = stmt.where(CbamActivityRecord.status == 'active')
+        stmt = stmt.where(CbamActivityRecord.status == "active")
     total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
     rows = list(
         db.execute(
@@ -368,7 +362,7 @@ def create_activity_record(
         payload.activity_type, payload.unit
     )
     if payload.data_source_type not in DATA_SOURCE_TYPES:
-        raise ValidationAppError('Invalid dataSourceType.')
+        raise ValidationAppError("Invalid dataSourceType.")
     require_positive_quantity(payload.quantity)
     validate_optional_date_range(payload.period_start, payload.period_end)
     _validate_process_fields(
@@ -397,7 +391,7 @@ def create_activity_record(
         process_description=payload.process_description,
         biogenic_status=payload.biogenic_status,
         notes=payload.notes,
-        status='active',
+        status="active",
         row_version=1,
         created_by_user_id=user.id,
         updated_by_user_id=user.id,
@@ -414,20 +408,20 @@ def create_activity_record(
     )
     write_audit_log(
         db,
-        action='cbam.activity_record.created',
+        action="cbam.activity_record.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_activity_record',
+        entity_type="cbam_activity_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'bindingId': str(binding.id),
-            'activityType': row.activity_type,
-            'dataSourceType': row.data_source_type,
-            'quantity': str(row.quantity),
-            'unit': row.unit,
+            "bindingId": str(binding.id),
+            "activityType": row.activity_type,
+            "dataSourceType": row.data_source_type,
+            "quantity": str(row.quantity),
+            "unit": row.unit,
         },
     )
     db.commit()
@@ -448,34 +442,34 @@ def update_activity_record(
 ) -> ActivityRecordResponse:
     require_cbam_configure(db, user, organization_id)
     row = _get_row(db, organization_id, record_id)
-    if row.status == 'archived':
-        raise BusinessRuleError('Archived activity records cannot be updated.')
+    if row.status == "archived":
+        raise BusinessRuleError("Archived activity records cannot be updated.")
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM activity record')
-    data = payload.model_dump(exclude_unset=True, exclude={'row_version'})
-    if 'quantity' in data and data['quantity'] is not None:
-        require_positive_quantity(data['quantity'])
-        row.quantity = data['quantity']
-    if 'unit' in data and data['unit'] is not None:
-        _, _, unit = _validate_activity_and_unit(row.activity_type, data['unit'])
+    check_row_version(row.row_version, payload.row_version, entity="CBAM activity record")
+    data = payload.model_dump(exclude_unset=True, exclude={"row_version"})
+    if "quantity" in data and data["quantity"] is not None:
+        require_positive_quantity(data["quantity"])
+        row.quantity = data["quantity"]
+    if "unit" in data and data["unit"] is not None:
+        _, _, unit = _validate_activity_and_unit(row.activity_type, data["unit"])
         row.unit = unit
-    if 'data_source_type' in data and data['data_source_type'] is not None:
-        if data['data_source_type'] not in DATA_SOURCE_TYPES:
-            raise ValidationAppError('Invalid dataSourceType.')
-        row.data_source_type = data['data_source_type']
+    if "data_source_type" in data and data["data_source_type"] is not None:
+        if data["data_source_type"] not in DATA_SOURCE_TYPES:
+            raise ValidationAppError("Invalid dataSourceType.")
+        row.data_source_type = data["data_source_type"]
     for field in (
-        'activity_date',
-        'period_start',
-        'period_end',
-        'source_reference',
-        'measurement_method',
-        'supplier_name',
-        'certificate_reference',
-        'process_type_code',
-        'process_description',
-        'biogenic_status',
-        'notes',
+        "activity_date",
+        "period_start",
+        "period_end",
+        "source_reference",
+        "measurement_method",
+        "supplier_name",
+        "certificate_reference",
+        "process_type_code",
+        "process_description",
+        "biogenic_status",
+        "notes",
     ):
         if field in data:
             setattr(row, field, data[field])
@@ -490,15 +484,15 @@ def update_activity_record(
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.activity_record.updated',
+        action="cbam.activity_record.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_activity_record',
+        entity_type="cbam_activity_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'fields': list(data.keys()), 'rowVersion': row.row_version},
+        metadata={"fields": list(data.keys()), "rowVersion": row.row_version},
     )
     db.commit()
     db.refresh(row)
@@ -520,23 +514,23 @@ def archive_activity_record(
     row = _get_row(db, organization_id, record_id)
     binding = get_binding_for_org(db, organization_id, row.reporting_period_binding_id)
     require_writable_binding(binding)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM activity record')
-    if row.status == 'archived':
-        raise BusinessRuleError('Activity record is already archived.')
-    row.status = 'archived'
+    check_row_version(row.row_version, payload.row_version, entity="CBAM activity record")
+    if row.status == "archived":
+        raise BusinessRuleError("Activity record is already archived.")
+    row.status = "archived"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.activity_record.archived',
+        action="cbam.activity_record.archived",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_activity_record',
+        entity_type="cbam_activity_record",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'to': 'archived'},
+        metadata={"to": "archived"},
     )
     db.commit()
     db.refresh(row)

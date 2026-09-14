@@ -56,42 +56,37 @@ from ecotrace.modules.cbam.infrastructure.models import (
 )
 
 EXPECTED_VALUE_COUNT = 12532
-EXPECTED_CONTENT_CHECKSUM = (
-    '7543752e2ba7ccb314e6037355dfa2e11c65a0f129f6d27a0c5ffdd167c645c4'
-)
-DV_WORKBOOK_SHA256 = '865372ed23649b7b02c9124f207fc0b0875fd244c45c19e9fb8cdb1e503a5003'
+EXPECTED_CONTENT_CHECKSUM = "7543752e2ba7ccb314e6037355dfa2e11c65a0f129f6d27a0c5ffdd167c645c4"
+DV_WORKBOOK_SHA256 = "865372ed23649b7b02c9124f207fc0b0875fd244c45c19e9fb8cdb1e503a5003"
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-REFERENCE_DIR = Path(
-    os.environ.get('CBAM_REFERENCE_DIR', str(_REPO_ROOT / 'local-reference'))
-)
+REFERENCE_DIR = Path(os.environ.get("CBAM_REFERENCE_DIR", str(_REPO_ROOT / "local-reference")))
 SEE_WORKBOOK = REFERENCE_DIR / (
-    'CBAM SEE V2.1_Example Steel 3 Screws and nuts_final '
-    'Dosyasının Kopyası- (1) (1).xlsx'
+    "CBAM SEE V2.1_Example Steel 3 Screws and nuts_final Dosyasının Kopyası- (1) (1).xlsx"
 )
-DV_WORKBOOK = REFERENCE_DIR / 'DVs_as_adopted_v20260204.xlsx'
+DV_WORKBOOK = REFERENCE_DIR / "DVs_as_adopted_v20260204.xlsx"
 
 # Deterministic fixtures picked from the seed payload.
-UNIQUE_COUNTRY = 'Albania'
-UNIQUE_CN_DISPLAY = '2523 29 00'
-UNIQUE_CN_NORMALIZED = '25232900'
-UNIQUE_DIRECT = Decimal('0.9')
-UNIQUE_INDIRECT = Decimal('0.03')
+UNIQUE_COUNTRY = "Albania"
+UNIQUE_CN_DISPLAY = "2523 29 00"
+UNIQUE_CN_NORMALIZED = "25232900"
+UNIQUE_DIRECT = Decimal("0.9")
+UNIQUE_INDIRECT = Decimal("0.03")
 
 # Albania 2523 90 00 exists only per production route, never with a NULL route.
-ROUTED_CN = '25239000'
-ROUTED_ROUTE = '(A)'
-ROUTED_DIRECT = Decimal('0.86')
+ROUTED_CN = "25239000"
+ROUTED_ROUTE = "(A)"
+ROUTED_DIRECT = Decimal("0.86")
 
 # Argentina 2523 90 00 has grey + white hydraulic cements on a NULL route.
-AMBIGUOUS_COUNTRY = 'Argentina'
-AMBIGUOUS_CN = '25239000'
-AMBIGUOUS_GREY = 'Grey hydraulic cements'
-AMBIGUOUS_WHITE = 'White hydraulic cements'
+AMBIGUOUS_COUNTRY = "Argentina"
+AMBIGUOUS_CN = "25239000"
+AMBIGUOUS_GREY = "Grey hydraulic cements"
+AMBIGUOUS_WHITE = "White hydraulic cements"
 
 # 2523 10 00 route (B) is published only for the Other Countries group.
-GROUP_ONLY_CN = '25231000'
-GROUP_ONLY_ROUTE = '(B)'
+GROUP_ONLY_CN = "25231000"
+GROUP_ONLY_ROUTE = "(B)"
 
 
 # --------------------------------------------------------------------------------------
@@ -99,7 +94,7 @@ GROUP_ONLY_ROUTE = '(B)'
 # --------------------------------------------------------------------------------------
 
 
-@pytest.mark.skipif(not SEE_WORKBOOK.is_file(), reason='CBAM SEE workbook not available')
+@pytest.mark.skipif(not SEE_WORKBOOK.is_file(), reason="CBAM SEE workbook not available")
 def test_see_e_purchprec_cells_and_formulas() -> None:
     """L25/L39/L52/T49/T52 are the formulas Phase 10A reimplements."""
     from openpyxl import load_workbook
@@ -109,30 +104,30 @@ def test_see_e_purchprec_cells_and_formulas() -> None:
     try:
         assert WORKBOOK_PRIMARY_SHEET in wb.sheetnames
         ws = wb[WORKBOOK_PRIMARY_SHEET]
-        assert ws['L25'].value == '=IF(G14="","",SUM(L17:L24))'
-        assert ws['L39'].value == '=IF(G14="","",SUM(L25)-SUM(L28:L38))'
-        assert ws['L52'].value == '=IF(COUNT(L50:L51)=0,"",L50*L51)'
-        assert 'SUM(T25)*SUM(L49)' in str(ws['T49'].value)
-        assert 'SUM(T25)*SUM(L52)' in str(ws['T52'].value)
+        assert ws["L25"].value == '=IF(G14="","",SUM(L17:L24))'
+        assert ws["L39"].value == '=IF(G14="","",SUM(L25)-SUM(L28:L38))'
+        assert ws["L52"].value == '=IF(COUNT(L50:L51)=0,"",L50*L51)'
+        assert "SUM(T25)*SUM(L49)" in str(ws["T49"].value)
+        assert "SUM(T25)*SUM(L52)" in str(ws["T52"].value)
     finally:
         wb.close()
 
 
-@pytest.mark.skipif(not DV_WORKBOOK.is_file(), reason='DV workbook not available')
+@pytest.mark.skipif(not DV_WORKBOOK.is_file(), reason="DV workbook not available")
 def test_dv_workbook_checksum_and_extraction_readable() -> None:
     """The seed payload declares the exact DV workbook it was extracted from."""
     from openpyxl import load_workbook
 
     assert hashlib.sha256(DV_WORKBOOK.read_bytes()).hexdigest() == DV_WORKBOOK_SHA256
     payload = load_precursor_default_seed_payload()
-    assert payload['dataset']['sourceWorkbookSha256'] == DV_WORKBOOK_SHA256
-    assert payload['dataset']['sourceWorkbookName'] == DV_WORKBOOK.name
+    assert payload["dataset"]["sourceWorkbookSha256"] == DV_WORKBOOK_SHA256
+    assert payload["dataset"]["sourceWorkbookName"] == DV_WORKBOOK.name
 
     wb = load_workbook(DV_WORKBOOK, read_only=True, data_only=True)
     try:
         sheets = set(wb.sheetnames)
-        assert {'Overview', 'Version History'} <= sheets
-        seeded_sheets = {row['sourceSheet'] for row in payload['values']}
+        assert {"Overview", "Version History"} <= sheets
+        seeded_sheets = {row["sourceSheet"] for row in payload["values"]}
         assert seeded_sheets <= sheets
     finally:
         wb.close()
@@ -145,13 +140,13 @@ def test_dv_workbook_checksum_and_extraction_readable() -> None:
 
 def test_seed_payload_checksum_is_deterministic() -> None:
     payload = load_precursor_default_seed_payload()
-    assert len(payload['values']) == EXPECTED_VALUE_COUNT
-    assert payload['dataset']['valueCount'] == EXPECTED_VALUE_COUNT
+    assert len(payload["values"]) == EXPECTED_VALUE_COUNT
+    assert payload["dataset"]["valueCount"] == EXPECTED_VALUE_COUNT
     assert compute_seed_content_checksum(payload) == EXPECTED_CONTENT_CHECKSUM
-    assert payload['dataset']['contentChecksum'] == EXPECTED_CONTENT_CHECKSUM
+    assert payload["dataset"]["contentChecksum"] == EXPECTED_CONTENT_CHECKSUM
     # The checksum must not depend on the stored value itself.
     without_checksum = load_precursor_default_seed_payload()
-    without_checksum['dataset'].pop('contentChecksum')
+    without_checksum["dataset"].pop("contentChecksum")
     assert compute_seed_content_checksum(without_checksum) == EXPECTED_CONTENT_CHECKSUM
 
 
@@ -208,18 +203,16 @@ def test_seed_is_idempotent(seeded_db) -> None:
 def test_published_dataset_checksum_mutation_conflicts(seeded_db) -> None:
     dataset = ensure_platform_precursor_default_catalog(seeded_db)
     seeded_db.execute(
-        text(
-            'UPDATE cbam_precursor_default_datasets SET content_checksum = :c WHERE id = :i'
-        ),
-        {'c': '0' * 64, 'i': dataset.id},
+        text("UPDATE cbam_precursor_default_datasets SET content_checksum = :c WHERE id = :i"),
+        {"c": "0" * 64, "i": dataset.id},
     )
     seeded_db.expire_all()
 
     with pytest.raises(ConflictError) as exc:
         ensure_platform_precursor_default_catalog(seeded_db)
     details = str(exc.value.details)
-    assert 'IMMUTABLE_PRECURSOR_DV_DATASET_CONFLICT' in details
-    assert 'content_checksum' in details
+    assert "IMMUTABLE_PRECURSOR_DV_DATASET_CONFLICT" in details
+    assert "content_checksum" in details
 
 
 def test_published_dataset_row_count_drift_conflicts(seeded_db) -> None:
@@ -234,20 +227,20 @@ def test_published_dataset_row_count_drift_conflicts(seeded_db) -> None:
 
     with pytest.raises(ConflictError) as exc:
         ensure_platform_precursor_default_catalog(seeded_db)
-    assert 'default_value_count' in str(exc.value.details)
+    assert "default_value_count" in str(exc.value.details)
 
 
 def test_seed_payload_checksum_mismatch_is_rejected(seeded_db, monkeypatch) -> None:
     payload = load_precursor_default_seed_payload()
-    payload['dataset']['contentChecksum'] = 'f' * 64
+    payload["dataset"]["contentChecksum"] = "f" * 64
     monkeypatch.setattr(
         precursor_default_catalog_seed,
-        'load_precursor_default_seed_payload',
+        "load_precursor_default_seed_payload",
         lambda: payload,
     )
     with pytest.raises(ConflictError) as exc:
         ensure_platform_precursor_default_catalog(seeded_db)
-    assert 'SEED_CHECKSUM_MISMATCH' in str(exc.value.details)
+    assert "SEED_CHECKSUM_MISMATCH" in str(exc.value.details)
 
 
 def test_get_active_dataset_lazy_seeds(seeded_db) -> None:
@@ -268,19 +261,19 @@ def test_get_active_dataset_lazy_seeds(seeded_db) -> None:
 
 
 def test_normalizers_and_lookup_key() -> None:
-    assert normalize_precursor_cn_code('2523 29 00') == '25232900'
-    assert normalize_precursor_cn_code('ex 7318.15.95') == '73181595'
-    assert normalize_country_name('  Albania\xa0 ') == 'Albania'
-    assert normalize_lookup_segment(None) == ''
-    assert normalize_lookup_segment(' Grey  Portland\xa0Cement ') == 'grey portland cement'
+    assert normalize_precursor_cn_code("2523 29 00") == "25232900"
+    assert normalize_precursor_cn_code("ex 7318.15.95") == "73181595"
+    assert normalize_country_name("  Albania\xa0 ") == "Albania"
+    assert normalize_lookup_segment(None) == ""
+    assert normalize_lookup_segment(" Grey  Portland\xa0Cement ") == "grey portland cement"
     assert (
         build_lookup_key(
-            country_name='Albania',
-            cn_normalized_code='25232900',
+            country_name="Albania",
+            cn_normalized_code="25232900",
             production_route=None,
             goods_description=None,
         )
-        == 'albania|25232900||'
+        == "albania|25232900||"
     )
 
 
@@ -314,7 +307,7 @@ def test_resolve_exact_default_is_resolved(seeded_db) -> None:
 def test_resolve_unknown_cn_is_unresolved(seeded_db) -> None:
     ensure_platform_precursor_default_catalog(seeded_db)
     resolution = resolve_default_value(
-        seeded_db, country_of_origin=UNIQUE_COUNTRY, cn_code='9999 99 99'
+        seeded_db, country_of_origin=UNIQUE_COUNTRY, cn_code="9999 99 99"
     )
     assert resolution.status == RESOLUTION_UNRESOLVED
     assert resolution.issue_code == CODE_DEFAULT_VALUE_UNRESOLVED
@@ -324,18 +317,14 @@ def test_resolve_unknown_cn_is_unresolved(seeded_db) -> None:
 
 def test_resolve_requires_country_and_cn(seeded_db) -> None:
     ensure_platform_precursor_default_catalog(seeded_db)
-    no_country = resolve_default_value(
-        seeded_db, country_of_origin=None, cn_code=UNIQUE_CN_DISPLAY
-    )
+    no_country = resolve_default_value(seeded_db, country_of_origin=None, cn_code=UNIQUE_CN_DISPLAY)
     assert no_country.status == RESOLUTION_UNRESOLVED
     assert no_country.issue_code == CODE_PRECURSOR_COUNTRY_REQUIRED
 
-    no_cn = resolve_default_value(
-        seeded_db, country_of_origin=UNIQUE_COUNTRY, cn_code=None
-    )
+    no_cn = resolve_default_value(seeded_db, country_of_origin=UNIQUE_COUNTRY, cn_code=None)
     assert no_cn.status == RESOLUTION_UNRESOLVED
     assert no_cn.issue_code == CODE_PRECURSOR_CN_CODE_REQUIRED
-    assert CODE_PRECURSOR_CN_CODE_REQUIRED == 'PRECURSOR_CN_CODE_REQUIRED'
+    assert CODE_PRECURSOR_CN_CODE_REQUIRED == "PRECURSOR_CN_CODE_REQUIRED"
 
 
 def test_resolve_ambiguous_without_description(seeded_db) -> None:
@@ -360,7 +349,7 @@ def test_description_narrows_ambiguous_match(seeded_db) -> None:
         seeded_db,
         country_of_origin=AMBIGUOUS_COUNTRY,
         cn_code=AMBIGUOUS_CN,
-        goods_description='  grey   hydraulic cements ',
+        goods_description="  grey   hydraulic cements ",
     )
     assert narrowed.status == RESOLUTION_RESOLVED
     assert narrowed.value is not None
@@ -392,7 +381,7 @@ def test_null_route_matches_null_route_only(seeded_db) -> None:
         seeded_db,
         country_of_origin=UNIQUE_COUNTRY,
         cn_code=ROUTED_CN,
-        production_route='  (a)  ',
+        production_route="  (a)  ",
     )
     assert padded.status == RESOLUTION_RESOLVED
     assert padded.value is not None
@@ -408,7 +397,7 @@ def test_other_countries_group_is_never_a_fallback(seeded_db) -> None:
         production_route=GROUP_ONLY_ROUTE,
     )
     assert not_fallen_back.status == RESOLUTION_UNRESOLVED
-    assert 'never selected automatically' in not_fallen_back.other_countries_note
+    assert "never selected automatically" in not_fallen_back.other_countries_note
 
     explicit = resolve_default_value(
         seeded_db,
@@ -424,7 +413,7 @@ def test_other_countries_group_is_never_a_fallback(seeded_db) -> None:
 def test_country_matching_is_case_insensitive(seeded_db) -> None:
     ensure_platform_precursor_default_catalog(seeded_db)
     resolution = resolve_default_value(
-        seeded_db, country_of_origin='  aLBANia ', cn_code=UNIQUE_CN_NORMALIZED
+        seeded_db, country_of_origin="  aLBANia ", cn_code=UNIQUE_CN_NORMALIZED
     )
     assert resolution.status == RESOLUTION_RESOLVED
     assert resolution.value is not None
@@ -454,12 +443,12 @@ def test_snapshot_carries_dataset_and_value_provenance(seeded_db) -> None:
         requested_route=None,
         requested_description=None,
     )
-    assert snapshot['snapshotVersion'] == 1
-    assert snapshot['dataset']['contentChecksum'] == EXPECTED_CONTENT_CHECKSUM
-    assert snapshot['dataset']['sourceWorkbookSha256'] == DV_WORKBOOK_SHA256
-    assert snapshot['value']['cnNormalizedCode'] == UNIQUE_CN_NORMALIZED
-    assert snapshot['requestedKeys']['lookupKey'] == resolution.lookup_key
-    assert snapshot['units']['specificDirect'] == SPECIFIC_DIRECT_UNIT
+    assert snapshot["snapshotVersion"] == 1
+    assert snapshot["dataset"]["contentChecksum"] == EXPECTED_CONTENT_CHECKSUM
+    assert snapshot["dataset"]["sourceWorkbookSha256"] == DV_WORKBOOK_SHA256
+    assert snapshot["value"]["cnNormalizedCode"] == UNIQUE_CN_NORMALIZED
+    assert snapshot["requestedKeys"]["lookupKey"] == resolution.lookup_key
+    assert snapshot["units"]["specificDirect"] == SPECIFIC_DIRECT_UNIT
 
     direct, indirect = snapshot_specific_values(snapshot)
     assert direct == UNIQUE_DIRECT
@@ -470,11 +459,11 @@ def test_snapshot_specific_values_ignore_non_numeric_states() -> None:
     assert snapshot_specific_values(None) == (None, None)
     assert snapshot_specific_values({}) == (None, None)
     dashed = {
-        'value': {
-            'directValue': None,
-            'directValueStatus': DV_STATUS_DASH,
-            'indirectValue': '0.03',
-            'indirectValueStatus': DV_STATUS_NUMERIC,
+        "value": {
+            "directValue": None,
+            "directValueStatus": DV_STATUS_DASH,
+            "indirectValue": "0.03",
+            "indirectValueStatus": DV_STATUS_NUMERIC,
         }
     }
-    assert snapshot_specific_values(dashed) == (None, Decimal('0.03'))
+    assert snapshot_specific_values(dashed) == (None, Decimal("0.03"))

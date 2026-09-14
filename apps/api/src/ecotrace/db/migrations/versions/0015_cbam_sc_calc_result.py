@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0015_cbam_sc_calc_result'
-down_revision: str | None = '0014_cbam_sc_fuel_catalog'
+revision: str = "0015_cbam_sc_calc_result"
+down_revision: str | None = "0014_cbam_sc_fuel_catalog"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -15,8 +15,8 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     # Allow STATIONARY_COMBUSTION_CO2_V1 definitions without a factor definition.
     op.execute(
-        'ALTER TABLE cbam_calculation_definitions '
-        'DROP CONSTRAINT IF EXISTS ck_cbam_calculation_definitions_calculation_definition_type'
+        "ALTER TABLE cbam_calculation_definitions "
+        "DROP CONSTRAINT IF EXISTS ck_cbam_calculation_definitions_calculation_definition_type"
     )
     op.execute(
         """
@@ -29,8 +29,7 @@ CHECK (calculation_type IN (
 """
     )
     op.execute(
-        'ALTER TABLE cbam_calculation_definitions '
-        'ALTER COLUMN factor_definition_id DROP NOT NULL'
+        "ALTER TABLE cbam_calculation_definitions ALTER COLUMN factor_definition_id DROP NOT NULL"
     )
     op.execute(
         """
@@ -167,49 +166,46 @@ CREATE TABLE cbam_stationary_combustion_results (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_results_organization_id '
-        'ON cbam_stationary_combustion_results (organization_id)'
+        "CREATE INDEX ix_cbam_sc_results_organization_id "
+        "ON cbam_stationary_combustion_results (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_results_run_id '
-        'ON cbam_stationary_combustion_results (calculation_run_id)'
+        "CREATE INDEX ix_cbam_sc_results_run_id "
+        "ON cbam_stationary_combustion_results (calculation_run_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_results_activity_id '
-        'ON cbam_stationary_combustion_results (activity_record_id)'
+        "CREATE INDEX ix_cbam_sc_results_activity_id "
+        "ON cbam_stationary_combustion_results (activity_record_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_results_binding_id '
-        'ON cbam_stationary_combustion_results (reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_sc_results_binding_id "
+        "ON cbam_stationary_combustion_results (reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_results_fuel_id '
-        'ON cbam_stationary_combustion_results (fuel_id)'
+        "CREATE INDEX ix_cbam_sc_results_fuel_id ON cbam_stationary_combustion_results (fuel_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_results_parameter_set_id '
-        'ON cbam_stationary_combustion_results (parameter_set_id)'
+        "CREATE INDEX ix_cbam_sc_results_parameter_set_id "
+        "ON cbam_stationary_combustion_results (parameter_set_id)"
     )
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_stationary_combustion_results')
+    op.execute("DROP TABLE IF EXISTS cbam_stationary_combustion_results")
     op.execute(
-        'ALTER TABLE cbam_calculation_definitions '
-        'DROP CONSTRAINT IF EXISTS ck_cbam_calc_def_factor_req'
+        "ALTER TABLE cbam_calculation_definitions "
+        "DROP CONSTRAINT IF EXISTS ck_cbam_calc_def_factor_req"
     )
     # Existing rows must already satisfy NOT NULL for MULTIPLY-only historical data.
     op.execute(
-        'DELETE FROM cbam_calculation_definitions '
+        "DELETE FROM cbam_calculation_definitions "
         "WHERE calculation_type = 'STATIONARY_COMBUSTION_CO2_V1'"
     )
     op.execute(
-        'ALTER TABLE cbam_calculation_definitions '
-        'ALTER COLUMN factor_definition_id SET NOT NULL'
+        "ALTER TABLE cbam_calculation_definitions ALTER COLUMN factor_definition_id SET NOT NULL"
     )
     op.execute(
-        'ALTER TABLE cbam_calculation_definitions '
-        'DROP CONSTRAINT IF EXISTS ck_cbam_calc_def_type'
+        "ALTER TABLE cbam_calculation_definitions DROP CONSTRAINT IF EXISTS ck_cbam_calc_def_type"
     )
     op.execute(
         """

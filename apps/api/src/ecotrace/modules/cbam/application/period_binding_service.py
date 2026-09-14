@@ -56,9 +56,9 @@ def _to_response(row: CbamReportingPeriodBinding) -> PeriodBindingResponse:
 def _reject_if_locked(row: CbamReportingPeriodBinding) -> None:
     if row.status in MUTATION_BLOCKED_BINDING_STATUSES:
         raise BusinessRuleError(
-            'Locked or approved CBAM reporting period bindings cannot be mutated '
-            '(approve/lock transitions are deferred until D-030).',
-            details=[{'code': 'BLOCKED_DOMAIN', 'decision': 'D-030', 'status': row.status}],
+            "Locked or approved CBAM reporting period bindings cannot be mutated "
+            "(approve/lock transitions are deferred until D-030).",
+            details=[{"code": "BLOCKED_DOMAIN", "decision": "D-030", "status": row.status}],
         )
 
 
@@ -121,12 +121,12 @@ def create_period_binding(
     ).scalar_one_or_none()
     if exists:
         raise ConflictError(
-            'A CBAM reporting period binding already exists for this reporting period.'
+            "A CBAM reporting period binding already exists for this reporting period."
         )
     row = CbamReportingPeriodBinding(
         organization_id=organization_id,
         reporting_period_id=period.id,
-        status='draft',
+        status="draft",
         revision_number=0,
         row_version=1,
         created_by_user_id=user.id,
@@ -136,18 +136,18 @@ def create_period_binding(
     db.flush()
     write_audit_log(
         db,
-        action='cbam.period_binding.created',
+        action="cbam.period_binding.created",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_reporting_period_binding',
+        entity_type="cbam_reporting_period_binding",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
         metadata={
-            'reportingPeriodId': str(row.reporting_period_id),
-            'status': row.status,
-            'genericPeriodStatus': period.status,
+            "reportingPeriodId": str(row.reporting_period_id),
+            "status": row.status,
+            "genericPeriodStatus": period.status,
         },
     )
     db.commit()
@@ -171,23 +171,23 @@ def update_period_binding(
     _reject_if_locked(row)
     if row.status not in WRITABLE_BINDING_STATUSES:
         raise BusinessRuleError(
-            'This CBAM reporting period binding status cannot be updated in Phase 2.',
-            details=[{'code': 'BLOCKED_DOMAIN', 'status': row.status}],
+            "This CBAM reporting period binding status cannot be updated in Phase 2.",
+            details=[{"code": "BLOCKED_DOMAIN", "status": row.status}],
         )
-    check_row_version(row.row_version, payload.row_version, entity='CBAM reporting period binding')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM reporting period binding")
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.period_binding.updated',
+        action="cbam.period_binding.updated",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_reporting_period_binding',
+        entity_type="cbam_reporting_period_binding",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'rowVersion': row.row_version},
+        metadata={"rowVersion": row.row_version},
     )
     db.commit()
     db.refresh(row)
@@ -208,34 +208,36 @@ def open_data_collection(
     require_cbam_configure(db, user, organization_id)
     row = get_binding_for_org(db, organization_id, binding_id)
     _reject_if_locked(row)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM reporting period binding')
-    if row.status != 'draft':
+    check_row_version(row.row_version, payload.row_version, entity="CBAM reporting period binding")
+    if row.status != "draft":
         raise BusinessRuleError(
-            'Only draft→data_collection is allowed in Phase 2. '
-            'Further transitions require completeness/lock decisions (D-012/D-013/D-030/D-035).',
-            details=[{'code': 'BLOCKED_DOMAIN', 'from': row.status, 'attempted': 'data_collection'}],
+            "Only draft→data_collection is allowed in Phase 2. "
+            "Further transitions require completeness/lock decisions (D-012/D-013/D-030/D-035).",
+            details=[
+                {"code": "BLOCKED_DOMAIN", "from": row.status, "attempted": "data_collection"}
+            ],
         )
     if count_usable_installations(db, organization_id) < 1:
         raise BusinessRuleError(
-            'Open data collection requires at least one usable CBAM installation profile '
-            '(status draft or active).',
-            details=[{'code': 'INSTALLATION_REQUIRED'}],
+            "Open data collection requires at least one usable CBAM installation profile "
+            "(status draft or active).",
+            details=[{"code": "INSTALLATION_REQUIRED"}],
         )
     previous = row.status
-    row.status = 'data_collection'
+    row.status = "data_collection"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.period_binding.data_collection_opened',
+        action="cbam.period_binding.data_collection_opened",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_reporting_period_binding',
+        entity_type="cbam_reporting_period_binding",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'from': previous, 'to': row.status},
+        metadata={"from": previous, "to": row.status},
     )
     db.commit()
     db.refresh(row)
@@ -256,26 +258,26 @@ def archive_period_binding(
     require_cbam_configure(db, user, organization_id)
     row = get_binding_for_org(db, organization_id, binding_id)
     _reject_if_locked(row)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM reporting period binding')
-    if row.status != 'draft':
+    check_row_version(row.row_version, payload.row_version, entity="CBAM reporting period binding")
+    if row.status != "draft":
         raise BusinessRuleError(
-            'Only draft CBAM reporting period bindings can be archived in Phase 2.'
+            "Only draft CBAM reporting period bindings can be archived in Phase 2."
         )
     previous = row.status
-    row.status = 'archived'
+    row.status = "archived"
     row.updated_by_user_id = user.id
     row.row_version += 1
     write_audit_log(
         db,
-        action='cbam.period_binding.archived',
+        action="cbam.period_binding.archived",
         actor_user_id=user.id,
         organization_id=organization_id,
-        entity_type='cbam_reporting_period_binding',
+        entity_type="cbam_reporting_period_binding",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'from': previous, 'to': row.status},
+        metadata={"from": previous, "to": row.status},
     )
     db.commit()
     db.refresh(row)

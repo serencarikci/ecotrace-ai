@@ -24,9 +24,9 @@ from ecotrace.modules.cbam.infrastructure.models import (
 from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-COVERAGE_MISSING = 'MISSING'
-COVERAGE_CURRENT = 'CURRENT'
-COVERAGE_STALE = 'STALE'
+COVERAGE_MISSING = "MISSING"
+COVERAGE_CURRENT = "CURRENT"
+COVERAGE_STALE = "STALE"
 
 
 class StationaryCombustionActivityCoverageItem(CamelModel):
@@ -49,11 +49,15 @@ class StationaryCombustionActivityCoverageItem(CamelModel):
 
 
 def _active_fuels_by_code(db: Session) -> dict[str, CbamStationaryCombustionFuel]:
-    rows = db.execute(
-        select(CbamStationaryCombustionFuel).where(
-            CbamStationaryCombustionFuel.status == 'ACTIVE'
+    rows = (
+        db.execute(
+            select(CbamStationaryCombustionFuel).where(
+                CbamStationaryCombustionFuel.status == "ACTIVE"
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     return {row.code: row for row in rows}
 
 
@@ -87,7 +91,7 @@ def list_stationary_combustion_activity_coverage(
             select(CbamActivityRecord).where(
                 CbamActivityRecord.organization_id == organization_id,
                 CbamActivityRecord.reporting_period_binding_id == binding_id,
-                CbamActivityRecord.status == 'active',
+                CbamActivityRecord.status == "active",
             )
         )
         .scalars()
@@ -104,18 +108,20 @@ def list_stationary_combustion_activity_coverage(
     pointer_map = get_current_result_ids_for_binding(
         db, organization_id=organization_id, binding_id=binding_id
     )
-    page_result_ids = [
-        pointer_map[a.id] for a in page_activities if a.id in pointer_map
-    ]
+    page_result_ids = [pointer_map[a.id] for a in page_activities if a.id in pointer_map]
     results_by_id: dict[uuid.UUID, CbamStationaryCombustionResult] = {}
     if page_result_ids:
-        rows = db.execute(
-            select(CbamStationaryCombustionResult).where(
-                CbamStationaryCombustionResult.id.in_(page_result_ids),
-                CbamStationaryCombustionResult.organization_id == organization_id,
-                CbamStationaryCombustionResult.reporting_period_binding_id == binding_id,
+        rows = (
+            db.execute(
+                select(CbamStationaryCombustionResult).where(
+                    CbamStationaryCombustionResult.id.in_(page_result_ids),
+                    CbamStationaryCombustionResult.organization_id == organization_id,
+                    CbamStationaryCombustionResult.reporting_period_binding_id == binding_id,
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         results_by_id = {row.id: row for row in rows}
 
     items: list[StationaryCombustionActivityCoverageItem] = []
@@ -149,7 +155,7 @@ def list_stationary_combustion_activity_coverage(
                     current_result_value=None,
                     current_result_unit=None,
                     stale_reason_codes=[],
-                    blocking_issue_codes=['MISSING_CALCULATION'],
+                    blocking_issue_codes=["MISSING_CALCULATION"],
                 )
             )
             continue

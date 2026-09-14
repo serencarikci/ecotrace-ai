@@ -49,11 +49,15 @@ def _org(db):
 
 
 def _admin(db):
-    return db.execute(select(User).where(User.normalized_email == 'orgadmin@ecotrace.dev')).scalar_one()
+    return db.execute(
+        select(User).where(User.normalized_email == "orgadmin@ecotrace.dev")
+    ).scalar_one()
 
 
 def _facility(db, org_id):
-    return db.execute(select(Facility).where(Facility.organization_id == org_id).limit(1)).scalar_one()
+    return db.execute(
+        select(Facility).where(Facility.organization_id == org_id).limit(1)
+    ).scalar_one()
 
 
 def _setup_binding(db, admin, org):
@@ -64,18 +68,18 @@ def _setup_binding(db, admin, org):
         org.id,
         InstallationCreate(
             facility_id=facility.id,
-            code=f'P3-{uuid.uuid4().hex[:8]}',
-            name='P3 Installation',
+            code=f"P3-{uuid.uuid4().hex[:8]}",
+            name="P3 Installation",
         ),
     )
     period = ReportingPeriod(
         organization_id=org.id,
-        code=f'P3-{uuid.uuid4().hex[:6]}',
-        name='P3 Period',
-        period_type='custom',
-        start_date=__import__('datetime').date(2028, 1, 1),
-        end_date=__import__('datetime').date(2028, 3, 31),
-        status='open',
+        code=f"P3-{uuid.uuid4().hex[:6]}",
+        name="P3 Period",
+        period_type="custom",
+        start_date=__import__("datetime").date(2028, 1, 1),
+        end_date=__import__("datetime").date(2028, 3, 31),
+        status="open",
     )
     db.add(period)
     db.commit()
@@ -109,8 +113,8 @@ def test_production_create_reject_zero_and_stale(seeded_db) -> None:
             ProductionRecordCreate(
                 installation_profile_id=installation.id,
                 product_profile_version_id=profile.id,
-                quantity=Decimal('0'),
-                unit='t',
+                quantity=Decimal("0"),
+                unit="t",
             ),
         )
     created = production_record_service.create_production_record(
@@ -121,19 +125,19 @@ def test_production_create_reject_zero_and_stale(seeded_db) -> None:
         ProductionRecordCreate(
             installation_profile_id=installation.id,
             product_profile_version_id=profile.id,
-            quantity=Decimal('10'),
-            unit='t',
+            quantity=Decimal("10"),
+            unit="t",
         ),
     )
-    assert created.status == 'active'
-    assert created.profile_link_status == 'READY'
+    assert created.status == "active"
+    assert created.profile_link_status == "READY"
     with pytest.raises(ConflictError):
         production_record_service.update_production_record(
             seeded_db,
             admin,
             org.id,
             created.id,
-            ProductionRecordUpdate(row_version=99, quantity=Decimal('11')),
+            ProductionRecordUpdate(row_version=99, quantity=Decimal("11")),
         )
     archived = production_record_service.archive_production_record(
         seeded_db,
@@ -142,10 +146,10 @@ def test_production_create_reject_zero_and_stale(seeded_db) -> None:
         created.id,
         ProductionRecordVersionRequest(row_version=created.row_version),
     )
-    assert archived.status == 'archived'
+    assert archived.status == "archived"
     audit = seeded_db.execute(
         select(AuditLog).where(
-            AuditLog.action == 'cbam.production_record.created',
+            AuditLog.action == "cbam.production_record.created",
             AuditLog.entity_id == str(created.id),
         )
     ).scalar_one()
@@ -164,10 +168,10 @@ def test_activity_types_units_and_primary_properties(seeded_db) -> None:
             binding.id,
             ActivityRecordCreate(
                 installation_profile_id=installation.id,
-                activity_type='ELECTRICITY',
-                quantity=Decimal('100'),
-                unit='L',
-                data_source_type='PRIMARY',
+                activity_type="ELECTRICITY",
+                quantity=Decimal("100"),
+                unit="L",
+                data_source_type="PRIMARY",
             ),
         )
     with pytest.raises(ValidationAppError):
@@ -178,10 +182,10 @@ def test_activity_types_units_and_primary_properties(seeded_db) -> None:
             binding.id,
             ActivityRecordCreate(
                 installation_profile_id=installation.id,
-                activity_type='NOT_A_TYPE',
-                quantity=Decimal('100'),
-                unit='kWh',
-                data_source_type='PRIMARY',
+                activity_type="NOT_A_TYPE",
+                quantity=Decimal("100"),
+                unit="kWh",
+                data_source_type="PRIMARY",
             ),
         )
     electricity = activity_record_service.create_activity_record(
@@ -191,21 +195,21 @@ def test_activity_types_units_and_primary_properties(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='ELECTRICITY',
-            quantity=Decimal('12500'),
-            unit='kWh',
-            data_source_type='PRIMARY',
-            source_reference='meter-1',
+            activity_type="ELECTRICITY",
+            quantity=Decimal("12500"),
+            unit="kWh",
+            data_source_type="PRIMARY",
+            source_reference="meter-1",
             properties=[
                 ActivityPropertyInput(
-                    property_code='NET_CALORIFIC_VALUE',
-                    numeric_value=Decimal('1.1'),
-                    unit='GJ',
+                    property_code="NET_CALORIFIC_VALUE",
+                    numeric_value=Decimal("1.1"),
+                    unit="GJ",
                 )
             ],
         ),
     )
-    assert electricity.activity_group == 'PURCHASED_ENERGY'
+    assert electricity.activity_group == "PURCHASED_ENERGY"
     assert len(electricity.properties) == 1
     gas = activity_record_service.create_activity_record(
         seeded_db,
@@ -214,13 +218,13 @@ def test_activity_types_units_and_primary_properties(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='NATURAL_GAS',
-            quantity=Decimal('50'),
-            unit='m3',
-            data_source_type='DEFAULT_REFERENCE',
+            activity_type="NATURAL_GAS",
+            quantity=Decimal("50"),
+            unit="m3",
+            data_source_type="DEFAULT_REFERENCE",
         ),
     )
-    assert gas.data_source_type == 'DEFAULT_REFERENCE'
+    assert gas.data_source_type == "DEFAULT_REFERENCE"
     diesel = activity_record_service.create_activity_record(
         seeded_db,
         admin,
@@ -228,13 +232,13 @@ def test_activity_types_units_and_primary_properties(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='DIESEL',
-            quantity=Decimal('20'),
-            unit='L',
-            data_source_type='UNKNOWN',
+            activity_type="DIESEL",
+            quantity=Decimal("20"),
+            unit="L",
+            data_source_type="UNKNOWN",
         ),
     )
-    assert diesel.activity_type == 'DIESEL'
+    assert diesel.activity_type == "DIESEL"
     steam = activity_record_service.create_activity_record(
         seeded_db,
         admin,
@@ -242,20 +246,20 @@ def test_activity_types_units_and_primary_properties(seeded_db) -> None:
         binding.id,
         ActivityRecordCreate(
             installation_profile_id=installation.id,
-            activity_type='PURCHASED_STEAM',
-            quantity=Decimal('5'),
-            unit='GJ',
-            data_source_type='PRIMARY',
+            activity_type="PURCHASED_STEAM",
+            quantity=Decimal("5"),
+            unit="GJ",
+            data_source_type="PRIMARY",
         ),
     )
-    assert steam.unit == 'GJ'
+    assert steam.unit == "GJ"
     with pytest.raises(ConflictError):
         activity_record_service.update_activity_record(
             seeded_db,
             admin,
             org.id,
             electricity.id,
-            ActivityRecordUpdate(row_version=0, notes='stale'),
+            ActivityRecordUpdate(row_version=0, notes="stale"),
         )
     archived = activity_record_service.archive_activity_record(
         seeded_db,
@@ -264,7 +268,7 @@ def test_activity_types_units_and_primary_properties(seeded_db) -> None:
         electricity.id,
         ActivityRecordVersionRequest(row_version=electricity.row_version),
     )
-    assert archived.status == 'archived'
+    assert archived.status == "archived"
 
 
 def test_purchased_consumed_rules(seeded_db) -> None:
@@ -278,17 +282,17 @@ def test_purchased_consumed_rules(seeded_db) -> None:
         binding.id,
         PurchasedInputCreate(
             installation_profile_id=installation.id,
-            input_name='Anode material',
-            quantity=Decimal('100'),
-            unit='t',
-            consumed_quantity=Decimal('30'),
-            consumed_unit='t',
-            embedded_emission_value=Decimal('1.2'),
-            embedded_emission_unit='tCO2e/t',
-            embedded_emission_source_type='PRIMARY',
+            input_name="Anode material",
+            quantity=Decimal("100"),
+            unit="t",
+            consumed_quantity=Decimal("30"),
+            consumed_unit="t",
+            embedded_emission_value=Decimal("1.2"),
+            embedded_emission_unit="tCO2e/t",
+            embedded_emission_source_type="PRIMARY",
         ),
     )
-    assert ok.consumed_quantity == Decimal('30')
+    assert ok.consumed_quantity == Decimal("30")
     equal = purchased_input_service.create_purchased_input(
         seeded_db,
         admin,
@@ -296,14 +300,14 @@ def test_purchased_consumed_rules(seeded_db) -> None:
         binding.id,
         PurchasedInputCreate(
             installation_profile_id=installation.id,
-            input_name='Equal consume',
-            quantity=Decimal('10'),
-            unit='kg',
-            consumed_quantity=Decimal('10'),
-            consumed_unit='kg',
+            input_name="Equal consume",
+            quantity=Decimal("10"),
+            unit="kg",
+            consumed_quantity=Decimal("10"),
+            consumed_unit="kg",
         ),
     )
-    assert equal.consumed_quantity == Decimal('10')
+    assert equal.consumed_quantity == Decimal("10")
     with pytest.raises(ValidationAppError):
         purchased_input_service.create_purchased_input(
             seeded_db,
@@ -312,11 +316,11 @@ def test_purchased_consumed_rules(seeded_db) -> None:
             binding.id,
             PurchasedInputCreate(
                 installation_profile_id=installation.id,
-                input_name='Over consume',
-                quantity=Decimal('10'),
-                unit='kg',
-                consumed_quantity=Decimal('11'),
-                consumed_unit='kg',
+                input_name="Over consume",
+                quantity=Decimal("10"),
+                unit="kg",
+                consumed_quantity=Decimal("11"),
+                consumed_unit="kg",
             ),
         )
     missing_ee = purchased_input_service.create_purchased_input(
@@ -326,10 +330,10 @@ def test_purchased_consumed_rules(seeded_db) -> None:
         binding.id,
         PurchasedInputCreate(
             installation_profile_id=installation.id,
-            input_name='No EE',
-            quantity=Decimal('5'),
-            unit='t',
-            embedded_emission_source_type='NOT_PROVIDED',
+            input_name="No EE",
+            quantity=Decimal("5"),
+            unit="t",
+            embedded_emission_source_type="NOT_PROVIDED",
         ),
     )
     assert missing_ee.embedded_emission_value is None
@@ -340,7 +344,7 @@ def test_purchased_consumed_rules(seeded_db) -> None:
         ok.id,
         PurchasedInputVersionRequest(row_version=ok.row_version),
     )
-    assert archived.status == 'archived'
+    assert archived.status == "archived"
 
 
 def test_phase3_has_no_forbidden_engine_imports() -> None:
@@ -350,51 +354,51 @@ def test_phase3_has_no_forbidden_engine_imports() -> None:
 
 def test_phase3_source_has_no_emission_calculation_keywords() -> None:
     api_root = Path(__file__).resolve().parents[2]
-    src = api_root / 'src' / 'ecotrace'
-    files = list((src / 'modules' / 'cbam').rglob('*.py'))
-    files.append(src / 'api' / 'v1' / 'cbam.py')
+    src = api_root / "src" / "ecotrace"
+    files = list((src / "modules" / "cbam").rglob("*.py"))
+    files.append(src / "api" / "v1" / "cbam.py")
     export_allow = {
-        'export_storage.py',
-        'export_template_service.py',
-        'export_readiness_service.py',
-        'export_context.py',
-        'workbook_export_service.py',
-        'internal_template_builder.py',
-        'period_summary_service.py',
-        '0013_cbam_excel_export.py',
+        "export_storage.py",
+        "export_template_service.py",
+        "export_readiness_service.py",
+        "export_context.py",
+        "workbook_export_service.py",
+        "internal_template_builder.py",
+        "period_summary_service.py",
+        "0013_cbam_excel_export.py",
         # Phase 12A Official SEE export (read-only sheet inspection / ZIP writer helpers)
-        'writer.py',
-        'leakage.py',
-        'forensics.py',
-        'parity.py',
-        'package_writer.py',
-        'package_inventory.py',
-        'clearing.py',
-        'recalc.py',
+        "writer.py",
+        "leakage.py",
+        "forensics.py",
+        "parity.py",
+        "package_writer.py",
+        "package_inventory.py",
+        "clearing.py",
+        "recalc.py",
     }
     banned = (
-        'apcc',
-        'co2e_factor',
-        'allocate_emission',
-        'calculate_see',
-        'xlsxwriter',
-        'ipcc_lookup',
-        'defra_lookup',
-        'fetch_ipcc',
-        'fetch_defra',
-        'urllib.request',
+        "apcc",
+        "co2e_factor",
+        "allocate_emission",
+        "calculate_see",
+        "xlsxwriter",
+        "ipcc_lookup",
+        "defra_lookup",
+        "fetch_ipcc",
+        "fetch_defra",
+        "urllib.request",
     )
     for path in files:
-        text = path.read_text(encoding='utf-8').lower()
+        text = path.read_text(encoding="utf-8").lower()
         for token in banned:
-            assert token not in text, f'{path} contains banned token {token}'
+            assert token not in text, f"{path} contains banned token {token}"
         if path.name not in export_allow:
-            assert 'openpyxl' not in text, f'{path} contains banned token openpyxl'
+            assert "openpyxl" not in text, f"{path} contains banned token openpyxl"
         if path.name in {
-            'production_record_service.py',
-            'activity_record_service.py',
-            'purchased_input_service.py',
-            'catalogs.py',
+            "production_record_service.py",
+            "activity_record_service.py",
+            "purchased_input_service.py",
+            "catalogs.py",
         }:
-            assert 'ipcc' not in text
-            assert 'defra' not in text
+            assert "ipcc" not in text
+            assert "defra" not in text

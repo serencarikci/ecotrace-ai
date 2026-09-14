@@ -32,7 +32,7 @@ def build_used_input_map(
     manifest: MappingManifest,
 ) -> dict[tuple[str, str], Any]:
     used: dict[tuple[str, str], Any] = {}
-    for entry in manifest.by_direction('INPUT'):
+    for entry in manifest.by_direction("INPUT"):
         value = resolve_source(ctx, entry.source)
         if value is None:
             continue
@@ -53,10 +53,10 @@ def build_cell_patches(
     used_keys = set(used.keys())
     patches: dict[tuple[str, str], Any | None] = {}
 
-    for entry in manifest.by_direction('CLEAR_EXAMPLE'):
+    for entry in manifest.by_direction("CLEAR_EXAMPLE"):
         patches[(entry.sheet, entry.cell)] = None
 
-    for entry in manifest.by_direction('INPUT'):
+    for entry in manifest.by_direction("INPUT"):
         key = (entry.sheet, entry.cell)
         if key in used_keys:
             patches[key] = used[key]
@@ -96,15 +96,15 @@ def write_official_see_workbook(
     leaks = scan_example_leakage(after_wb, manifest, used_input_keys=used_keys)
     if leaks:
         raise BusinessRuleError(
-            'Example data leakage detected after clear/write.',
+            "Example data leakage detected after clear/write.",
             code=CODE_EXAMPLE_LEAKAGE,
             details=[
                 {
-                    'code': CODE_EXAMPLE_LEAKAGE,
-                    'kind': f.kind,
-                    'sheet': f.sheet,
-                    'cell': f.cell,
-                    'detail': f.detail,
+                    "code": CODE_EXAMPLE_LEAKAGE,
+                    "kind": f.kind,
+                    "sheet": f.sheet,
+                    "cell": f.cell,
+                    "detail": f.detail,
                 }
                 for f in leaks[:50]
             ],
@@ -113,25 +113,25 @@ def write_official_see_workbook(
     after_formulas = collect_formula_map(after_wb)
     if len(after_formulas) != before_count:
         raise BusinessRuleError(
-            f'Formula preservation failed: before={before_count} after={len(after_formulas)}',
+            f"Formula preservation failed: before={before_count} after={len(after_formulas)}",
             code=CODE_FORMULA_PRESERVATION_FAILED,
-            details=[{'code': CODE_FORMULA_PRESERVATION_FAILED}],
+            details=[{"code": CODE_FORMULA_PRESERVATION_FAILED}],
         )
     samples_checked = 0
     for entry in manifest.formula_entries()[:200]:
-        key = f'{entry.sheet}!{entry.cell}'
+        key = f"{entry.sheet}!{entry.cell}"
         actual = after_formulas.get(key)
         if entry.expected_formula and actual != entry.expected_formula:
             raise BusinessRuleError(
-                f'Formula cell changed unexpectedly: {key}',
+                f"Formula cell changed unexpectedly: {key}",
                 code=CODE_FORMULA_PRESERVATION_FAILED,
                 details=[
                     {
-                        'code': CODE_FORMULA_PRESERVATION_FAILED,
-                        'sheet': entry.sheet,
-                        'cell': entry.cell,
-                        'expected': entry.expected_formula,
-                        'actual': actual,
+                        "code": CODE_FORMULA_PRESERVATION_FAILED,
+                        "sheet": entry.sheet,
+                        "cell": entry.cell,
+                        "expected": entry.expected_formula,
+                        "actual": actual,
                     }
                 ],
             )
@@ -139,16 +139,16 @@ def write_official_see_workbook(
     for key, formula in before_formulas.items():
         if after_formulas.get(key) != formula:
             raise BusinessRuleError(
-                f'Formula cell changed unexpectedly: {key}',
+                f"Formula cell changed unexpectedly: {key}",
                 code=CODE_FORMULA_PRESERVATION_FAILED,
-                details=[{'code': CODE_FORMULA_PRESERVATION_FAILED, 'cell': key}],
+                details=[{"code": CODE_FORMULA_PRESERVATION_FAILED, "cell": key}],
             )
 
     return {
-        'clearedCells': write_meta['clearedCells'],
-        'writtenInputs': len(used),
-        'patchedCells': write_meta['clearedCells'] + write_meta['writtenInputs'],
-        'formulaCount': before_count,
-        'formulaSamplesChecked': samples_checked,
-        'modifiedParts': write_meta['modifiedParts'],
+        "clearedCells": write_meta["clearedCells"],
+        "writtenInputs": len(used),
+        "patchedCells": write_meta["clearedCells"] + write_meta["writtenInputs"],
+        "formulaCount": before_count,
+        "formulaSamplesChecked": samples_checked,
+        "modifiedParts": write_meta["modifiedParts"],
     }

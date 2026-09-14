@@ -16,14 +16,14 @@ from ecotrace.modules.cbam.application.official_see_export.constants import (
 )
 from ecotrace.modules.cbam.application.official_see_export.mapping.loader import MappingManifest
 
-_FORMULA_ERROR_TOKENS = ('#N/A', '#NAME?', '#VALUE?', '#REF!', '#DIV/0!', '#NUM?', '#NULL!')
+_FORMULA_ERROR_TOKENS = ("#N/A", "#NAME?", "#VALUE?", "#REF!", "#DIV/0!", "#NUM?", "#NULL!")
 
 # Official SEE Summary_Products I/J/K (and Communication mirrors) use Excel format ``0.000``.
-_SEE_SPECIFIC_NUM_FMT = '0.000'
+_SEE_SPECIFIC_NUM_FMT = "0.000"
 _SEE_SPECIFIC_PLACES = 3
 
-_SUMMARY_PRODUCTS_SEE_COLS = ('F', 'I', 'J', 'K', 'P')
-_SUMMARY_COMM_SEE_COLS = ('F', 'G', 'I', 'J', 'K')
+_SUMMARY_PRODUCTS_SEE_COLS = ("F", "I", "J", "K", "P")
+_SUMMARY_COMM_SEE_COLS = ("F", "G", "I", "J", "K")
 _SUMMARY_PRODUCTS_FIRST_ROW = 10
 _SUMMARY_COMM_FIRST_ROW = 26
 _SUMMARY_MAX_PRODUCT_SLOTS = 10
@@ -45,18 +45,18 @@ def workbook_places_for_cell(num_fmt: str | None) -> int:
     Official SEE Summary_Products / Summary_Communication specific-emissions cells use
     ``0.000`` → **3** places. Do not invent a looser tolerance than the format implies.
     """
-    fmt = (num_fmt or '').strip()
-    if not fmt or fmt in {'General', '@', 'text'}:
+    fmt = (num_fmt or "").strip()
+    if not fmt or fmt in {"General", "@", "text"}:
         return 0
     # Patterns like 0.000, #,##0.000, 0.00%
-    match = re.search(r'\.(0+)', fmt)
+    match = re.search(r"\.(0+)", fmt)
     if match:
         return len(match.group(1))
     return 0
 
 
 def _to_decimal(value: Any) -> Decimal | None:
-    if value is None or value == '':
+    if value is None or value == "":
         return None
     if isinstance(value, Decimal):
         return value
@@ -82,7 +82,7 @@ def _is_formula_error(value: Any) -> bool:
 def _quantize_equal(expected: Decimal, actual: Decimal, *, places: int) -> bool:
     if places <= 0:
         return expected == actual
-    quant = Decimal('1').scaleb(-places)
+    quant = Decimal("1").scaleb(-places)
     return bool(
         expected.quantize(quant, rounding=ROUND_HALF_UP)
         == actual.quantize(quant, rounding=ROUND_HALF_UP)
@@ -107,9 +107,9 @@ def _formula_error_finding(
     return ParityMismatch(
         sheet=sheet,
         cell=cell,
-        expected='<non-error>',
+        expected="<non-error>",
         actual=repr(actual),
-        diff='formula_error',
+        diff="formula_error",
         semantic_field=semantic_field,
     )
 
@@ -129,7 +129,7 @@ def compare_outputs(
     wb = load_workbook(recalculated_xlsx, data_only=True)
     wb_fmt = load_workbook(recalculated_xlsx, data_only=False)
     mismatches: list[ParityMismatch] = []
-    for entry in manifest.by_direction('OUTPUT'):
+    for entry in manifest.by_direction("OUTPUT"):
         key = (entry.sheet, entry.cell)
         if entry.sheet not in wb.sheetnames:
             if key in expected_by_key or entry.required:
@@ -138,8 +138,8 @@ def compare_outputs(
                         sheet=entry.sheet,
                         cell=entry.cell,
                         expected=repr(expected_by_key.get(key)),
-                        actual='<missing sheet>',
-                        diff='n/a',
+                        actual="<missing sheet>",
+                        diff="n/a",
                         semantic_field=entry.semantic_field,
                     )
                 )
@@ -168,11 +168,7 @@ def compare_outputs(
             continue
         exp_d = _to_decimal(expected)
         act_d = _to_decimal(actual)
-        diff = (
-            str(act_d - exp_d)
-            if exp_d is not None and act_d is not None
-            else 'n/a'
-        )
+        diff = str(act_d - exp_d) if exp_d is not None and act_d is not None else "n/a"
         mismatches.append(
             ParityMismatch(
                 sheet=entry.sheet,
@@ -216,17 +212,17 @@ def scan_output_formula_errors(
                 _formula_error_finding(sheet, cell, actual, semantic_field=semantic_field)
             )
 
-    for entry in manifest.by_direction('OUTPUT'):
+    for entry in manifest.by_direction("OUTPUT"):
         _check(entry.sheet, entry.cell, semantic_field=entry.semantic_field)
 
     used = product_count
     if used is None:
         used = 0
-        if 'Summary_Products' in wb.sheetnames:
-            sp = wb['Summary_Products']
+        if "Summary_Products" in wb.sheetnames:
+            sp = wb["Summary_Products"]
             for i in range(_SUMMARY_MAX_PRODUCT_SLOTS):
                 row = _SUMMARY_PRODUCTS_FIRST_ROW + i
-                if sp[f'D{row}'].value not in (None, ''):
+                if sp[f"D{row}"].value not in (None, ""):
                     used = i + 1
         if used == 0:
             used = _SUMMARY_MAX_PRODUCT_SLOTS
@@ -236,15 +232,15 @@ def scan_output_formula_errors(
         comm_row = _SUMMARY_COMM_FIRST_ROW + i
         for col in _SUMMARY_PRODUCTS_SEE_COLS:
             _check(
-                'Summary_Products',
-                f'{col}{prod_row}',
-                semantic_field=f'summary_products[{i}].scan.{col.lower()}',
+                "Summary_Products",
+                f"{col}{prod_row}",
+                semantic_field=f"summary_products[{i}].scan.{col.lower()}",
             )
         for col in _SUMMARY_COMM_SEE_COLS:
             _check(
-                'Summary_Communication',
-                f'{col}{comm_row}',
-                semantic_field=f'summary_communication[{i}].scan.{col.lower()}',
+                "Summary_Communication",
+                f"{col}{comm_row}",
+                semantic_field=f"summary_communication[{i}].scan.{col.lower()}",
             )
 
     return findings
@@ -256,27 +252,22 @@ def assert_no_formula_errors_or_raise(
     *,
     product_count: int | None = None,
 ) -> None:
-    findings = scan_output_formula_errors(
-        recalculated_xlsx, manifest, product_count=product_count
-    )
+    findings = scan_output_formula_errors(recalculated_xlsx, manifest, product_count=product_count)
     if not findings:
         return
     first = findings[0]
     raise BusinessRuleError(
-        (
-            f'Formula error token at {first.sheet}!{first.cell}: '
-            f'actual={first.actual}'
-        ),
+        (f"Formula error token at {first.sheet}!{first.cell}: actual={first.actual}"),
         code=CODE_FORMULA_PARITY_FAILED,
         details=[
             {
-                'code': CODE_FORMULA_PARITY_FAILED,
-                'sheet': m.sheet,
-                'cell': m.cell,
-                'expected': m.expected,
-                'actual': m.actual,
-                'diff': m.diff,
-                'semanticField': m.semantic_field,
+                "code": CODE_FORMULA_PARITY_FAILED,
+                "sheet": m.sheet,
+                "cell": m.cell,
+                "expected": m.expected,
+                "actual": m.actual,
+                "diff": m.diff,
+                "semanticField": m.semantic_field,
             }
             for m in findings[:50]
         ],
@@ -294,19 +285,19 @@ def assert_parity_or_raise(
     first = mismatches[0]
     raise BusinessRuleError(
         (
-            f'Formula parity failed at {first.sheet}!{first.cell}: '
-            f'expected={first.expected} actual={first.actual} diff={first.diff}'
+            f"Formula parity failed at {first.sheet}!{first.cell}: "
+            f"expected={first.expected} actual={first.actual} diff={first.diff}"
         ),
         code=CODE_FORMULA_PARITY_FAILED,
         details=[
             {
-                'code': CODE_FORMULA_PARITY_FAILED,
-                'sheet': m.sheet,
-                'cell': m.cell,
-                'expected': m.expected,
-                'actual': m.actual,
-                'diff': m.diff,
-                'semanticField': m.semantic_field,
+                "code": CODE_FORMULA_PARITY_FAILED,
+                "sheet": m.sheet,
+                "cell": m.cell,
+                "expected": m.expected,
+                "actual": m.actual,
+                "diff": m.diff,
+                "semanticField": m.semantic_field,
             }
             for m in mismatches[:50]
         ],

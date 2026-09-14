@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = '0017_cbam_sc_current_result'
-down_revision: str | None = '0016_cbam_sc_exec_idem'
+revision: str = "0017_cbam_sc_current_result"
+down_revision: str | None = "0016_cbam_sc_exec_idem"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -58,16 +58,16 @@ CREATE TABLE cbam_stationary_combustion_current_results (
 """
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_current_organization_id '
-        'ON cbam_stationary_combustion_current_results (organization_id)'
+        "CREATE INDEX ix_cbam_sc_current_organization_id "
+        "ON cbam_stationary_combustion_current_results (organization_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_current_binding_id '
-        'ON cbam_stationary_combustion_current_results (reporting_period_binding_id)'
+        "CREATE INDEX ix_cbam_sc_current_binding_id "
+        "ON cbam_stationary_combustion_current_results (reporting_period_binding_id)"
     )
     op.execute(
-        'CREATE INDEX ix_cbam_sc_current_result_id '
-        'ON cbam_stationary_combustion_current_results (current_result_id)'
+        "CREATE INDEX ix_cbam_sc_current_result_id "
+        "ON cbam_stationary_combustion_current_results (current_result_id)"
     )
     # One-time deterministic backfill: newest successful result per activity
     # (created_at DESC, id DESC). Does not rewrite result snapshots.
@@ -113,5 +113,5 @@ WHERE ranked.rn = 1
 
 
 def downgrade() -> None:
-    op.execute('DROP TABLE IF EXISTS cbam_stationary_combustion_current_results')
-    op.execute('DROP INDEX IF EXISTS uq_cbam_sc_result_id_org_binding_activity')
+    op.execute("DROP TABLE IF EXISTS cbam_stationary_combustion_current_results")
+    op.execute("DROP INDEX IF EXISTS uq_cbam_sc_result_id_org_binding_activity")

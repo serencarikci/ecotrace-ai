@@ -54,18 +54,18 @@ def _balanced_create(
     *,
     installation_id,
     profile_id,
-    name: str = 'P9C',
+    name: str = "P9C",
 ) -> ProductionProcessCreate:
     return ProductionProcessCreate(
         installation_profile_id=installation_id,
         name=name,
         product_profile_version_id=profile_id,
-        produced_quantity=Decimal('10'),
-        produced_quantity_unit='t',
-        marketed_quantity=Decimal('10'),
-        marketed_quantity_unit='t',
-        non_cbam_quantity=Decimal('0'),
-        non_cbam_quantity_unit='t',
+        produced_quantity=Decimal("10"),
+        produced_quantity_unit="t",
+        marketed_quantity=Decimal("10"),
+        marketed_quantity_unit="t",
+        non_cbam_quantity=Decimal("0"),
+        non_cbam_quantity_unit="t",
         has_measurable_heat=False,
         has_waste_gas=False,
     )
@@ -75,13 +75,11 @@ def test_matching_profile_exposes_exact_allocated_mwh_and_tco2e(seeded_db) -> No
     db = seeded_db
     user, organization, binding, installation = seed_workbook_ready_ie_allocation(db)
     detail = _exec_iea(db, user, organization, binding)
-    products = {
-        uuid.UUID(p['productProfileVersionId']): p for p in detail.products
-    }
+    products = {uuid.UUID(p["productProfileVersionId"]): p for p in detail.products}
     assert products
     profile_id, row = next(iter(products.items()))
-    expected_mwh = Decimal(row['finalAllocatedElectricityMwh'])
-    expected_em = Decimal(row['finalAllocatedIndirectEmissionsTco2e'])
+    expected_mwh = Decimal(row["finalAllocatedElectricityMwh"])
+    expected_em = Decimal(row["finalAllocatedIndirectEmissionsTco2e"])
     assert expected_mwh in GOLDEN_PRODUCT_ELEC_FINALS_BY_E.values()
     assert expected_em in GOLDEN_PRODUCT_EM_FINALS_BY_E.values()
 
@@ -99,8 +97,8 @@ def test_matching_profile_exposes_exact_allocated_mwh_and_tco2e(seeded_db) -> No
     assert iea.allocated_electricity_mwh == expected_mwh
     assert iea.allocated_indirect_emissions_tco2e == expected_em
     assert iea.product_allocated_value == expected_em
-    assert iea.electricity_unit == 'MWh'
-    assert iea.result_unit == 'tCO2e'
+    assert iea.electricity_unit == "MWh"
+    assert iea.result_unit == "tCO2e"
     assert iea.blocking_code is None
 
 
@@ -119,8 +117,8 @@ def test_different_profile_rows_are_not_mixed(seeded_db) -> None:
         binding.id,
         _balanced_create(
             installation_id=installation.id,
-            profile_id=uuid.UUID(a['productProfileVersionId']),
-            name='A',
+            profile_id=uuid.UUID(a["productProfileVersionId"]),
+            name="A",
         ),
     )
     pb = production_process_service.create_production_process(
@@ -130,15 +128,15 @@ def test_different_profile_rows_are_not_mixed(seeded_db) -> None:
         binding.id,
         _balanced_create(
             installation_id=installation.id,
-            profile_id=uuid.UUID(b['productProfileVersionId']),
-            name='B',
+            profile_id=uuid.UUID(b["productProfileVersionId"]),
+            name="B",
         ),
     )
     assert pa.indirect_emissions_allocation.allocated_electricity_mwh == Decimal(
-        a['finalAllocatedElectricityMwh']
+        a["finalAllocatedElectricityMwh"]
     )
     assert pb.indirect_emissions_allocation.allocated_electricity_mwh == Decimal(
-        b['finalAllocatedElectricityMwh']
+        b["finalAllocatedElectricityMwh"]
     )
     assert (
         pa.indirect_emissions_allocation.allocated_electricity_mwh
@@ -171,7 +169,7 @@ def test_stale_iea_does_not_expose_product_values_as_current(seeded_db) -> None:
     db = seeded_db
     user, organization, binding, installation = seed_workbook_ready_ie_allocation(db)
     detail = _exec_iea(db, user, organization, binding)
-    profile_id = uuid.UUID(detail.products[0]['productProfileVersionId'])
+    profile_id = uuid.UUID(detail.products[0]["productProfileVersionId"])
     process = production_process_service.create_production_process(
         db,
         user,
@@ -192,7 +190,7 @@ def test_stale_iea_does_not_expose_product_values_as_current(seeded_db) -> None:
         basis.id,
         MonthlyProductionBasisUpdate(
             row_version=basis.row_version,
-            total_production_quantity=basis.total_production_quantity + Decimal('1'),
+            total_production_quantity=basis.total_production_quantity + Decimal("1"),
         ),
     )
     refreshed = production_process_service.get_production_process(
@@ -217,11 +215,9 @@ def test_missing_product_allocation_row_fails_closed(seeded_db) -> None:
         db,
         user,
         organization.id,
-        product=ensure_org_product(db, organization.id, code=f'OTHER-{uuid.uuid4().hex[:6]}'),
+        product=ensure_org_product(db, organization.id, code=f"OTHER-{uuid.uuid4().hex[:6]}"),
     )
-    assert str(other.id) not in {
-        p['productProfileVersionId'] for p in detail.products
-    }
+    assert str(other.id) not in {p["productProfileVersionId"] for p in detail.products}
     process = production_process_service.create_production_process(
         db,
         user,
@@ -236,8 +232,7 @@ def test_missing_product_allocation_row_fails_closed(seeded_db) -> None:
     assert iea.allocated_indirect_emissions_tco2e is None
     assert iea.blocking_code == CODE_INDIRECT_EMISSIONS_PRODUCT_ALLOCATION_MISSING
     assert (
-        CODE_INDIRECT_EMISSIONS_PRODUCT_ALLOCATION_MISSING
-        in process.readiness.blocking_issue_codes
+        CODE_INDIRECT_EMISSIONS_PRODUCT_ALLOCATION_MISSING in process.readiness.blocking_issue_codes
     )
 
 
@@ -252,11 +247,11 @@ def test_process_without_profile_does_not_guess(seeded_db) -> None:
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='NoProfile',
-            produced_quantity=Decimal('1'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('1'),
-            marketed_quantity_unit='t',
+            name="NoProfile",
+            produced_quantity=Decimal("1"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("1"),
+            marketed_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
@@ -277,8 +272,8 @@ def test_cross_org_iea_product_rows_are_not_resolved(seeded_db) -> None:
     db = seeded_db
     user_a, org_a, binding_a, installation_a = seed_workbook_ready_ie_allocation(db)
     detail_a = _exec_iea(db, user_a, org_a, binding_a)
-    profile_a = uuid.UUID(detail_a.products[0]['productProfileVersionId'])
-    mwh_a = Decimal(detail_a.products[0]['finalAllocatedElectricityMwh'])
+    profile_a = uuid.UUID(detail_a.products[0]["productProfileVersionId"])
+    mwh_a = Decimal(detail_a.products[0]["finalAllocatedElectricityMwh"])
 
     user_b, org_b, binding_b, installation_b = seed_workbook_ready_ie_allocation(db)
     _exec_iea(db, user_b, org_b, binding_b)
@@ -294,9 +289,9 @@ def test_cross_org_iea_product_rows_are_not_resolved(seeded_db) -> None:
                 db,
                 user_b,
                 org_b.id,
-                product=ensure_org_product(db, org_b.id, code=f'BONLY-{uuid.uuid4().hex[:6]}'),
+                product=ensure_org_product(db, org_b.id, code=f"BONLY-{uuid.uuid4().hex[:6]}"),
             ).id,
-            name='OrgB',
+            name="OrgB",
         ),
     )
     assert process_b.indirect_emissions_allocation.allocated_electricity_mwh is None
@@ -313,7 +308,7 @@ def test_cross_org_iea_product_rows_are_not_resolved(seeded_db) -> None:
         _balanced_create(
             installation_id=installation_a.id,
             profile_id=profile_a,
-            name='OrgA',
+            name="OrgA",
         ),
     )
     assert process_a.indirect_emissions_allocation.allocated_electricity_mwh == mwh_a
@@ -337,8 +332,8 @@ def test_process_list_does_not_n_plus_one_iea_product_queries(seeded_db) -> None
             binding.id,
             _balanced_create(
                 installation_id=installation.id,
-                profile_id=uuid.UUID(row['productProfileVersionId']),
-                name=f'L{i}',
+                profile_id=uuid.UUID(row["productProfileVersionId"]),
+                name=f"L{i}",
             ),
         )
 
@@ -347,19 +342,19 @@ def test_process_list_does_not_n_plus_one_iea_product_queries(seeded_db) -> None
     def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         statements.append(str(statement))
 
-    event.listen(db.bind, 'before_cursor_execute', before_cursor_execute)
+    event.listen(db.bind, "before_cursor_execute", before_cursor_execute)
     try:
         page = production_process_service.list_production_processes(
             db, user, organization.id, binding.id, page=1, page_size=50
         )
     finally:
-        event.remove(db.bind, 'before_cursor_execute', before_cursor_execute)
+        event.remove(db.bind, "before_cursor_execute", before_cursor_execute)
 
     assert len(page.items) == len(detail.products)
     iea_product_selects = [
         s
         for s in statements
-        if 'cbam_iea_product_allocations' in s.lower() and s.lstrip().upper().startswith('SELECT')
+        if "cbam_iea_product_allocations" in s.lower() and s.lstrip().upper().startswith("SELECT")
     ]
     # One bounded select via IEA summary/detail — must not scale with process count.
     assert len(iea_product_selects) <= 2

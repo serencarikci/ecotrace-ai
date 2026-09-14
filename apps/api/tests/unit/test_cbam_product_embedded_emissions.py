@@ -89,7 +89,7 @@ def test_readiness_is_ready_for_a_fully_seeded_binding(seeded_db: Session) -> No
     readiness = _readiness(seeded_db, scenario)
 
     assert readiness.rollup_ready is True
-    assert readiness.status == 'READY'
+    assert readiness.status == "READY"
     assert readiness.blocking_issue_codes == []
     assert readiness.methodology_code == METHODOLOGY_CODE
     assert readiness.eligible_product_count == 1
@@ -106,7 +106,7 @@ def test_readiness_is_ready_for_a_fully_seeded_binding(seeded_db: Session) -> No
     product = readiness.products[0]
     assert product.product_profile_version_id == scenario.profile_id
     assert product.process_id == scenario.process_id
-    assert product.status == 'READY'
+    assert product.status == "READY"
     assert product.denominator_tonnes == scenario.denominator_tonnes
     assert product.production_records_tonnes == scenario.denominator_tonnes
 
@@ -115,7 +115,7 @@ def test_execute_persists_totals_specifics_and_identities(seeded_db: Session) ->
     scenario = seed_ready_rollup(seeded_db)
     execution = _execute(seeded_db, scenario)
 
-    assert execution.status == 'COMPLETED'
+    assert execution.status == "COMPLETED"
     assert execution.idempotent_replay is False
     assert execution.product_count == 1
     assert execution.precursor_contribution_count == 1
@@ -136,22 +136,22 @@ def test_execute_persists_totals_specifics_and_identities(seeded_db: Session) ->
     assert len(detail.precursor_contributions) == 1
 
     row = detail.products[0]
-    own_direct = Decimal(row['ownDirectTco2eRaw'])
-    own_indirect = Decimal(row['ownIndirectTco2eRaw'])
-    precursor_direct = Decimal(row['precursorDirectTco2eRaw'])
-    precursor_indirect = Decimal(row['precursorIndirectTco2eRaw'])
-    total_direct = Decimal(row['totalDirectTco2eRaw'])
-    total_indirect = Decimal(row['totalIndirectTco2eRaw'])
-    total_embedded = Decimal(row['totalEmbeddedTco2eRaw'])
-    denominator = Decimal(row['denominatorTonnes'])
+    own_direct = Decimal(row["ownDirectTco2eRaw"])
+    own_indirect = Decimal(row["ownIndirectTco2eRaw"])
+    precursor_direct = Decimal(row["precursorDirectTco2eRaw"])
+    precursor_indirect = Decimal(row["precursorIndirectTco2eRaw"])
+    total_direct = Decimal(row["totalDirectTco2eRaw"])
+    total_indirect = Decimal(row["totalIndirectTco2eRaw"])
+    total_embedded = Decimal(row["totalEmbeddedTco2eRaw"])
+    denominator = Decimal(row["denominatorTonnes"])
 
     # own_direct = T54 + T58 + T62 + T72 with heat/waste/export all zero here.
-    assert own_direct == Decimal(row['deaDirectTco2'])
-    assert Decimal(row['heatAttributedTco2e']) == Decimal('0')
-    assert Decimal(row['wasteGasAttributedTco2e']) == Decimal('0')
-    assert Decimal(row['exportedElectricityDirectTco2e']) == Decimal('0')
-    assert row['exportedElectricityNoteCode'] == EXPORTED_ELECTRICITY_NOTE_CODE
-    assert own_indirect == Decimal(row['ieaIndirectTco2e'])
+    assert own_direct == Decimal(row["deaDirectTco2"])
+    assert Decimal(row["heatAttributedTco2e"]) == Decimal("0")
+    assert Decimal(row["wasteGasAttributedTco2e"]) == Decimal("0")
+    assert Decimal(row["exportedElectricityDirectTco2e"]) == Decimal("0")
+    assert row["exportedElectricityNoteCode"] == EXPORTED_ELECTRICITY_NOTE_CODE
+    assert own_indirect == Decimal(row["ieaIndirectTco2e"])
 
     assert precursor_direct == GOLDEN_PRECURSOR_DIRECT_TCO2E
     assert precursor_indirect == GOLDEN_PRECURSOR_INDIRECT_TCO2E
@@ -159,25 +159,23 @@ def test_execute_persists_totals_specifics_and_identities(seeded_db: Session) ->
     assert total_indirect == own_indirect + precursor_indirect
     assert total_embedded == total_direct + total_indirect
 
-    assert Decimal(row['specificDirectRaw']) == total_direct / denominator
-    assert Decimal(row['specificIndirectRaw']) == total_indirect / denominator
-    assert Decimal(row['specificTotalRaw']) == total_embedded / denominator
-    assert row['specificUnit'] == SPECIFIC_UNIT_TCO2E_PER_T
-    assert row['deaSourceUnit'] == 'tCO2'
+    assert Decimal(row["specificDirectRaw"]) == total_direct / denominator
+    assert Decimal(row["specificIndirectRaw"]) == total_indirect / denominator
+    assert Decimal(row["specificTotalRaw"]) == total_embedded / denominator
+    assert row["specificUnit"] == SPECIFIC_UNIT_TCO2E_PER_T
+    assert row["deaSourceUnit"] == "tCO2"
 
     # The denominator is the process produced quantity, never the marketed quantity.
-    assert row['components']['denominator']['source'] == 'PROCESS_PRODUCED_QUANTITY'
-    assert Decimal(row['processProducedQuantity']) == scenario.denominator_tonnes
+    assert row["components"]["denominator"]["source"] == "PROCESS_PRODUCED_QUANTITY"
+    assert Decimal(row["processProducedQuantity"]) == scenario.denominator_tonnes
 
     contribution = detail.precursor_contributions[0]
-    assert Decimal(contribution['quantityTonnes']) == PRECURSOR_USE_TONNES
-    assert Decimal(contribution['specificDirect']) == PRECURSOR_SPECIFIC_DIRECT
-    assert Decimal(contribution['specificIndirect']) == PRECURSOR_SPECIFIC_INDIRECT
-    assert Decimal(contribution['contributionDirectTco2eRaw']) == GOLDEN_PRECURSOR_DIRECT_TCO2E
-    assert (
-        Decimal(contribution['contributionIndirectTco2eRaw']) == GOLDEN_PRECURSOR_INDIRECT_TCO2E
-    )
-    assert contribution['dataSourceMode'] == 'SUPPLIER_DATA'
+    assert Decimal(contribution["quantityTonnes"]) == PRECURSOR_USE_TONNES
+    assert Decimal(contribution["specificDirect"]) == PRECURSOR_SPECIFIC_DIRECT
+    assert Decimal(contribution["specificIndirect"]) == PRECURSOR_SPECIFIC_INDIRECT
+    assert Decimal(contribution["contributionDirectTco2eRaw"]) == GOLDEN_PRECURSOR_DIRECT_TCO2E
+    assert Decimal(contribution["contributionIndirectTco2eRaw"]) == GOLDEN_PRECURSOR_INDIRECT_TCO2E
+    assert contribution["dataSourceMode"] == "SUPPLIER_DATA"
 
 
 def test_binding_totals_equal_the_sum_of_product_rows(seeded_db: Session) -> None:
@@ -191,10 +189,10 @@ def test_binding_totals_equal_the_sum_of_product_rows(seeded_db: Session) -> Non
         execution.result_id,
     )
     assert detail.total_direct_tco2e_raw == sum(
-        Decimal(p['totalDirectTco2eRaw']) for p in detail.products
+        Decimal(p["totalDirectTco2eRaw"]) for p in detail.products
     )
     assert detail.total_indirect_tco2e_raw == sum(
-        Decimal(p['totalIndirectTco2eRaw']) for p in detail.products
+        Decimal(p["totalIndirectTco2eRaw"]) for p in detail.products
     )
     assert (
         detail.total_embedded_tco2e_raw
@@ -264,8 +262,8 @@ def test_execution_without_allocations_fails_closed(seeded_db: Session) -> None:
         seeded_db, user, organization.id, binding.id
     )
     assert readiness.rollup_ready is False
-    assert 'DIRECT_EMISSIONS_ALLOCATION_NOT_READY' in readiness.blocking_issue_codes
-    assert 'INDIRECT_EMISSIONS_ALLOCATION_NOT_READY' in readiness.blocking_issue_codes
+    assert "DIRECT_EMISSIONS_ALLOCATION_NOT_READY" in readiness.blocking_issue_codes
+    assert "INDIRECT_EMISSIONS_ALLOCATION_NOT_READY" in readiness.blocking_issue_codes
     assert CODE_NO_ELIGIBLE_PRODUCTS in readiness.blocking_issue_codes
 
     with pytest.raises(BusinessRuleError) as excinfo:
@@ -274,9 +272,11 @@ def test_execution_without_allocations_fails_closed(seeded_db: Session) -> None:
             user,
             organization.id,
             binding.id,
-            pee.ProductEmbeddedEmissionsExecuteRequest(client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE),
+            pee.ProductEmbeddedEmissionsExecuteRequest(
+                client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE
+            ),
         )
-    codes = {d['code'] for d in excinfo.value.details}
+    codes = {d["code"] for d in excinfo.value.details}
     assert CODE_NO_ELIGIBLE_PRODUCTS in codes
 
 
@@ -302,7 +302,7 @@ def test_two_processes_for_one_product_block_as_ambiguous(seeded_db: Session) ->
 def test_precursor_use_without_a_process_blocks(seeded_db: Session) -> None:
     scenario = seed_ready_rollup(seeded_db)
     other_product = ensure_org_product(
-        seeded_db, scenario.organization.id, code=f'PEE-X-{uuid.uuid4().hex[:6]}'
+        seeded_db, scenario.organization.id, code=f"PEE-X-{uuid.uuid4().hex[:6]}"
     )
     other_profile = create_active_ready_profile(
         seeded_db, scenario.user, scenario.organization.id, product=other_product
@@ -340,7 +340,7 @@ def test_unbalanced_precursor_blocks_the_product(seeded_db: Session) -> None:
         scenario.organization.id,
         scenario.binding.id,
         scenario.precursor_id,
-        PurchasedPrecursorUpdate(row_version=precursor.row_version, quantity=Decimal('9')),
+        PurchasedPrecursorUpdate(row_version=precursor.row_version, quantity=Decimal("9")),
     )
     seeded_db.commit()
 
@@ -359,8 +359,8 @@ def test_production_record_sum_mismatch_blocks_the_denominator(seeded_db: Sessio
         ProductionRecordCreate(
             installation_profile_id=scenario.installation.id,
             product_profile_version_id=scenario.profile_id,
-            quantity=Decimal('1'),
-            unit='t',
+            quantity=Decimal("1"),
+            unit="t",
             production_date=ACTIVITY_DAY,
         ),
     )
@@ -380,7 +380,7 @@ def test_process_without_produced_quantity_is_not_ready(seeded_db: Session) -> N
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Incomplete process',
+            name="Incomplete process",
             product_profile_version_id=profile_id,
         ),
     )
@@ -405,7 +405,9 @@ def test_product_without_precursors_rolls_up_own_emissions_only(seeded_db: Sessi
         user,
         organization.id,
         binding.id,
-        pee.ProductEmbeddedEmissionsExecuteRequest(client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE),
+        pee.ProductEmbeddedEmissionsExecuteRequest(
+            client_request_id=uuid.uuid4(), methodology_code=METHODOLOGY_CODE
+        ),
     )
     assert execution.precursor_contribution_count == 0
 
@@ -413,10 +415,10 @@ def test_product_without_precursors_rolls_up_own_emissions_only(seeded_db: Sessi
         seeded_db, user, organization.id, binding.id, execution.result_id
     )
     row = detail.products[0]
-    assert Decimal(row['precursorDirectTco2eRaw']) == Decimal('0')
-    assert Decimal(row['precursorIndirectTco2eRaw']) == Decimal('0')
-    assert Decimal(row['totalDirectTco2eRaw']) == Decimal(row['ownDirectTco2eRaw'])
-    assert Decimal(row['totalIndirectTco2eRaw']) == Decimal(row['ownIndirectTco2eRaw'])
+    assert Decimal(row["precursorDirectTco2eRaw"]) == Decimal("0")
+    assert Decimal(row["precursorIndirectTco2eRaw"]) == Decimal("0")
+    assert Decimal(row["totalDirectTco2eRaw"]) == Decimal(row["ownDirectTco2eRaw"])
+    assert Decimal(row["totalIndirectTco2eRaw"]) == Decimal(row["ownIndirectTco2eRaw"])
     assert detail.precursor_contributions == []
 
 
@@ -425,7 +427,7 @@ def test_precursor_use_targeting_another_product_is_excluded(seeded_db: Session)
     user, organization, binding, installation, profile_id = _fresh_allocations(seeded_db)
     create_ready_process(seeded_db, user, organization, binding, installation, profile_id)
     other_product = ensure_org_product(
-        seeded_db, organization.id, code=f'PEE-O-{uuid.uuid4().hex[:6]}'
+        seeded_db, organization.id, code=f"PEE-O-{uuid.uuid4().hex[:6]}"
     )
     other_profile = create_active_ready_profile(
         seeded_db, user, organization.id, product=other_product
@@ -437,14 +439,14 @@ def test_precursor_use_targeting_another_product_is_excluded(seeded_db: Session)
         binding.id,
         ProductionProcessCreate(
             installation_profile_id=installation.id,
-            name='Other product process',
+            name="Other product process",
             product_profile_version_id=other_profile.id,
-            produced_quantity=Decimal('4'),
-            produced_quantity_unit='t',
-            marketed_quantity=Decimal('4'),
-            marketed_quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
+            produced_quantity=Decimal("4"),
+            produced_quantity_unit="t",
+            marketed_quantity=Decimal("4"),
+            marketed_quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
             has_measurable_heat=False,
             has_waste_gas=False,
         ),
@@ -457,19 +459,19 @@ def test_precursor_use_targeting_another_product_is_excluded(seeded_db: Session)
         binding.id,
         PurchasedPrecursorCreate(
             installation_profile_id=installation.id,
-            data_source_mode='SUPPLIER_DATA',
-            name='Shared precursor',
-            quantity=Decimal('5'),
-            quantity_unit='t',
-            non_cbam_quantity=Decimal('0'),
-            non_cbam_quantity_unit='t',
-            specific_direct_embedded_emissions=Decimal('0.5'),
-            electricity_consumption_intensity=Decimal('0.2'),
-            electricity_emission_factor=Decimal('0.5'),
-            provenance_notes='Supplier declaration',
+            data_source_mode="SUPPLIER_DATA",
+            name="Shared precursor",
+            quantity=Decimal("5"),
+            quantity_unit="t",
+            non_cbam_quantity=Decimal("0"),
+            non_cbam_quantity_unit="t",
+            specific_direct_embedded_emissions=Decimal("0.5"),
+            electricity_consumption_intensity=Decimal("0.2"),
+            electricity_emission_factor=Decimal("0.5"),
+            provenance_notes="Supplier declaration",
         ),
     )
-    for target, qty in ((profile_id, Decimal('3')), (other_profile.id, Decimal('2'))):
+    for target, qty in ((profile_id, Decimal("3")), (other_profile.id, Decimal("2"))):
         purchased_precursor_service.create_precursor_product_use(
             seeded_db,
             user,
@@ -477,7 +479,7 @@ def test_precursor_use_targeting_another_product_is_excluded(seeded_db: Session)
             binding.id,
             precursor.id,
             PrecursorProductUseCreate(
-                target_product_profile_version_id=target, quantity=qty, unit='t'
+                target_product_profile_version_id=target, quantity=qty, unit="t"
             ),
         )
     seeded_db.commit()
@@ -500,7 +502,7 @@ def test_exported_electricity_is_never_attributed_to_a_product(seeded_db: Sessio
     user = admin(seeded_db)
     organization = org(seeded_db)
     binding, installation, profile_id = seed_allocations(
-        seeded_db, user, organization, exported_electricity_kwh=Decimal('5000')
+        seeded_db, user, organization, exported_electricity_kwh=Decimal("5000")
     )
     create_ready_process(seeded_db, user, organization, binding, installation, profile_id)
     seeded_db.commit()
@@ -528,10 +530,10 @@ def test_exported_electricity_is_never_attributed_to_a_product(seeded_db: Sessio
         seeded_db, user, organization.id, binding.id, execution.result_id
     )
     row = detail.products[0]
-    assert Decimal(row['exportedElectricityDirectTco2e']) == Decimal('0')
-    assert Decimal(row['ownDirectTco2eRaw']) == Decimal(row['deaDirectTco2'])
+    assert Decimal(row["exportedElectricityDirectTco2e"]) == Decimal("0")
+    assert Decimal(row["ownDirectTco2eRaw"]) == Decimal(row["deaDirectTco2"])
     # Indirect stays the raw IEA value: exported electricity feeds T72 (direct) only.
-    assert Decimal(row['ownIndirectTco2eRaw']) == Decimal(row['ieaIndirectTco2e'])
+    assert Decimal(row["ownIndirectTco2eRaw"]) == Decimal(row["ieaIndirectTco2e"])
     assert EXPORTED_ELECTRICITY_NOTE_CODE in detail.informational_codes
 
 
@@ -568,11 +570,11 @@ def test_v2_execute_defaults_and_matches_v1_when_no_internal_flows(
     )
     assert detail.exported_electricity_note_code == EXPORTED_ELECTRICITY_NOTE_CODE_V2
     assert detail.internal_precursor_note_code == INTERNAL_PRECURSOR_NOTE_CODE_V2
-    assert 'not modeled' not in detail.exported_electricity_note.lower()
-    assert 'not modeled' not in detail.internal_precursor_note.lower()
+    assert "not modeled" not in detail.exported_electricity_note.lower()
+    assert "not modeled" not in detail.internal_precursor_note.lower()
     row = detail.products[0]
-    assert Decimal(row['internalDirectTco2eRaw']) == Decimal('0')
-    assert Decimal(row['exportedElectricityDirectTco2e']) == Decimal('0')
+    assert Decimal(row["internalDirectTco2eRaw"]) == Decimal("0")
+    assert Decimal(row["exportedElectricityDirectTco2e"]) == Decimal("0")
     assert detail.internal_contributions == []
 
     v1_detail = pee.get_product_embedded_emissions_result(
@@ -610,11 +612,11 @@ def test_v2_includes_t72_in_own_direct(seeded_db: Session) -> None:
         ProductionProcessUpdate(
             row_version=process.row_version,
             has_exported_electricity=True,
-            exported_electricity_quantity=Decimal('2'),
-            exported_electricity_unit='MWh',
-            exported_electricity_emission_factor=Decimal('0.5'),
-            exported_electricity_ef_unit='tCO2/MWh',
-            exported_electricity_provenance='metered export',
+            exported_electricity_quantity=Decimal("2"),
+            exported_electricity_unit="MWh",
+            exported_electricity_emission_factor=Decimal("0.5"),
+            exported_electricity_ef_unit="tCO2/MWh",
+            exported_electricity_provenance="metered export",
         ),
     )
     seeded_db.commit()
@@ -628,5 +630,5 @@ def test_v2_includes_t72_in_own_direct(seeded_db: Session) -> None:
         execution.result_id,
     )
     row = detail.products[0]
-    assert Decimal(row['exportedElectricityDirectTco2e']) == Decimal('-1.0')
-    assert Decimal(row['ownDirectTco2eRaw']) == Decimal(row['deaDirectTco2']) + Decimal('-1.0')
+    assert Decimal(row["exportedElectricityDirectTco2e"]) == Decimal("-1.0")
+    assert Decimal(row["ownDirectTco2eRaw"]) == Decimal(row["deaDirectTco2"]) + Decimal("-1.0")

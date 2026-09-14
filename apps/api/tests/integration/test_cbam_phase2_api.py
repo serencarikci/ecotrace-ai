@@ -154,9 +154,9 @@ def test_period_binding_open_data_collection_flow(client: TestClient) -> None:
 def test_product_profile_api_no_classification(client: TestClient) -> None:
     admin = api_login(client, "orgadmin@ecotrace.dev", "EcoTraceOrgAdmin!2024")
     org_id = current_org_id(client, admin)
-    products = client.get(
-        f"/api/v1/organizations/{org_id}/products", headers=_auth(admin)
-    ).json()["items"]
+    products = client.get(f"/api/v1/organizations/{org_id}/products", headers=_auth(admin)).json()[
+        "items"
+    ]
     assert products
     product_id = products[0]["id"]
     version = 9000 + (uuid.uuid4().int % 1000)

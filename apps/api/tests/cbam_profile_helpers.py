@@ -23,7 +23,7 @@ def ensure_org_product(
     *,
     code: str | None = None,
 ) -> Product:
-    code = code or f'PR-{uuid.uuid4().hex[:8]}'
+    code = code or f"PR-{uuid.uuid4().hex[:8]}"
     existing = db.execute(
         select(Product).where(
             Product.organization_id == organization_id,
@@ -35,9 +35,9 @@ def ensure_org_product(
     row = Product(
         organization_id=organization_id,
         code=code,
-        name=f'Test product {code}',
-        product_type='finished_good',
-        default_unit_code='t',
+        name=f"Test product {code}",
+        product_type="finished_good",
+        default_unit_code="t",
         is_active=True,
     )
     db.add(row)
@@ -51,7 +51,7 @@ def create_active_ready_profile(
     organization_id: uuid.UUID,
     *,
     product: Product | None = None,
-    cn_code: str = '73181595',
+    cn_code: str = "73181595",
 ) -> product_profile_service.ProductProfileResponse:
     product = product or ensure_org_product(db, organization_id)
     draft = product_profile_service.create_product_profile(
@@ -62,13 +62,13 @@ def create_active_ready_profile(
             product_id=product.id,
             product_name=product.name,
             cn_code=cn_code,
-            reducing_agent='Natural gas',
-            steel_mill_identification_number='TR-TEST-001',
-            percent_mn=Decimal('40'),
-            percent_cr=Decimal('20'),
-            percent_ni=Decimal('10'),
-            percent_other_alloys=Decimal('10'),
-            percent_other_materials=Decimal('20'),
+            reducing_agent="Natural gas",
+            steel_mill_identification_number="TR-TEST-001",
+            percent_mn=Decimal("40"),
+            percent_cr=Decimal("20"),
+            percent_ni=Decimal("10"),
+            percent_other_alloys=Decimal("10"),
+            percent_other_materials=Decimal("20"),
         ),
     )
     return product_profile_service.publish_product_profile(

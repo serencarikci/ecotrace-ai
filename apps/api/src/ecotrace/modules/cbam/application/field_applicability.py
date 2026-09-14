@@ -7,35 +7,35 @@ from typing import Any
 from ecotrace.shared.domain.schemas import CamelModel
 
 FIELD_APPLICABILITY_KEYS = (
-    'reducingAgent',
-    'steelMillIdentificationNumber',
-    'percentMn',
-    'percentCr',
-    'percentNi',
-    'percentOtherAlloys',
-    'percentOtherMaterials',
+    "reducingAgent",
+    "steelMillIdentificationNumber",
+    "percentMn",
+    "percentCr",
+    "percentNi",
+    "percentOtherAlloys",
+    "percentOtherMaterials",
 )
 
 # API camelCase key → ORM attribute on CbamProductProfileVersion
 FIELD_ATTR_BY_KEY = {
-    'reducingAgent': 'reducing_agent',
-    'steelMillIdentificationNumber': 'steel_mill_identification_number',
-    'percentMn': 'percent_mn',
-    'percentCr': 'percent_cr',
-    'percentNi': 'percent_ni',
-    'percentOtherAlloys': 'percent_other_alloys',
-    'percentOtherMaterials': 'percent_other_materials',
+    "reducingAgent": "reducing_agent",
+    "steelMillIdentificationNumber": "steel_mill_identification_number",
+    "percentMn": "percent_mn",
+    "percentCr": "percent_cr",
+    "percentNi": "percent_ni",
+    "percentOtherAlloys": "percent_other_alloys",
+    "percentOtherMaterials": "percent_other_materials",
 }
 
 # Request/model snake_case → API camelCase key
 KEY_BY_ATTR = {attr: key for key, attr in FIELD_ATTR_BY_KEY.items()}
 
 PERCENT_KEY_BY_ATTR = {
-    'percent_mn': 'percentMn',
-    'percent_cr': 'percentCr',
-    'percent_ni': 'percentNi',
-    'percent_other_alloys': 'percentOtherAlloys',
-    'percent_other_materials': 'percentOtherMaterials',
+    "percent_mn": "percentMn",
+    "percent_cr": "percentCr",
+    "percent_ni": "percentNi",
+    "percent_other_alloys": "percentOtherAlloys",
+    "percent_other_materials": "percentOtherMaterials",
 }
 
 
@@ -54,13 +54,13 @@ class FieldApplicability(CamelModel):
     def from_raw(cls, raw: Any) -> FieldApplicability:
         normalized = normalize_field_applicability(raw)
         return cls(
-            reducing_agent=normalized['reducingAgent'],
-            steel_mill_identification_number=normalized['steelMillIdentificationNumber'],
-            percent_mn=normalized['percentMn'],
-            percent_cr=normalized['percentCr'],
-            percent_ni=normalized['percentNi'],
-            percent_other_alloys=normalized['percentOtherAlloys'],
-            percent_other_materials=normalized['percentOtherMaterials'],
+            reducing_agent=normalized["reducingAgent"],
+            steel_mill_identification_number=normalized["steelMillIdentificationNumber"],
+            percent_mn=normalized["percentMn"],
+            percent_cr=normalized["percentCr"],
+            percent_ni=normalized["percentNi"],
+            percent_other_alloys=normalized["percentOtherAlloys"],
+            percent_other_materials=normalized["percentOtherMaterials"],
         )
 
 
@@ -87,19 +87,17 @@ def field_applicability_from_sector_entry(entry: dict[str, Any] | None) -> dict[
     """Map workbook-derived sectorSpecialParameters entry → API contract keys."""
     if not entry:
         return empty_field_applicability()
-    raw_flags = entry.get('flags')
+    raw_flags = entry.get("flags")
     flags: dict[str, Any] = raw_flags if isinstance(raw_flags, dict) else {}
     return normalize_field_applicability(
         {
-            'reducingAgent': flags.get('reducingAgent', False),
-            'steelMillIdentificationNumber': flags.get(
-                'steelMillIdentificationNumber', False
-            ),
-            'percentMn': flags.get('percentMn', False),
-            'percentCr': flags.get('percentCr', False),
-            'percentNi': flags.get('percentNi', False),
-            'percentOtherAlloys': flags.get('percentOtherAlloys', False),
-            'percentOtherMaterials': entry.get('percentOtherMaterials', False),
+            "reducingAgent": flags.get("reducingAgent", False),
+            "steelMillIdentificationNumber": flags.get("steelMillIdentificationNumber", False),
+            "percentMn": flags.get("percentMn", False),
+            "percentCr": flags.get("percentCr", False),
+            "percentNi": flags.get("percentNi", False),
+            "percentOtherAlloys": flags.get("percentOtherAlloys", False),
+            "percentOtherMaterials": entry.get("percentOtherMaterials", False),
         }
     )
 
@@ -113,16 +111,14 @@ def field_applicability_from_cn_payload(
     if explicit is not None:
         return normalize_field_applicability(explicit)
     entry = sector_special_parameters.get(sector)
-    return field_applicability_from_sector_entry(
-        entry if isinstance(entry, dict) else None
-    )
+    return field_applicability_from_sector_entry(entry if isinstance(entry, dict) else None)
 
 
 def field_applicability_for_cn(cn: Any | None) -> dict[str, bool]:
     """Read persisted CN-row applicability (authoritative); never sector-name matching."""
     if cn is None:
         return empty_field_applicability()
-    raw = getattr(cn, 'field_applicability', None)
+    raw = getattr(cn, "field_applicability", None)
     return normalize_field_applicability(raw)
 
 
@@ -153,11 +149,11 @@ def collect_non_applicable_write_errors(
         if not fa[key]:
             errors.append(
                 {
-                    'code': f'{attr.upper()}_NOT_APPLICABLE',
-                    'field': key,
-                    'message': (
-                        'This field is not applicable to the selected CN code '
-                        'and cannot be persisted.'
+                    "code": f"{attr.upper()}_NOT_APPLICABLE",
+                    "field": key,
+                    "message": (
+                        "This field is not applicable to the selected CN code "
+                        "and cannot be persisted."
                     ),
                 }
             )

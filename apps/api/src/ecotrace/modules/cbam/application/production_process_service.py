@@ -119,7 +119,7 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
 
-ReadinessStatus = Literal['EMPTY', 'INCOMPLETE', 'UNBALANCED', 'STALE', 'READY']
+ReadinessStatus = Literal["EMPTY", "INCOMPLETE", "UNBALANCED", "STALE", "READY"]
 
 
 class ProductionProcessCreate(CamelModel):
@@ -322,7 +322,7 @@ class ProcessExportedElectricityView(CamelModel):
 
 
 class _IeaProductSnapshot:
-    __slots__ = ('electricity_mwh', 'emissions_tco2e')
+    __slots__ = ("electricity_mwh", "emissions_tco2e")
 
     def __init__(self, electricity_mwh: Decimal, emissions_tco2e: Decimal) -> None:
         self.electricity_mwh = electricity_mwh
@@ -333,19 +333,19 @@ class _BindingAllocationBundle:
     """Bounded binding-scoped DEA/IEA/PE snapshots for process list/detail (no N+1)."""
 
     __slots__ = (
-        'dea_by_profile',
-        'dea_current_result_id',
-        'dea_is_stale',
-        'dea_result_unit',
-        'dea_stale_reason_codes',
-        'exported_electricity',
-        'facility_exported_by_installation',
-        'iea_by_profile',
-        'iea_current_result_id',
-        'iea_emissions_unit',
-        'iea_is_stale',
-        'iea_stale_reason_codes',
-        'process_exported_by_installation',
+        "dea_by_profile",
+        "dea_current_result_id",
+        "dea_is_stale",
+        "dea_result_unit",
+        "dea_stale_reason_codes",
+        "exported_electricity",
+        "facility_exported_by_installation",
+        "iea_by_profile",
+        "iea_current_result_id",
+        "iea_emissions_unit",
+        "iea_is_stale",
+        "iea_stale_reason_codes",
+        "process_exported_by_installation",
     )
 
     def __init__(
@@ -489,8 +489,8 @@ def _require_mass_unit(unit: str | None, *, field: str) -> str | None:
     normalized = require_unit(unit)
     if normalized not in MASS_ACTIVITY_UNITS:
         raise ValidationAppError(
-            f'{field} must use a mass unit (kg, t, or Gg).',
-            details=[{'code': CODE_INCOMPATIBLE_MASS_UNIT, 'field': field}],
+            f"{field} must use a mass unit (kg, t, or Gg).",
+            details=[{"code": CODE_INCOMPATIBLE_MASS_UNIT, "field": field}],
         )
     return normalized
 
@@ -504,19 +504,19 @@ def _optional_tonnes(quantity: Decimal | None, unit: str | None) -> Decimal | No
 def _validate_method(method: str) -> str:
     if method not in ALL_CALCULATION_METHODS:
         raise ValidationAppError(
-            f'Unknown calculation method: {method}',
-            details=[{'code': CODE_PROCESS_METHOD_REQUIRED, 'method': method}],
+            f"Unknown calculation method: {method}",
+            details=[{"code": CODE_PROCESS_METHOD_REQUIRED, "method": method}],
         )
     if method in DISABLED_CALCULATION_METHODS:
         raise BusinessRuleError(
-            f'Calculation method {method} is not supported in Phase 9A. '
-            f'Only {METHOD_CONVENTIONAL} is active.',
-            details=[{'code': CODE_PROCESS_METHOD_UNSUPPORTED, 'method': method}],
+            f"Calculation method {method} is not supported in Phase 9A. "
+            f"Only {METHOD_CONVENTIONAL} is active.",
+            details=[{"code": CODE_PROCESS_METHOD_UNSUPPORTED, "method": method}],
         )
     if method not in SUPPORTED_CALCULATION_METHODS:
         raise BusinessRuleError(
-            f'Calculation method {method} is not supported.',
-            details=[{'code': CODE_PROCESS_METHOD_UNSUPPORTED, 'method': method}],
+            f"Calculation method {method} is not supported.",
+            details=[{"code": CODE_PROCESS_METHOD_UNSUPPORTED, "method": method}],
         )
     return method
 
@@ -528,21 +528,21 @@ def _validate_dq_codes(
 ) -> None:
     if quality is not None and quality not in data_quality_codes():
         raise ValidationAppError(
-            f'Invalid data quality code: {quality}',
-            details=[{'code': CODE_DATA_QUALITY_CODE_INVALID, 'field': 'dataQualityCode'}],
+            f"Invalid data quality code: {quality}",
+            details=[{"code": CODE_DATA_QUALITY_CODE_INVALID, "field": "dataQualityCode"}],
         )
     if verification is not None and verification not in data_verification_codes():
         raise ValidationAppError(
-            f'Invalid data verification code: {verification}',
-            details=[{'code': CODE_DATA_QUALITY_CODE_INVALID, 'field': 'dataVerificationCode'}],
+            f"Invalid data verification code: {verification}",
+            details=[{"code": CODE_DATA_QUALITY_CODE_INVALID, "field": "dataVerificationCode"}],
         )
     if justification is not None and justification not in data_quality_justification_codes():
         raise ValidationAppError(
-            f'Invalid data quality justification code: {justification}',
+            f"Invalid data quality justification code: {justification}",
             details=[
                 {
-                    'code': CODE_DATA_QUALITY_CODE_INVALID,
-                    'field': 'dataQualityJustificationCode',
+                    "code": CODE_DATA_QUALITY_CODE_INVALID,
+                    "field": "dataQualityJustificationCode",
                 }
             ],
         )
@@ -581,11 +581,11 @@ def _clear_waste_fields(row: CbamProductionProcess) -> None:
 
 
 _EXPORTED_ELECTRICITY_FIELDS = (
-    'exported_electricity_quantity',
-    'exported_electricity_unit',
-    'exported_electricity_emission_factor',
-    'exported_electricity_ef_unit',
-    'exported_electricity_provenance',
+    "exported_electricity_quantity",
+    "exported_electricity_unit",
+    "exported_electricity_emission_factor",
+    "exported_electricity_ef_unit",
+    "exported_electricity_provenance",
 )
 
 
@@ -598,8 +598,8 @@ def _validate_exported_electricity_quantity_unit(unit: str) -> str:
     normalized = require_unit(unit)
     if normalized != EXPORTED_ELECTRICITY_QUANTITY_UNIT:
         raise ValidationAppError(
-            f'Exported electricity unit must be {EXPORTED_ELECTRICITY_QUANTITY_UNIT}.',
-            details=[{'field': 'exportedElectricityUnit'}],
+            f"Exported electricity unit must be {EXPORTED_ELECTRICITY_QUANTITY_UNIT}.",
+            details=[{"field": "exportedElectricityUnit"}],
         )
     return normalized
 
@@ -607,8 +607,8 @@ def _validate_exported_electricity_quantity_unit(unit: str) -> str:
 def _validate_exported_electricity_ef_unit(unit: str) -> str:
     if unit != EXPORTED_ELECTRICITY_FACTOR_UNIT:
         raise ValidationAppError(
-            f'Exported electricity factor unit must be {EXPORTED_ELECTRICITY_FACTOR_UNIT}.',
-            details=[{'field': 'exportedElectricityEfUnit'}],
+            f"Exported electricity factor unit must be {EXPORTED_ELECTRICITY_FACTOR_UNIT}.",
+            details=[{"field": "exportedElectricityEfUnit"}],
         )
     return unit
 
@@ -627,32 +627,32 @@ def _apply_exported_electricity_constraints(
     if has_exported is False:
         if reject_fields_when_false and any(v is not None for v in values):
             raise ValidationAppError(
-                'Exported-electricity fields must be null when hasExportedElectricity is false.',
-                details=[{'code': CODE_EXPORTED_ELECTRICITY_FIELDS_NOT_ALLOWED}],
+                "Exported-electricity fields must be null when hasExportedElectricity is false.",
+                details=[{"code": CODE_EXPORTED_ELECTRICITY_FIELDS_NOT_ALLOWED}],
             )
         return {
-            'has_exported_electricity': False,
-            'exported_electricity_quantity': None,
-            'exported_electricity_unit': None,
-            'exported_electricity_emission_factor': None,
-            'exported_electricity_ef_unit': None,
-            'exported_electricity_provenance': None,
+            "has_exported_electricity": False,
+            "exported_electricity_quantity": None,
+            "exported_electricity_unit": None,
+            "exported_electricity_emission_factor": None,
+            "exported_electricity_ef_unit": None,
+            "exported_electricity_provenance": None,
         }
-    out: dict[str, Any] = {'has_exported_electricity': has_exported}
+    out: dict[str, Any] = {"has_exported_electricity": has_exported}
     if quantity is not None:
-        require_non_negative(quantity, field='exportedElectricityQuantity')
-        out['exported_electricity_quantity'] = quantity
+        require_non_negative(quantity, field="exportedElectricityQuantity")
+        out["exported_electricity_quantity"] = quantity
     if quantity_unit is not None:
-        out['exported_electricity_unit'] = _validate_exported_electricity_quantity_unit(
+        out["exported_electricity_unit"] = _validate_exported_electricity_quantity_unit(
             quantity_unit
         )
     if emission_factor is not None:
-        require_non_negative(emission_factor, field='exportedElectricityEmissionFactor')
-        out['exported_electricity_emission_factor'] = emission_factor
+        require_non_negative(emission_factor, field="exportedElectricityEmissionFactor")
+        out["exported_electricity_emission_factor"] = emission_factor
     if ef_unit is not None:
-        out['exported_electricity_ef_unit'] = _validate_exported_electricity_ef_unit(ef_unit)
+        out["exported_electricity_ef_unit"] = _validate_exported_electricity_ef_unit(ef_unit)
     if provenance is not None:
-        out['exported_electricity_provenance'] = provenance.strip() or None
+        out["exported_electricity_provenance"] = provenance.strip() or None
     return out
 
 
@@ -663,12 +663,9 @@ def _exported_electricity_blocking_codes(row: CbamProductionProcess) -> list[str
     codes: list[str] = []
     if row.exported_electricity_quantity is None or row.exported_electricity_unit is None:
         codes.append(CODE_EXPORTED_ELECTRICITY_DATA_INCOMPLETE)
-    if (
-        row.exported_electricity_emission_factor is None
-        or row.exported_electricity_ef_unit is None
-    ):
+    if row.exported_electricity_emission_factor is None or row.exported_electricity_ef_unit is None:
         codes.append(CODE_EXPORTED_ELECTRICITY_FACTOR_REQUIRED)
-    if not (row.exported_electricity_provenance or '').strip():
+    if not (row.exported_electricity_provenance or "").strip():
         codes.append(CODE_EXPORTED_ELECTRICITY_PROVENANCE_REQUIRED)
     return codes
 
@@ -685,9 +682,7 @@ def _process_exported_electricity_view(
     installation_facility = bundle.facility_exported_by_installation.get(
         row.installation_profile_id
     )
-    installation_process = bundle.process_exported_by_installation.get(
-        row.installation_profile_id
-    )
+    installation_process = bundle.process_exported_by_installation.get(row.installation_profile_id)
     difference: Decimal | None = None
     if installation_facility is None and installation_process is None:
         status = EXPORTED_ELECTRICITY_RECONCILIATION_NOT_APPLICABLE
@@ -697,7 +692,7 @@ def _process_exported_electricity_view(
         difference = installation_process - installation_facility
         status = (
             EXPORTED_ELECTRICITY_RECONCILIATION_MATCHED
-            if difference == Decimal('0')
+            if difference == Decimal("0")
             else EXPORTED_ELECTRICITY_RECONCILIATION_MISMATCHED
         )
     return ProcessExportedElectricityView(
@@ -711,9 +706,7 @@ def _process_exported_electricity_view(
         calculation_status=attribution.status,
         attributed_direct_tco2e=attribution.attributed_direct_tco2e,
         formula_ref=attribution.formula_ref,
-        facility_exported_electricity_mwh=(
-            bundle.exported_electricity.exported_electricity_mwh
-        ),
+        facility_exported_electricity_mwh=(bundle.exported_electricity.exported_electricity_mwh),
         installation_facility_exported_electricity_mwh=installation_facility,
         installation_process_exported_electricity_mwh=installation_process,
         reconciliation_status=status,
@@ -752,61 +745,61 @@ def _apply_heat_constraints(
     if has_heat is False:
         if reject_fields_when_false and any(v is not None for v in heat_fields):
             raise ValidationAppError(
-                'Measurable-heat fields must be null when hasMeasurableHeat is false.',
-                details=[{'code': CODE_HEAT_FIELDS_NOT_ALLOWED}],
+                "Measurable-heat fields must be null when hasMeasurableHeat is false.",
+                details=[{"code": CODE_HEAT_FIELDS_NOT_ALLOWED}],
             )
         return {
-            'has_measurable_heat': False,
-            'heat_imported_quantity': None,
-            'heat_imported_unit': None,
-            'heat_exported_quantity': None,
-            'heat_exported_unit': None,
-            'heat_imported_ef': None,
-            'heat_exported_ef': None,
-            'heat_ef_unit': None,
-            'heat_factor_source': None,
-            'heat_factor_document': None,
+            "has_measurable_heat": False,
+            "heat_imported_quantity": None,
+            "heat_imported_unit": None,
+            "heat_exported_quantity": None,
+            "heat_exported_unit": None,
+            "heat_imported_ef": None,
+            "heat_exported_ef": None,
+            "heat_ef_unit": None,
+            "heat_factor_source": None,
+            "heat_factor_document": None,
         }
-    out: dict[str, Any] = {'has_measurable_heat': has_heat}
+    out: dict[str, Any] = {"has_measurable_heat": has_heat}
     if imported_q is not None:
-        require_non_negative(imported_q, field='heatImportedQuantity')
-        out['heat_imported_quantity'] = imported_q
+        require_non_negative(imported_q, field="heatImportedQuantity")
+        out["heat_imported_quantity"] = imported_q
     if exported_q is not None:
-        require_non_negative(exported_q, field='heatExportedQuantity')
-        out['heat_exported_quantity'] = exported_q
+        require_non_negative(exported_q, field="heatExportedQuantity")
+        out["heat_exported_quantity"] = exported_q
     if imported_u is not None:
         u = require_unit(imported_u)
         if u != HEAT_QUANTITY_UNIT:
             raise ValidationAppError(
-                f'Heat quantity unit must be {HEAT_QUANTITY_UNIT}.',
-                details=[{'field': 'heatImportedUnit'}],
+                f"Heat quantity unit must be {HEAT_QUANTITY_UNIT}.",
+                details=[{"field": "heatImportedUnit"}],
             )
-        out['heat_imported_unit'] = u
+        out["heat_imported_unit"] = u
     if exported_u is not None:
         u = require_unit(exported_u)
         if u != HEAT_QUANTITY_UNIT:
             raise ValidationAppError(
-                f'Heat quantity unit must be {HEAT_QUANTITY_UNIT}.',
-                details=[{'field': 'heatExportedUnit'}],
+                f"Heat quantity unit must be {HEAT_QUANTITY_UNIT}.",
+                details=[{"field": "heatExportedUnit"}],
             )
-        out['heat_exported_unit'] = u
+        out["heat_exported_unit"] = u
     if imported_ef is not None:
-        require_non_negative(imported_ef, field='heatImportedEf')
-        out['heat_imported_ef'] = imported_ef
+        require_non_negative(imported_ef, field="heatImportedEf")
+        out["heat_imported_ef"] = imported_ef
     if exported_ef is not None:
-        require_non_negative(exported_ef, field='heatExportedEf')
-        out['heat_exported_ef'] = exported_ef
+        require_non_negative(exported_ef, field="heatExportedEf")
+        out["heat_exported_ef"] = exported_ef
     if ef_unit is not None:
         if ef_unit != HEAT_FACTOR_UNIT:
             raise ValidationAppError(
-                f'Heat EF unit must be {HEAT_FACTOR_UNIT}.',
-                details=[{'field': 'heatEfUnit'}],
+                f"Heat EF unit must be {HEAT_FACTOR_UNIT}.",
+                details=[{"field": "heatEfUnit"}],
             )
-        out['heat_ef_unit'] = ef_unit
+        out["heat_ef_unit"] = ef_unit
     if factor_source is not None:
-        out['heat_factor_source'] = factor_source.strip() or None
+        out["heat_factor_source"] = factor_source.strip() or None
     if factor_document is not None:
-        out['heat_factor_document'] = factor_document.strip() or None
+        out["heat_factor_document"] = factor_document.strip() or None
     return out
 
 
@@ -824,42 +817,42 @@ def _apply_waste_constraints(
     if has_waste is False:
         if reject_fields_when_false and any(v is not None for v in waste_fields):
             raise ValidationAppError(
-                'Waste-gas fields must be null when hasWasteGas is false.',
-                details=[{'code': CODE_WASTE_GAS_FIELDS_NOT_ALLOWED}],
+                "Waste-gas fields must be null when hasWasteGas is false.",
+                details=[{"code": CODE_WASTE_GAS_FIELDS_NOT_ALLOWED}],
             )
         return {
-            'has_waste_gas': False,
-            'waste_gas_imported_quantity': None,
-            'waste_gas_imported_unit': None,
-            'waste_gas_exported_quantity': None,
-            'waste_gas_exported_unit': None,
-            'waste_gas_provenance': None,
+            "has_waste_gas": False,
+            "waste_gas_imported_quantity": None,
+            "waste_gas_imported_unit": None,
+            "waste_gas_exported_quantity": None,
+            "waste_gas_exported_unit": None,
+            "waste_gas_provenance": None,
         }
-    out: dict[str, Any] = {'has_waste_gas': has_waste}
+    out: dict[str, Any] = {"has_waste_gas": has_waste}
     if imported_q is not None:
-        require_non_negative(imported_q, field='wasteGasImportedQuantity')
-        out['waste_gas_imported_quantity'] = imported_q
+        require_non_negative(imported_q, field="wasteGasImportedQuantity")
+        out["waste_gas_imported_quantity"] = imported_q
     if exported_q is not None:
-        require_non_negative(exported_q, field='wasteGasExportedQuantity')
-        out['waste_gas_exported_quantity'] = exported_q
+        require_non_negative(exported_q, field="wasteGasExportedQuantity")
+        out["waste_gas_exported_quantity"] = exported_q
     if imported_u is not None:
         u = require_unit(imported_u)
         if u != WASTE_GAS_QUANTITY_UNIT:
             raise ValidationAppError(
-                f'Waste-gas quantity unit must be {WASTE_GAS_QUANTITY_UNIT}.',
-                details=[{'field': 'wasteGasImportedUnit'}],
+                f"Waste-gas quantity unit must be {WASTE_GAS_QUANTITY_UNIT}.",
+                details=[{"field": "wasteGasImportedUnit"}],
             )
-        out['waste_gas_imported_unit'] = u
+        out["waste_gas_imported_unit"] = u
     if exported_u is not None:
         u = require_unit(exported_u)
         if u != WASTE_GAS_QUANTITY_UNIT:
             raise ValidationAppError(
-                f'Waste-gas quantity unit must be {WASTE_GAS_QUANTITY_UNIT}.',
-                details=[{'field': 'wasteGasExportedUnit'}],
+                f"Waste-gas quantity unit must be {WASTE_GAS_QUANTITY_UNIT}.",
+                details=[{"field": "wasteGasExportedUnit"}],
             )
-        out['waste_gas_exported_unit'] = u
+        out["waste_gas_exported_unit"] = u
     if provenance is not None:
-        out['waste_gas_provenance'] = provenance.strip() or None
+        out["waste_gas_provenance"] = provenance.strip() or None
     return out
 
 
@@ -875,7 +868,7 @@ def _get_process(
         or row.organization_id != organization_id
         or row.reporting_period_binding_id != binding_id
     ):
-        raise NotFoundError('CBAM production process not found.')
+        raise NotFoundError("CBAM production process not found.")
     return row
 
 
@@ -926,15 +919,15 @@ def _sum_production_records_tonnes(
                 CbamProductionRecord.organization_id == organization_id,
                 CbamProductionRecord.reporting_period_binding_id == binding_id,
                 CbamProductionRecord.product_profile_version_id == profile_id,
-                CbamProductionRecord.status == 'active',
+                CbamProductionRecord.status == "active",
             )
         )
         .scalars()
         .all()
     )
     if not rows:
-        return Decimal('0')
-    total = Decimal('0')
+        return Decimal("0")
+    total = Decimal("0")
     for r in rows:
         total += to_tonnes(r.quantity, r.unit)
     return total
@@ -979,8 +972,8 @@ def _load_binding_allocation_bundle(
     dea_by_profile: dict[uuid.UUID, Decimal] = {}
     if dea_summary.current_result_id is not None and not dea_summary.current_is_stale:
         for item in dea_summary.totals_by_product_profile:
-            profile_key = item.get('productProfileVersionId')
-            value = item.get('finalAllocatedFossilCo2Tonnes')
+            profile_key = item.get("productProfileVersionId")
+            value = item.get("finalAllocatedFossilCo2Tonnes")
             if profile_key is None or value is None:
                 continue
             dea_by_profile[uuid.UUID(str(profile_key))] = Decimal(str(value))
@@ -988,9 +981,9 @@ def _load_binding_allocation_bundle(
     iea_by_profile: dict[uuid.UUID, _IeaProductSnapshot] = {}
     if iea_summary.current_result_id is not None and not iea_summary.current_is_stale:
         for item in iea_summary.totals_by_product_profile:
-            profile_key = item.get('productProfileVersionId')
-            elec = item.get('finalAllocatedElectricityMwh')
-            emissions = item.get('finalAllocatedIndirectEmissionsTco2e')
+            profile_key = item.get("productProfileVersionId")
+            elec = item.get("finalAllocatedElectricityMwh")
+            emissions = item.get("finalAllocatedIndirectEmissionsTco2e")
             if profile_key is None or elec is None or emissions is None:
                 continue
             iea_by_profile[uuid.UUID(str(profile_key))] = _IeaProductSnapshot(
@@ -1001,10 +994,10 @@ def _load_binding_allocation_bundle(
     exported = ExportedElectricityView(
         exported_electricity_mwh=pe.total_exported_electricity_mwh,
         electricity_unit=ELECTRICITY_UNIT_MWH,
-        source='purchased_electricity_current',
+        source="purchased_electricity_current",
         note=(
-            'Reused from purchased-electricity immutable/current results. '
-            'Not subtracted from indirect consumption (SEE T66 vs T72).'
+            "Reused from purchased-electricity immutable/current results. "
+            "Not subtracted from indirect consumption (SEE T66 vs T72)."
         ),
     )
     facility_exported = get_exported_electricity_mwh_by_installation(
@@ -1023,7 +1016,7 @@ def _load_binding_allocation_bundle(
         if mwh is None:
             continue
         key = process_row.installation_profile_id
-        process_exported[key] = process_exported.get(key, Decimal('0')) + mwh
+        process_exported[key] = process_exported.get(key, Decimal("0")) + mwh
 
     return _BindingAllocationBundle(
         dea_current_result_id=dea_summary.current_result_id,
@@ -1263,16 +1256,15 @@ def _compute_readiness(
 
     blocking.extend(target_blocking)
 
-    if heat_status == 'INCOMPLETE':
+    if heat_status == "INCOMPLETE":
         blocking.append(CODE_MEASURABLE_HEAT_DATA_INCOMPLETE)
-    if waste_status == 'INCOMPLETE':
+    if waste_status == "INCOMPLETE":
         blocking.append(CODE_WASTE_GAS_DATA_INCOMPLETE)
 
     informational: list[str] = []
     blocking.extend(_exported_electricity_blocking_codes(row))
     mismatched = (
-        exported_electricity.reconciliation_status
-        == EXPORTED_ELECTRICITY_RECONCILIATION_MISMATCHED
+        exported_electricity.reconciliation_status == EXPORTED_ELECTRICITY_RECONCILIATION_MISMATCHED
     )
     if mismatched:
         # Only a process that declares its own L71 entry is blocked; sibling processes of
@@ -1284,15 +1276,11 @@ def _compute_readiness(
 
     stale = False
     if not dea.is_ready:
-        blocking.append(
-            dea.blocking_code or CODE_DIRECT_EMISSIONS_ALLOCATION_NOT_READY
-        )
+        blocking.append(dea.blocking_code or CODE_DIRECT_EMISSIONS_ALLOCATION_NOT_READY)
         if dea.is_stale:
             stale = True
     if not iea.is_ready:
-        blocking.append(
-            iea.blocking_code or CODE_INDIRECT_EMISSIONS_ALLOCATION_NOT_READY
-        )
+        blocking.append(iea.blocking_code or CODE_INDIRECT_EMISSIONS_ALLOCATION_NOT_READY)
         if iea.is_stale:
             stale = True
 
@@ -1348,7 +1336,7 @@ def _to_response(
 ) -> ProductionProcessResponse:
     if uses is None:
         uses = _list_uses(db, row.id)
-    use_tonnes = Decimal('0')
+    use_tonnes = Decimal("0")
     use_resps: list[ProductUseResponse] = []
     for u in uses:
         resp = _product_use_response(u, source_profile_id=row.product_profile_version_id)
@@ -1539,7 +1527,7 @@ def get_controlled_list_for_processes(
     require_cbam_view(db, user, organization_id)
     lst = get_production_process_controlled_list(list_code)
     if lst is None:
-        raise NotFoundError(f'Controlled list not found: {list_code}')
+        raise NotFoundError(f"Controlled list not found: {list_code}")
     return ControlledListResponse(
         list_code=lst.list_code,
         title_en=lst.title_en,
@@ -1688,21 +1676,15 @@ def create_production_process(
     if profile_id is not None:
         require_linkable_product_profile(db, organization_id, profile_id)
 
-    produced_unit = _require_mass_unit(
-        payload.produced_quantity_unit, field='producedQuantityUnit'
-    )
-    marketed_unit = _require_mass_unit(
-        payload.marketed_quantity_unit, field='marketedQuantityUnit'
-    )
-    non_cbam_unit = _require_mass_unit(
-        payload.non_cbam_quantity_unit, field='nonCbamQuantityUnit'
-    )
+    produced_unit = _require_mass_unit(payload.produced_quantity_unit, field="producedQuantityUnit")
+    marketed_unit = _require_mass_unit(payload.marketed_quantity_unit, field="marketedQuantityUnit")
+    non_cbam_unit = _require_mass_unit(payload.non_cbam_quantity_unit, field="nonCbamQuantityUnit")
     if payload.produced_quantity is not None:
-        require_non_negative(payload.produced_quantity, field='producedQuantity')
+        require_non_negative(payload.produced_quantity, field="producedQuantity")
     if payload.marketed_quantity is not None:
-        require_non_negative(payload.marketed_quantity, field='marketedQuantity')
+        require_non_negative(payload.marketed_quantity, field="marketedQuantity")
     if payload.non_cbam_quantity is not None:
-        require_non_negative(payload.non_cbam_quantity, field='nonCbamQuantity')
+        require_non_negative(payload.non_cbam_quantity, field="nonCbamQuantity")
 
     heat = _apply_heat_constraints(
         has_heat=payload.has_measurable_heat,
@@ -1767,13 +1749,13 @@ def create_production_process(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.production_process.created',
-        entity_type='cbam_production_process',
+        action="cbam.production_process.created",
+        entity_type="cbam_production_process",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'id': str(row.id), 'method': method},
+        metadata={"id": str(row.id), "method": method},
     )
     db.commit()
     db.refresh(row)
@@ -1798,31 +1780,31 @@ def update_production_process_draft(
     row = _get_process(db, organization_id, binding_id, process_id)
     if row.status == PROCESS_STATUS_ARCHIVED:
         raise BusinessRuleError(
-            'Archived production processes cannot be edited.',
-            details=[{'code': CODE_PROCESS_ARCHIVED}],
+            "Archived production processes cannot be edited.",
+            details=[{"code": CODE_PROCESS_ARCHIVED}],
         )
-    check_row_version(row.row_version, payload.row_version, entity='CBAM production process')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM production process")
     data = payload.model_dump(exclude_unset=True)
-    data.pop('row_version', None)
+    data.pop("row_version", None)
 
-    if 'calculation_method' in data and data['calculation_method'] is not None:
-        row.calculation_method = _validate_method(data['calculation_method'])
-    if 'product_profile_version_id' in data:
-        pid = data['product_profile_version_id']
+    if "calculation_method" in data and data["calculation_method"] is not None:
+        row.calculation_method = _validate_method(data["calculation_method"])
+    if "product_profile_version_id" in data:
+        pid = data["product_profile_version_id"]
         if pid is not None:
             require_linkable_product_profile(db, organization_id, pid)
         row.product_profile_version_id = pid
-    if 'name' in data:
-        row.name = (data['name'].strip() if data['name'] else None) or None
-    if 'identifier' in data:
-        row.identifier = (data['identifier'].strip() if data['identifier'] else None) or None
-    if 'notes' in data:
-        row.notes = data['notes']
+    if "name" in data:
+        row.name = (data["name"].strip() if data["name"] else None) or None
+    if "identifier" in data:
+        row.identifier = (data["identifier"].strip() if data["identifier"] else None) or None
+    if "notes" in data:
+        row.notes = data["notes"]
 
     for qty_field, unit_field in (
-        ('produced_quantity', 'produced_quantity_unit'),
-        ('marketed_quantity', 'marketed_quantity_unit'),
-        ('non_cbam_quantity', 'non_cbam_quantity_unit'),
+        ("produced_quantity", "produced_quantity_unit"),
+        ("marketed_quantity", "marketed_quantity_unit"),
+        ("non_cbam_quantity", "non_cbam_quantity_unit"),
     ):
         if qty_field in data:
             val = data[qty_field]
@@ -1832,164 +1814,155 @@ def update_production_process_draft(
         if unit_field in data:
             setattr(row, unit_field, _require_mass_unit(data[unit_field], field=unit_field))
 
-    dq_q = data.get('data_quality_code', row.data_quality_code)
-    dq_v = (
-        data.get('data_verification_code', row.data_verification_code)
-    )
-    dq_j = (
-        data.get('data_quality_justification_code', row.data_quality_justification_code)
-    )
+    dq_q = data.get("data_quality_code", row.data_quality_code)
+    dq_v = data.get("data_verification_code", row.data_verification_code)
+    dq_j = data.get("data_quality_justification_code", row.data_quality_justification_code)
     if any(
         k in data
         for k in (
-            'data_quality_code',
-            'data_verification_code',
-            'data_quality_justification_code',
+            "data_quality_code",
+            "data_verification_code",
+            "data_quality_justification_code",
         )
     ):
         _validate_dq_codes(dq_q, dq_v, dq_j)
-        if 'data_quality_code' in data:
-            row.data_quality_code = data['data_quality_code']
-        if 'data_verification_code' in data:
-            row.data_verification_code = data['data_verification_code']
-        if 'data_quality_justification_code' in data:
-            row.data_quality_justification_code = data['data_quality_justification_code']
+        if "data_quality_code" in data:
+            row.data_quality_code = data["data_quality_code"]
+        if "data_verification_code" in data:
+            row.data_verification_code = data["data_verification_code"]
+        if "data_quality_justification_code" in data:
+            row.data_quality_justification_code = data["data_quality_justification_code"]
 
-    has_heat = (
-        data.get('has_measurable_heat', row.has_measurable_heat)
-    )
-    if 'has_measurable_heat' in data or any(k.startswith('heat_') for k in data):
+    has_heat = data.get("has_measurable_heat", row.has_measurable_heat)
+    if "has_measurable_heat" in data or any(k.startswith("heat_") for k in data):
         if has_heat is False:
             if any(
                 data.get(k) is not None
                 for k in (
-                    'heat_imported_quantity',
-                    'heat_imported_unit',
-                    'heat_exported_quantity',
-                    'heat_exported_unit',
-                    'heat_imported_ef',
-                    'heat_exported_ef',
-                    'heat_ef_unit',
-                    'heat_factor_source',
-                    'heat_factor_document',
+                    "heat_imported_quantity",
+                    "heat_imported_unit",
+                    "heat_exported_quantity",
+                    "heat_exported_unit",
+                    "heat_imported_ef",
+                    "heat_exported_ef",
+                    "heat_ef_unit",
+                    "heat_factor_source",
+                    "heat_factor_document",
                 )
                 if k in data
             ):
                 raise ValidationAppError(
-                    'Measurable-heat fields must be null when hasMeasurableHeat is false.',
-                    details=[{'code': CODE_HEAT_FIELDS_NOT_ALLOWED}],
+                    "Measurable-heat fields must be null when hasMeasurableHeat is false.",
+                    details=[{"code": CODE_HEAT_FIELDS_NOT_ALLOWED}],
                 )
             row.has_measurable_heat = False
             _clear_heat_fields(row)
         else:
-            if 'has_measurable_heat' in data:
-                row.has_measurable_heat = data['has_measurable_heat']
+            if "has_measurable_heat" in data:
+                row.has_measurable_heat = data["has_measurable_heat"]
             for field in (
-                'heat_imported_quantity',
-                'heat_imported_unit',
-                'heat_exported_quantity',
-                'heat_exported_unit',
-                'heat_imported_ef',
-                'heat_exported_ef',
-                'heat_ef_unit',
-                'heat_factor_source',
-                'heat_factor_document',
+                "heat_imported_quantity",
+                "heat_imported_unit",
+                "heat_exported_quantity",
+                "heat_exported_unit",
+                "heat_imported_ef",
+                "heat_exported_ef",
+                "heat_ef_unit",
+                "heat_factor_source",
+                "heat_factor_document",
             ):
                 if field in data and has_heat is not False:
-                    if (
-                        (field.endswith('_quantity') or field.endswith('_ef'))
-                        and data[field] is not None
-                    ):
+                    if (field.endswith("_quantity") or field.endswith("_ef")) and data[
+                        field
+                    ] is not None:
                         require_non_negative(data[field], field=field)
-                    if field.endswith('_unit') and data[field] is not None:
-                        if 'ef' in field:
+                    if field.endswith("_unit") and data[field] is not None:
+                        if "ef" in field:
                             if data[field] != HEAT_FACTOR_UNIT:
                                 raise ValidationAppError(
-                                    f'Heat EF unit must be {HEAT_FACTOR_UNIT}.'
+                                    f"Heat EF unit must be {HEAT_FACTOR_UNIT}."
                                 )
                         else:
                             u = require_unit(data[field])
                             if u != HEAT_QUANTITY_UNIT:
                                 raise ValidationAppError(
-                                    f'Heat quantity unit must be {HEAT_QUANTITY_UNIT}.'
+                                    f"Heat quantity unit must be {HEAT_QUANTITY_UNIT}."
                                 )
                             data[field] = u
                     setattr(row, field, data[field])
 
-    has_waste = data.get('has_waste_gas', row.has_waste_gas)
-    if 'has_waste_gas' in data or any(k.startswith('waste_gas_') for k in data):
+    has_waste = data.get("has_waste_gas", row.has_waste_gas)
+    if "has_waste_gas" in data or any(k.startswith("waste_gas_") for k in data):
         if has_waste is False:
             if any(
                 data.get(k) is not None
                 for k in (
-                    'waste_gas_imported_quantity',
-                    'waste_gas_imported_unit',
-                    'waste_gas_exported_quantity',
-                    'waste_gas_exported_unit',
-                    'waste_gas_provenance',
+                    "waste_gas_imported_quantity",
+                    "waste_gas_imported_unit",
+                    "waste_gas_exported_quantity",
+                    "waste_gas_exported_unit",
+                    "waste_gas_provenance",
                 )
                 if k in data
             ):
                 raise ValidationAppError(
-                    'Waste-gas fields must be null when hasWasteGas is false.',
-                    details=[{'code': CODE_WASTE_GAS_FIELDS_NOT_ALLOWED}],
+                    "Waste-gas fields must be null when hasWasteGas is false.",
+                    details=[{"code": CODE_WASTE_GAS_FIELDS_NOT_ALLOWED}],
                 )
             row.has_waste_gas = False
             _clear_waste_fields(row)
         else:
-            if 'has_waste_gas' in data:
-                row.has_waste_gas = data['has_waste_gas']
+            if "has_waste_gas" in data:
+                row.has_waste_gas = data["has_waste_gas"]
             for field in (
-                'waste_gas_imported_quantity',
-                'waste_gas_imported_unit',
-                'waste_gas_exported_quantity',
-                'waste_gas_exported_unit',
-                'waste_gas_provenance',
+                "waste_gas_imported_quantity",
+                "waste_gas_imported_unit",
+                "waste_gas_exported_quantity",
+                "waste_gas_exported_unit",
+                "waste_gas_provenance",
             ):
                 if field in data:
-                    if field.endswith('_quantity') and data[field] is not None:
+                    if field.endswith("_quantity") and data[field] is not None:
                         require_non_negative(data[field], field=field)
-                    if field.endswith('_unit') and data[field] is not None:
+                    if field.endswith("_unit") and data[field] is not None:
                         u = require_unit(data[field])
                         if u != WASTE_GAS_QUANTITY_UNIT:
                             raise ValidationAppError(
-                                f'Waste-gas quantity unit must be {WASTE_GAS_QUANTITY_UNIT}.'
+                                f"Waste-gas quantity unit must be {WASTE_GAS_QUANTITY_UNIT}."
                             )
                         data[field] = u
                     setattr(row, field, data[field])
 
-    has_exported = data.get('has_exported_electricity', row.has_exported_electricity)
-    if 'has_exported_electricity' in data or any(
-        k.startswith('exported_electricity_') for k in data
+    has_exported = data.get("has_exported_electricity", row.has_exported_electricity)
+    if "has_exported_electricity" in data or any(
+        k.startswith("exported_electricity_") for k in data
     ):
         if has_exported is False:
             if any(data.get(k) is not None for k in _EXPORTED_ELECTRICITY_FIELDS if k in data):
                 raise ValidationAppError(
-                    'Exported-electricity fields must be null when '
-                    'hasExportedElectricity is false.',
-                    details=[{'code': CODE_EXPORTED_ELECTRICITY_FIELDS_NOT_ALLOWED}],
+                    "Exported-electricity fields must be null when "
+                    "hasExportedElectricity is false.",
+                    details=[{"code": CODE_EXPORTED_ELECTRICITY_FIELDS_NOT_ALLOWED}],
                 )
             row.has_exported_electricity = False
             _clear_exported_electricity_fields(row)
         else:
-            if 'has_exported_electricity' in data:
-                row.has_exported_electricity = data['has_exported_electricity']
+            if "has_exported_electricity" in data:
+                row.has_exported_electricity = data["has_exported_electricity"]
             for field in _EXPORTED_ELECTRICITY_FIELDS:
                 if field not in data:
                     continue
                 value = data[field]
                 if value is not None:
-                    if field == 'exported_electricity_quantity':
-                        require_non_negative(value, field='exportedElectricityQuantity')
-                    elif field == 'exported_electricity_emission_factor':
-                        require_non_negative(
-                            value, field='exportedElectricityEmissionFactor'
-                        )
-                    elif field == 'exported_electricity_unit':
+                    if field == "exported_electricity_quantity":
+                        require_non_negative(value, field="exportedElectricityQuantity")
+                    elif field == "exported_electricity_emission_factor":
+                        require_non_negative(value, field="exportedElectricityEmissionFactor")
+                    elif field == "exported_electricity_unit":
                         value = _validate_exported_electricity_quantity_unit(value)
-                    elif field == 'exported_electricity_ef_unit':
+                    elif field == "exported_electricity_ef_unit":
                         value = _validate_exported_electricity_ef_unit(value)
-                    elif field == 'exported_electricity_provenance':
+                    elif field == "exported_electricity_provenance":
                         value = value.strip() or None
                 setattr(row, field, value)
 
@@ -1999,13 +1972,13 @@ def update_production_process_draft(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.production_process.updated',
-        entity_type='cbam_production_process',
+        action="cbam.production_process.updated",
+        entity_type="cbam_production_process",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
-        metadata={'rowVersion': row.row_version},
+        metadata={"rowVersion": row.row_version},
     )
     db.commit()
     db.refresh(row)
@@ -2028,7 +2001,7 @@ def archive_production_process(
     binding = get_binding_for_org(db, organization_id, binding_id)
     require_writable_binding(binding)
     row = _get_process(db, organization_id, binding_id, process_id)
-    check_row_version(row.row_version, payload.row_version, entity='CBAM production process')
+    check_row_version(row.row_version, payload.row_version, entity="CBAM production process")
     if row.status == PROCESS_STATUS_ARCHIVED:
         return _to_response(db, user, row)
     row.status = PROCESS_STATUS_ARCHIVED
@@ -2038,8 +2011,8 @@ def archive_production_process(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.production_process.archived',
-        entity_type='cbam_production_process',
+        action="cbam.production_process.archived",
+        entity_type="cbam_production_process",
         entity_id=str(row.id),
         request_id=request_id,
         ip_address=ip_address,
@@ -2068,8 +2041,8 @@ def create_product_use(
     process = _get_process(db, organization_id, binding_id, process_id)
     if process.status == PROCESS_STATUS_ARCHIVED:
         raise BusinessRuleError(
-            'Cannot add product uses to an archived process.',
-            details=[{'code': CODE_PROCESS_ARCHIVED}],
+            "Cannot add product uses to an archived process.",
+            details=[{"code": CODE_PROCESS_ARCHIVED}],
         )
     target = require_linkable_product_profile(
         db, organization_id, payload.target_product_profile_version_id
@@ -2079,12 +2052,12 @@ def create_product_use(
         and target.id == process.product_profile_version_id
     ):
         raise BusinessRuleError(
-            'Target product profile must differ from the source process product profile.',
-            details=[{'code': CODE_TARGET_PRODUCT_INVALID}],
+            "Target product profile must differ from the source process product profile.",
+            details=[{"code": CODE_TARGET_PRODUCT_INVALID}],
         )
-    unit = _require_mass_unit(payload.unit, field='unit')
+    unit = _require_mass_unit(payload.unit, field="unit")
     assert unit is not None
-    require_non_negative(payload.quantity, field='quantity')
+    require_non_negative(payload.quantity, field="quantity")
 
     existing = db.execute(
         select(CbamProductionProcessProductUse).where(
@@ -2094,8 +2067,8 @@ def create_product_use(
     ).scalar_one_or_none()
     if existing is not None:
         raise BusinessRuleError(
-            'A product-use row for this target profile already exists on the process.',
-            details=[{'code': 'PRODUCT_USE_DUPLICATE'}],
+            "A product-use row for this target profile already exists on the process.",
+            details=[{"code": "PRODUCT_USE_DUPLICATE"}],
         )
 
     use = CbamProductionProcessProductUse(
@@ -2117,8 +2090,8 @@ def create_product_use(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.production_process.product_use.created',
-        entity_type='cbam_production_process_product_use',
+        action="cbam.production_process.product_use.created",
+        entity_type="cbam_production_process_product_use",
         entity_id=str(use.id),
         request_id=request_id,
         ip_address=ip_address,
@@ -2148,8 +2121,8 @@ def update_product_use(
     process = _get_process(db, organization_id, binding_id, process_id)
     if process.status == PROCESS_STATUS_ARCHIVED:
         raise BusinessRuleError(
-            'Cannot update product uses on an archived process.',
-            details=[{'code': CODE_PROCESS_ARCHIVED}],
+            "Cannot update product uses on an archived process.",
+            details=[{"code": CODE_PROCESS_ARCHIVED}],
         )
     use = db.get(CbamProductionProcessProductUse, use_id)
     if (
@@ -2158,22 +2131,24 @@ def update_product_use(
         or use.reporting_period_binding_id != binding_id
         or use.process_id != process_id
     ):
-        raise NotFoundError('Product-use distribution row not found.')
-    check_row_version(use.row_version, payload.row_version, entity='CBAM production process product use')
+        raise NotFoundError("Product-use distribution row not found.")
+    check_row_version(
+        use.row_version, payload.row_version, entity="CBAM production process product use"
+    )
     data = payload.model_dump(exclude_unset=True)
-    data.pop('row_version', None)
-    if data.get('target_product_profile_version_id'):
+    data.pop("row_version", None)
+    if data.get("target_product_profile_version_id"):
         target = require_linkable_product_profile(
-            db, organization_id, data['target_product_profile_version_id']
+            db, organization_id, data["target_product_profile_version_id"]
         )
         use.target_product_profile_version_id = target.id
-    if 'quantity' in data and data['quantity'] is not None:
-        require_non_negative(data['quantity'], field='quantity')
-        use.quantity = data['quantity']
-    if 'unit' in data and data['unit'] is not None:
-        use.unit = _require_mass_unit(data['unit'], field='unit')  # type: ignore[assignment]
-    if 'notes' in data:
-        use.notes = data['notes']
+    if "quantity" in data and data["quantity"] is not None:
+        require_non_negative(data["quantity"], field="quantity")
+        use.quantity = data["quantity"]
+    if "unit" in data and data["unit"] is not None:
+        use.unit = _require_mass_unit(data["unit"], field="unit")  # type: ignore[assignment]
+    if "notes" in data:
+        use.notes = data["notes"]
     use.row_version += 1
     use.updated_by_user_id = user.id
     process.row_version += 1
@@ -2182,8 +2157,8 @@ def update_product_use(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.production_process.product_use.updated',
-        entity_type='cbam_production_process_product_use',
+        action="cbam.production_process.product_use.updated",
+        entity_type="cbam_production_process_product_use",
         entity_id=str(use.id),
         request_id=request_id,
         ip_address=ip_address,
@@ -2212,8 +2187,8 @@ def delete_product_use(
     process = _get_process(db, organization_id, binding_id, process_id)
     if process.status == PROCESS_STATUS_ARCHIVED:
         raise BusinessRuleError(
-            'Cannot delete product uses on an archived process.',
-            details=[{'code': CODE_PROCESS_ARCHIVED}],
+            "Cannot delete product uses on an archived process.",
+            details=[{"code": CODE_PROCESS_ARCHIVED}],
         )
     use = db.get(CbamProductionProcessProductUse, use_id)
     if (
@@ -2222,7 +2197,7 @@ def delete_product_use(
         or use.reporting_period_binding_id != binding_id
         or use.process_id != process_id
     ):
-        raise NotFoundError('Product-use distribution row not found.')
+        raise NotFoundError("Product-use distribution row not found.")
     db.delete(use)
     process.row_version += 1
     process.updated_by_user_id = user.id
@@ -2230,8 +2205,8 @@ def delete_product_use(
         db,
         actor_user_id=user.id,
         organization_id=organization_id,
-        action='cbam.production_process.product_use.deleted',
-        entity_type='cbam_production_process_product_use',
+        action="cbam.production_process.product_use.deleted",
+        entity_type="cbam_production_process_product_use",
         entity_id=str(use_id),
         request_id=request_id,
         ip_address=ip_address,

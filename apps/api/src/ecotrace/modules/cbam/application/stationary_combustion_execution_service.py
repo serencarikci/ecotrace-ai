@@ -55,13 +55,13 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel
 
-STATIONARY_COMBUSTION_DEFINITION_CODE = 'STATIONARY_COMBUSTION_CO2_V1'
+STATIONARY_COMBUSTION_DEFINITION_CODE = "STATIONARY_COMBUSTION_CO2_V1"
 
 DENSITY_COMMAND_PROVENANCE = ParameterProvenance(
-    source_document='Execution command (explicit density)',
-    source_table='StationaryCombustionExecutionCommand.density',
-    dataset_version='command',
-    source_reference='Caller-supplied density; not a catalog default',
+    source_document="Execution command (explicit density)",
+    source_table="StationaryCombustionExecutionCommand.density",
+    dataset_version="command",
+    source_reference="Caller-supplied density; not a catalog default",
 )
 
 
@@ -145,7 +145,7 @@ def _result_response(
     is_stale: bool = False,
 ) -> StationaryCombustionResultResponse:
     data = StationaryCombustionResultResponse.model_validate(row)
-    return data.model_copy(update={'is_current': is_current, 'is_stale': is_stale})
+    return data.model_copy(update={"is_current": is_current, "is_stale": is_stale})
 
 
 def get_stationary_combustion_result(
@@ -167,13 +167,15 @@ def _get_sc_definition(db: Session) -> CbamCalculationDefinition:
     row = db.execute(
         select(CbamCalculationDefinition).where(
             CbamCalculationDefinition.code == STATIONARY_COMBUSTION_DEFINITION_CODE,
-            CbamCalculationDefinition.status == 'ACTIVE',
+            CbamCalculationDefinition.status == "ACTIVE",
         )
     ).scalar_one_or_none()
     if row is None:
         raise BusinessRuleError(
-            'Stationary-combustion calculation definition is not available.',
-            details=[{'code': 'DEFINITION_MISSING', 'codeValue': STATIONARY_COMBUSTION_DEFINITION_CODE}],
+            "Stationary-combustion calculation definition is not available.",
+            details=[
+                {"code": "DEFINITION_MISSING", "codeValue": STATIONARY_COMBUSTION_DEFINITION_CODE}
+            ],
         )
     return row
 
@@ -186,18 +188,18 @@ def _load_activity(
     activity_id: uuid.UUID,
 ) -> CbamActivityRecord:
     activity = db.get(CbamActivityRecord, activity_id)
-    if activity is None or activity.status != 'active':
-        raise NotFoundError('Activity record not found.')
+    if activity is None or activity.status != "active":
+        raise NotFoundError("Activity record not found.")
     if activity.organization_id != organization_id:
-        raise NotFoundError('Activity record not found.')
+        raise NotFoundError("Activity record not found.")
     if activity.reporting_period_binding_id != binding_id:
         raise ValidationAppError(
-            'Activity does not belong to the requested reporting-period binding.',
+            "Activity does not belong to the requested reporting-period binding.",
             details=[
                 {
-                    'code': 'ACTIVITY_BINDING_MISMATCH',
-                    'activityRecordId': str(activity_id),
-                    'reportingPeriodBindingId': str(binding_id),
+                    "code": "ACTIVITY_BINDING_MISMATCH",
+                    "activityRecordId": str(activity_id),
+                    "reportingPeriodBindingId": str(binding_id),
                 }
             ],
         )
@@ -207,24 +209,24 @@ def _load_activity(
 def _assert_activity_eligible(activity: CbamActivityRecord, fuel_code: str) -> None:
     if activity.activity_type not in ELIGIBLE_STATIONARY_COMBUSTION_ACTIVITY_TYPES:
         raise ValidationAppError(
-            f'Activity type {activity.activity_type!r} is not eligible for '
-            'stationary-combustion calculation.',
+            f"Activity type {activity.activity_type!r} is not eligible for "
+            "stationary-combustion calculation.",
             details=[
                 {
-                    'code': 'INELIGIBLE_ACTIVITY_TYPE',
-                    'activityType': activity.activity_type,
+                    "code": "INELIGIBLE_ACTIVITY_TYPE",
+                    "activityType": activity.activity_type,
                 }
             ],
         )
     if activity.activity_type != fuel_code:
         raise ValidationAppError(
-            f'Fuel code {fuel_code!r} is incompatible with activity type '
-            f'{activity.activity_type!r}.',
+            f"Fuel code {fuel_code!r} is incompatible with activity type "
+            f"{activity.activity_type!r}.",
             details=[
                 {
-                    'code': 'FUEL_ACTIVITY_TYPE_MISMATCH',
-                    'fuelCode': fuel_code,
-                    'activityType': activity.activity_type,
+                    "code": "FUEL_ACTIVITY_TYPE_MISMATCH",
+                    "fuelCode": fuel_code,
+                    "activityType": activity.activity_type,
                 }
             ],
         )
@@ -240,38 +242,38 @@ def _assert_density_rules(
     has_unit = density_unit is not None
     if has_value != has_unit:
         raise ValidationAppError(
-            'density_value and density_unit must both be provided or both omitted.',
-            details=[{'code': 'DENSITY_PAIR_INCOMPLETE'}],
+            "density_value and density_unit must both be provided or both omitted.",
+            details=[{"code": "DENSITY_PAIR_INCOMPLETE"}],
         )
-    if input_basis == 'VOLUME':
+    if input_basis == "VOLUME":
         if density_value is None or density_unit is None:
             raise ValidationAppError(
-                'Density value and unit are required for VOLUME fuels.',
-                details=[{'code': 'DENSITY_REQUIRED'}],
+                "Density value and unit are required for VOLUME fuels.",
+                details=[{"code": "DENSITY_REQUIRED"}],
             )
         if density_value <= 0:
             raise ValidationAppError(
-                'Density must be greater than zero.',
-                details=[{'code': 'DENSITY_INVALID'}],
+                "Density must be greater than zero.",
+                details=[{"code": "DENSITY_INVALID"}],
             )
-    elif input_basis == 'MASS':
+    elif input_basis == "MASS":
         if density_value is not None or density_unit is not None:
             raise ValidationAppError(
-                'Density must not be supplied for MASS fuels.',
-                details=[{'code': 'DENSITY_NOT_ALLOWED'}],
+                "Density must not be supplied for MASS fuels.",
+                details=[{"code": "DENSITY_NOT_ALLOWED"}],
             )
 
 
 def _assert_unit_compatibility(*, input_basis: str, activity_unit: str) -> None:
-    if input_basis == 'VOLUME' and activity_unit not in VOLUME_ACTIVITY_UNITS:
+    if input_basis == "VOLUME" and activity_unit not in VOLUME_ACTIVITY_UNITS:
         raise ValidationAppError(
-            f'Activity unit {activity_unit!r} is incompatible with VOLUME fuel basis.',
-            details=[{'code': 'INCOMPATIBLE_UNIT', 'activityUnit': activity_unit}],
+            f"Activity unit {activity_unit!r} is incompatible with VOLUME fuel basis.",
+            details=[{"code": "INCOMPATIBLE_UNIT", "activityUnit": activity_unit}],
         )
-    if input_basis == 'MASS' and activity_unit not in MASS_ACTIVITY_UNITS:
+    if input_basis == "MASS" and activity_unit not in MASS_ACTIVITY_UNITS:
         raise ValidationAppError(
-            f'Activity unit {activity_unit!r} is incompatible with MASS fuel basis.',
-            details=[{'code': 'INCOMPATIBLE_UNIT', 'activityUnit': activity_unit}],
+            f"Activity unit {activity_unit!r} is incompatible with MASS fuel basis.",
+            details=[{"code": "INCOMPATIBLE_UNIT", "activityUnit": activity_unit}],
         )
 
 
@@ -285,7 +287,7 @@ def _fail_run(
     ip_address: str | None,
     user_agent: str | None,
 ) -> None:
-    run.status = 'FAILED'
+    run.status = "FAILED"
     run.completed_at = datetime.now(UTC)
     run.error_summary = summary
     run.calculated_count = 0
@@ -293,12 +295,12 @@ def _fail_run(
     run.invalid_count = 1
     write_audit_log(
         db,
-        action='cbam.stationary_combustion_run.failed',
+        action="cbam.stationary_combustion_run.failed",
         actor_user_id=user.id,
         organization_id=run.organization_id,
-        entity_type='cbam_calculation_run',
+        entity_type="cbam_calculation_run",
         entity_id=str(run.id),
-        metadata={'errorSummary': summary},
+        metadata={"errorSummary": summary},
         request_id=request_id,
         ip_address=ip_address,
         user_agent=user_agent,
@@ -331,9 +333,7 @@ def execute_stationary_combustion_calculation(
     commit: bool = True,
 ) -> StationaryCombustionExecutionResponse:
     require_cbam_configure(db, user, command.organization_id)
-    binding = get_binding_for_org(
-        db, command.organization_id, command.reporting_period_binding_id
-    )
+    binding = get_binding_for_org(db, command.organization_id, command.reporting_period_binding_id)
     activity = _load_activity(
         db,
         organization_id=command.organization_id,
@@ -353,28 +353,26 @@ def execute_stationary_combustion_calculation(
             )
         ).scalar_one_or_none()
         if run is None:
-            raise NotFoundError('Calculation run not found.')
+            raise NotFoundError("Calculation run not found.")
         if run.reporting_period_binding_id != binding.id:
             raise ValidationAppError(
-                'Calculation run does not belong to the requested reporting-period binding.',
-                details=[{'code': 'RUN_BINDING_MISMATCH'}],
+                "Calculation run does not belong to the requested reporting-period binding.",
+                details=[{"code": "RUN_BINDING_MISMATCH"}],
             )
-        if run.status == 'ARCHIVED':
-            raise ValidationAppError('Archived calculation runs cannot be executed.')
-        if run.status == 'RUNNING':
-            raise ValidationAppError('Calculation run is already running.')
-        existing = _existing_result_for_run_activity(
-            db, run_id=run.id, activity_id=activity.id
-        )
+        if run.status == "ARCHIVED":
+            raise ValidationAppError("Archived calculation runs cannot be executed.")
+        if run.status == "RUNNING":
+            raise ValidationAppError("Calculation run is already running.")
+        existing = _existing_result_for_run_activity(db, run_id=run.id, activity_id=activity.id)
         if existing is not None:
             raise ConflictError(
-                'Stationary-combustion result already exists for this run and activity.',
+                "Stationary-combustion result already exists for this run and activity.",
                 details=[
                     {
-                        'code': 'STATIONARY_COMBUSTION_RESULT_EXISTS',
-                        'calculationRunId': str(run.id),
-                        'activityRecordId': str(activity.id),
-                        'resultId': str(existing.id),
+                        "code": "STATIONARY_COMBUSTION_RESULT_EXISTS",
+                        "calculationRunId": str(run.id),
+                        "activityRecordId": str(activity.id),
+                        "resultId": str(existing.id),
                     }
                 ],
             )
@@ -382,14 +380,14 @@ def execute_stationary_combustion_calculation(
         run = CbamCalculationRun(
             organization_id=command.organization_id,
             reporting_period_binding_id=binding.id,
-            status='DRAFT',
+            status="DRAFT",
             calculation_version=ENGINE_VERSION,
             created_by_user_id=command.requested_by_user_id or user.id,
         )
         db.add(run)
         db.flush()
 
-    run.status = 'RUNNING'
+    run.status = "RUNNING"
     run.started_at = datetime.now(UTC)
     run.completed_at = None
     run.error_summary = None
@@ -400,15 +398,15 @@ def execute_stationary_combustion_calculation(
 
     write_audit_log(
         db,
-        action='cbam.stationary_combustion_run.started',
+        action="cbam.stationary_combustion_run.started",
         actor_user_id=user.id,
         organization_id=command.organization_id,
-        entity_type='cbam_calculation_run',
+        entity_type="cbam_calculation_run",
         entity_id=str(run.id),
         metadata={
-            'activityRecordId': str(activity.id),
-            'fuelCode': fuel_code,
-            'referenceDate': command.reference_date.isoformat(),
+            "activityRecordId": str(activity.id),
+            "fuelCode": fuel_code,
+            "referenceDate": command.reference_date.isoformat(),
         },
         request_id=request_id,
         ip_address=ip_address,
@@ -425,16 +423,16 @@ def execute_stationary_combustion_calculation(
         if resolution.status == RESOLUTION_UNRESOLVED:
             raise BusinessRuleError(
                 resolution.message,
-                details=[{'code': 'UNRESOLVED_PARAMETER_SET', 'message': resolution.message}],
+                details=[{"code": "UNRESOLVED_PARAMETER_SET", "message": resolution.message}],
             )
         if resolution.status == RESOLUTION_AMBIGUOUS:
             raise BusinessRuleError(
                 resolution.message,
                 details=[
                     {
-                        'code': 'AMBIGUOUS_PARAMETER_SET',
-                        'message': resolution.message,
-                        'candidateParameterSetIds': [
+                        "code": "AMBIGUOUS_PARAMETER_SET",
+                        "message": resolution.message,
+                        "candidateParameterSetIds": [
                             str(i) for i in resolution.candidate_parameter_set_ids
                         ],
                     }
@@ -442,8 +440,8 @@ def execute_stationary_combustion_calculation(
             )
         if resolution.status != RESOLUTION_RESOLVED or resolution.parameters is None:
             raise BusinessRuleError(
-                'Stationary-combustion parameters could not be resolved.',
-                details=[{'code': 'UNRESOLVED_PARAMETER_SET'}],
+                "Stationary-combustion parameters could not be resolved.",
+                details=[{"code": "UNRESOLVED_PARAMETER_SET"}],
             )
 
         params = resolution.parameters
@@ -468,8 +466,8 @@ def execute_stationary_combustion_calculation(
         param_row = db.get(CbamStationaryCombustionParameterSet, params.parameter_set_id)
         if param_row is None:
             raise BusinessRuleError(
-                'Resolved parameter set row is missing.',
-                details=[{'code': 'UNRESOLVED_PARAMETER_SET'}],
+                "Resolved parameter set row is missing.",
+                details=[{"code": "UNRESOLVED_PARAMETER_SET"}],
             )
 
         inputs = StationaryCombustionInputs(
@@ -510,11 +508,11 @@ def execute_stationary_combustion_calculation(
         outcome = calculate_stationary_combustion_co2(inputs)
         if not outcome.ok or outcome.derived is None or outcome.result_value is None:
             raise ValidationAppError(
-                outcome.error_message or 'Stationary-combustion calculation failed.',
+                outcome.error_message or "Stationary-combustion calculation failed.",
                 details=[
                     {
-                        'code': outcome.error_code or 'INVALID_CALCULATION_INPUT',
-                        'message': outcome.error_message,
+                        "code": outcome.error_code or "INVALID_CALCULATION_INPUT",
+                        "message": outcome.error_message,
                     }
                 ],
             )
@@ -575,11 +573,11 @@ def execute_stationary_combustion_calculation(
             if not commit:
                 raise
             raise ConflictError(
-                'Stationary-combustion result persistence conflict.',
-                details=[{'code': 'STATIONARY_COMBUSTION_RESULT_CONFLICT'}],
+                "Stationary-combustion result persistence conflict.",
+                details=[{"code": "STATIONARY_COMBUSTION_RESULT_CONFLICT"}],
             ) from exc
 
-        run.status = 'COMPLETED'
+        run.status = "COMPLETED"
         run.completed_at = datetime.now(UTC)
         run.calculated_count = 1
         run.blocked_count = 0
@@ -587,19 +585,19 @@ def execute_stationary_combustion_calculation(
         run.error_summary = None
         write_audit_log(
             db,
-            action='cbam.stationary_combustion_result.created',
+            action="cbam.stationary_combustion_result.created",
             actor_user_id=user.id,
             organization_id=command.organization_id,
-            entity_type='cbam_stationary_combustion_result',
+            entity_type="cbam_stationary_combustion_result",
             entity_id=str(result.id),
             metadata={
-                'calculationRunId': str(run.id),
-                'activityRecordId': str(activity.id),
-                'fuelCode': params.fuel_code,
-                'resultValue': str(result.result_value),
-                'resultUnit': result.result_unit,
-                'datasetVersion': params.dataset_version,
-                'clientRequestId': (
+                "calculationRunId": str(run.id),
+                "activityRecordId": str(activity.id),
+                "fuelCode": params.fuel_code,
+                "resultValue": str(result.result_value),
+                "resultUnit": result.result_unit,
+                "datasetVersion": params.dataset_version,
+                "clientRequestId": (
                     str(command.client_request_id) if command.client_request_id else None
                 ),
             },
@@ -626,7 +624,7 @@ def execute_stationary_combustion_calculation(
             result=_result_response(result, is_current=True, is_stale=False),
         )
     except (ValidationAppError, BusinessRuleError, NotFoundError, ConflictError) as exc:
-        if run is not None and run.status == 'RUNNING':
+        if run is not None and run.status == "RUNNING":
             _fail_run(
                 db,
                 run,
