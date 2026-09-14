@@ -15,13 +15,19 @@ os.environ["APP_VERSION"] = "0.7.1"
 os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-32chars")
 os.environ.setdefault("INITIAL_ADMIN_PASSWORD", "EcoTraceAdmin!2024")
 os.environ.setdefault("POSTGRES_HOST", "localhost")
+# Local Homebrew Postgres uses 5433; GitHub Actions service maps 5432 and sets env.
 os.environ.setdefault("POSTGRES_PORT", "5433")
 os.environ.setdefault("POSTGRES_DB", "ecotrace_test")
 os.environ.setdefault("POSTGRES_USER", "ecotrace")
 os.environ.setdefault("POSTGRES_PASSWORD", "ecotrace_dev_password")
 os.environ.setdefault(
     "DATABASE_URL",
-    "postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5433/ecotrace_test",
+    (
+        "postgresql+psycopg://"
+        f"{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}"
+        f"@{os.environ['POSTGRES_HOST']}:{os.environ['POSTGRES_PORT']}"
+        f"/{os.environ['POSTGRES_DB']}"
+    ),
 )
 os.environ.setdefault("CORS_ALLOWED_ORIGINS", "http://localhost:4200")
 os.environ.setdefault("LOG_LEVEL", "WARNING")
@@ -74,7 +80,12 @@ from ecotrace.modules.cbam.application.stationary_combustion_catalog_seed import
 
 
 def _admin_database_url() -> str:
-    return "postgresql+psycopg://ecotrace:ecotrace_dev_password@localhost:5433/postgres"
+    """Admin URL for CREATE DATABASE — must use the same host/port as DATABASE_URL."""
+    return (
+        "postgresql+psycopg://"
+        f"{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}"
+        f"@{os.environ['POSTGRES_HOST']}:{os.environ['POSTGRES_PORT']}/postgres"
+    )
 
 
 def _ensure_test_database() -> None:
