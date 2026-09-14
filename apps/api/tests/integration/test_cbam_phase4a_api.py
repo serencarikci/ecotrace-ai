@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi.testclient import TestClient
+from tests.cbam_api_profile_helpers import create_published_steel_profile
 from tests.helpers import api_login, auth_headers, current_org_id
 
 
@@ -59,6 +60,7 @@ def test_allocation_api_authz_lifecycle_and_execution(client: TestClient) -> Non
     viewer = api_login(client, 'viewer@ecotrace.dev', 'EcoTraceViewer!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    profile_id = create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
 
     denied = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/allocation-rules',
@@ -76,6 +78,7 @@ def test_allocation_api_authz_lifecycle_and_execution(client: TestClient) -> Non
         headers=_auth(admin),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '500',
             'unit': 't',
         },
@@ -86,6 +89,7 @@ def test_allocation_api_authz_lifecycle_and_execution(client: TestClient) -> Non
         headers=_auth(admin),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '100',
             'unit': 't',
         },
@@ -211,6 +215,7 @@ def test_allocation_org_isolation(client: TestClient) -> None:
     admin = api_login(client, 'orgadmin@ecotrace.dev', 'EcoTraceOrgAdmin!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
     created = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/allocation-rules',
         headers=_auth(admin),

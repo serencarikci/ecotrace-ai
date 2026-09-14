@@ -490,6 +490,7 @@ def test_phase5_no_guessing_and_architecture() -> None:
     api_root = Path(__file__).resolve().parents[2]
     paths = [
         api_root / 'src/ecotrace/modules/cbam/application/calculation_math.py',
+        api_root / 'src/ecotrace/modules/cbam/application/stationary_combustion_math.py',
         api_root / 'src/ecotrace/modules/cbam/application/calculation_service.py',
         api_root / 'src/ecotrace/db/migrations/versions/0012_cbam_minimal_calculation.py',
     ]

@@ -24,6 +24,7 @@ class ReportingPeriodRef:
     status: str
     start_date: date
     end_date: date
+    period_type: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

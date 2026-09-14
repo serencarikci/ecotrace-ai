@@ -1,20 +1,43 @@
 from __future__ import annotations
+
 from datetime import UTC, date, datetime
 from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from ecotrace.core.lca_constants import CRADLE_TO_GATE_STAGES, DISCLAIMER, LCA_METHODOLOGY_VERSION, LIFECYCLE_STAGES
+
+from ecotrace.core.lca_constants import (
+    CRADLE_TO_GATE_STAGES,
+    DISCLAIMER,
+    LCA_METHODOLOGY_VERSION,
+    LIFECYCLE_STAGES,
+)
 from ecotrace.core.logging import get_logger
-from ecotrace.modules.digital_product_passport.infrastructure.models import DigitalProductPassport, DigitalProductPassportSection
+from ecotrace.modules.digital_product_passport.infrastructure.models import (
+    DigitalProductPassport,
+    DigitalProductPassportSection,
+)
 from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.modules.lifecycle_assessment.application.calculation_engine import run_lca_calculation
-from ecotrace.modules.lifecycle_assessment.infrastructure.models import LcaFunctionalUnit, LcaInventoryInput, LcaStudy, LcaSystemBoundary
+from ecotrace.modules.lifecycle_assessment.infrastructure.models import (
+    LcaFunctionalUnit,
+    LcaInventoryInput,
+    LcaStudy,
+    LcaSystemBoundary,
+)
 from ecotrace.modules.materials.infrastructure.models import Material
 from ecotrace.modules.organizations.infrastructure.models import Organization
 from ecotrace.modules.product_carbon_footprint.infrastructure.models import ProductCarbonFootprint
-from ecotrace.modules.products.infrastructure.models import BillOfMaterialItem, BillOfMaterials, Product, ProductBatch, ProductVariant
+from ecotrace.modules.products.infrastructure.models import (
+    BillOfMaterialItem,
+    BillOfMaterials,
+    Product,
+    ProductBatch,
+    ProductVariant,
+)
 from ecotrace.modules.reference_data.infrastructure.models import ActivityType
 from ecotrace.modules.suppliers.infrastructure.models import Supplier
+
 logger = get_logger(__name__)
 MARKER = 'seed:lca:v1'
 
@@ -112,7 +135,25 @@ def seed_lca(db: Session, org: Organization, actor: User) -> None:
             except Exception as exc:
                 logger.warning('seed.lca_calculation_skipped', code=code, error=str(exc))
     published = db.execute(select(DigitalProductPassport).where(DigitalProductPassport.organization_id == org.id, DigitalProductPassport.passport_code == 'DPP-EB750-V1')).scalar_one_or_none()
-    pcf_approved = db.execute(select(ProductCarbonFootprint).where(ProductCarbonFootprint.organization_id == org.id, ProductCarbonFootprint.product_id == bottle.id, ProductCarbonFootprint.status == 'approved')).scalar_one_or_none()
+    # Three seed studies may each produce an approved PCF for EB750. Resolve the
+    # passport link by the explicit product-carbon-footprint study identity — never
+    # pick an arbitrary approved row.
+    pcf_study = db.execute(
+        select(LcaStudy).where(
+            LcaStudy.organization_id == org.id,
+            LcaStudy.code == 'LCA-PCF-EB750',
+        )
+    ).scalar_one_or_none()
+    pcf_approved = None
+    if pcf_study is not None:
+        pcf_approved = db.execute(
+            select(ProductCarbonFootprint).where(
+                ProductCarbonFootprint.organization_id == org.id,
+                ProductCarbonFootprint.product_id == bottle.id,
+                ProductCarbonFootprint.lca_study_id == pcf_study.id,
+                ProductCarbonFootprint.status == 'approved',
+            )
+        ).scalar_one_or_none()
     if published is None:
         published = DigitalProductPassport(organization_id=org.id, product_id=bottle.id, product_batch_id=batch.id, product_carbon_footprint_id=pcf_approved.id if pcf_approved else None, passport_code='DPP-EB750-V1', title='EcoBottle 750 ml Digital Product Passport (demo)', description=f'Non-certified Digital Product Passport demo. {DISCLAIMER}', version=1, status='published', language_code='en', public_slug='ecobottle-750', qr_code_reference='http://localhost:4200/passport/ecobottle-750', published_at=datetime.now(UTC), published_by_user_id=actor.id, effective_from=date(2024, 1, 1))
         db.add(published)

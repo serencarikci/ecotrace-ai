@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
+from tests.cbam_api_profile_helpers import create_published_steel_profile
 from tests.helpers import api_login, auth_headers, current_org_id
 
 
@@ -62,11 +63,13 @@ def _prepare_binding(client: TestClient, token: str, org_id: str) -> tuple[str, 
 def _seed_ready_period(
     client: TestClient, token: str, org_id: str, binding_id: str, installation_id: str
 ) -> str:
+    profile_id = create_published_steel_profile(client, token, org_id, headers=_auth(token))
     base_prod = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/production-records',
         headers=_auth(token),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '500',
             'unit': 't',
         },
@@ -77,6 +80,7 @@ def _seed_ready_period(
         headers=_auth(token),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '100',
             'unit': 't',
         },
@@ -185,6 +189,7 @@ def test_export_api_permissions_and_flow(client: TestClient) -> None:
     viewer = api_login(client, 'viewer@ecotrace.dev', 'EcoTraceViewer!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
 
     templates = client.get(f'{_base(org_id)}/export-templates', headers=_auth(viewer))
     assert templates.status_code == 200

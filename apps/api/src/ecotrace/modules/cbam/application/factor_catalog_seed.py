@@ -86,6 +86,21 @@ PLATFORM_DEFINITIONS: tuple[dict[str, str | None], ...] = (
             'No numerical defaults are seeded.'
         ),
     },
+    {
+        'id': 'b1000000-0000-4000-8000-000000000004',
+        'code': 'ELECTRICITY_GRID_EMISSION_FACTOR',
+        'name': 'Purchased electricity grid emission factor',
+        'factor_category': 'EMISSION_FACTOR',
+        'activity_type': 'ELECTRICITY',
+        'property_code': None,
+        'description': (
+            'Platform extension point for purchased-electricity indirect emissions '
+            '(PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1). No numerical Turkey/default '
+            'factor is seeded until authoritative provenance (source document, dataset/'
+            'version, effective dates, unit) is available. Workbook example 0.439 tCO2/MWh '
+            'lacks provenance in local reference files.'
+        ),
+    },
 )
 
 
@@ -125,6 +140,7 @@ def ensure_platform_factor_catalog(db: Session) -> None:
                     code=code,
                     name=item['name'] or code,
                     factor_category=item['factor_category'] or 'OTHER',
+                    activity_type=item.get('activity_type'),
                     property_code=item['property_code'],
                     description=item['description'],
                     status='ACTIVE',

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import select
+from tests.cbam_profile_helpers import create_active_ready_profile
 
 from ecotrace.core.exceptions import ConflictError, ValidationAppError
 from ecotrace.db.seed import DEMO_ORG_SLUG
@@ -98,6 +99,7 @@ def test_production_create_reject_zero_and_stale(seeded_db) -> None:
     org = _org(seeded_db)
     admin = _admin(seeded_db)
     binding, installation = _setup_binding(seeded_db, admin, org)
+    profile = create_active_ready_profile(seeded_db, admin, org.id)
     with pytest.raises(ValidationAppError):
         production_record_service.create_production_record(
             seeded_db,
@@ -106,6 +108,7 @@ def test_production_create_reject_zero_and_stale(seeded_db) -> None:
             binding.id,
             ProductionRecordCreate(
                 installation_profile_id=installation.id,
+                product_profile_version_id=profile.id,
                 quantity=Decimal('0'),
                 unit='t',
             ),
@@ -117,11 +120,13 @@ def test_production_create_reject_zero_and_stale(seeded_db) -> None:
         binding.id,
         ProductionRecordCreate(
             installation_profile_id=installation.id,
+            product_profile_version_id=profile.id,
             quantity=Decimal('10'),
             unit='t',
         ),
     )
     assert created.status == 'active'
+    assert created.profile_link_status == 'READY'
     with pytest.raises(ConflictError):
         production_record_service.update_production_record(
             seeded_db,
@@ -357,6 +362,15 @@ def test_phase3_source_has_no_emission_calculation_keywords() -> None:
         'internal_template_builder.py',
         'period_summary_service.py',
         '0013_cbam_excel_export.py',
+        # Phase 12A Official SEE export (read-only sheet inspection / ZIP writer helpers)
+        'writer.py',
+        'leakage.py',
+        'forensics.py',
+        'parity.py',
+        'package_writer.py',
+        'package_inventory.py',
+        'clearing.py',
+        'recalc.py',
     }
     banned = (
         'apcc',

@@ -14,6 +14,14 @@ FORMULA_VERSION = 'multiply-activity-by-factor-v1'
 CALCULATION_TYPE_MULTIPLY = 'MULTIPLY_ACTIVITY_BY_FACTOR'
 ENGINE_VERSION = 'minimal-calculation-v1'
 
+# Stationary combustion (Phase 1 domain math; Phase 3 orchestration + typed result).
+CALCULATION_TYPE_STATIONARY_COMBUSTION_CO2 = 'STATIONARY_COMBUSTION_CO2_V1'
+
+# Purchased electricity indirect emissions (Phase 8A).
+CALCULATION_TYPE_PURCHASED_ELECTRICITY_INDIRECT = (
+    'PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1'
+)
+
 
 def quantize_result(value: Decimal) -> Decimal:
     return value.quantize(RESULT_SCALE, rounding=ROUND_HALF_UP)

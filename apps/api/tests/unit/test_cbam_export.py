@@ -8,6 +8,7 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 from sqlalchemy import select
+from tests.cbam_profile_helpers import create_active_ready_profile
 
 from ecotrace.db.seed import DEMO_ORG_SLUG
 from ecotrace.modules.cbam.application import (
@@ -144,12 +145,14 @@ def _activate_value(db, admin, org_id, definition_id, **kwargs):
 
 def _prepare_exportable_scenario(db, admin, org):
     binding, installation = _setup(db, admin, org)
+    profile = create_active_ready_profile(db, admin, org.id)
     base = production_record_service.create_production_record(
         db,
         admin,
         org.id,
         binding.id,
         ProductionRecordCreate(
+            product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
             quantity=Decimal('500'),
             unit='t',
@@ -161,6 +164,7 @@ def _prepare_exportable_scenario(db, admin, org):
         org.id,
         binding.id,
         ProductionRecordCreate(
+            product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
             quantity=Decimal('100'),
             unit='t',

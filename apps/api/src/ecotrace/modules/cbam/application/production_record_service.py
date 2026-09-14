@@ -1,8 +1,11 @@
+"""CBAM production records with authoritative product-profile linkage (Phase 6C)."""
+
 from __future__ import annotations
 
 import uuid
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -12,7 +15,6 @@ from ecotrace.modules.cbam.application.catalogs import RECORD_SOURCE_TYPES, requ
 from ecotrace.modules.cbam.application.collection_guards import (
     get_binding_for_org,
     get_installation_for_org,
-    get_product_profile_for_org,
     require_positive_quantity,
     require_usable_installation,
     require_writable_binding,
@@ -20,10 +22,17 @@ from ecotrace.modules.cbam.application.collection_guards import (
 )
 from ecotrace.modules.cbam.application.concurrency import check_row_version
 from ecotrace.modules.cbam.application.permissions import require_cbam_configure, require_cbam_view
+from ecotrace.modules.cbam.application.production_profile_link import (
+    compute_profile_link_state,
+    require_linkable_product_profile,
+    require_production_profile_id,
+)
 from ecotrace.modules.cbam.infrastructure.models import CbamProductionRecord
 from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.application.audit import write_audit_log
 from ecotrace.shared.domain.schemas import CamelModel, Page, paginate
+
+ProfileLinkStatus = Literal['MISSING', 'READY', 'OUTDATED', 'INVALID']
 
 
 class ProductionRecordCreate(CamelModel):
@@ -68,10 +77,55 @@ class ProductionRecordResponse(CamelModel):
     source_type: str
     status: str
     row_version: int
+    # Phase 6C authoritative profile-link projection (from referenced immutable version).
+    product_id: uuid.UUID | None = None
+    product_name: str | None = None
+    profile_version: int | None = None
+    profile_status: str | None = None
+    cn_normalized_code: str | None = None
+    cn_display_code: str | None = None
+    classification_ready: bool | None = None
+    profile_link_status: ProfileLinkStatus
+    profile_link_issue_codes: list[str]
 
 
-def _to_response(row: CbamProductionRecord) -> ProductionRecordResponse:
-    return ProductionRecordResponse.model_validate(row)
+class ProductionProfileLinkSummary(CamelModel):
+    eligible_record_count: int
+    missing_profile_count: int
+    outdated_profile_count: int
+    invalid_profile_count: int
+    active_record_count: int
+    allocation_profile_ready: bool
+    blocking_issue_codes: list[str]
+
+
+def _to_response(db: Session, row: CbamProductionRecord) -> ProductionRecordResponse:
+    status, codes, profile = compute_profile_link_state(db, row)
+    return ProductionRecordResponse(
+        id=row.id,
+        organization_id=row.organization_id,
+        reporting_period_binding_id=row.reporting_period_binding_id,
+        installation_profile_id=row.installation_profile_id,
+        product_profile_version_id=row.product_profile_version_id,
+        production_date=row.production_date,
+        period_start=row.period_start,
+        period_end=row.period_end,
+        quantity=row.quantity,
+        unit=row.unit,
+        notes=row.notes,
+        source_type=row.source_type,
+        status=row.status,
+        row_version=row.row_version,
+        product_id=profile.product_id if profile else None,
+        product_name=profile.product_name if profile else None,
+        profile_version=profile.version if profile else None,
+        profile_status=profile.status if profile else None,
+        cn_normalized_code=profile.cn_normalized_code if profile else None,
+        cn_display_code=profile.cn_display_code if profile else None,
+        classification_ready=profile.classification_ready if profile else None,
+        profile_link_status=status,
+        profile_link_issue_codes=codes,
+    )
 
 
 def _get_row(
@@ -112,7 +166,10 @@ def list_production_records(
         .all()
     )
     return paginate(
-        [_to_response(r) for r in rows], page=page, page_size=page_size, total_items=int(total)
+        [_to_response(db, r) for r in rows],
+        page=page,
+        page_size=page_size,
+        total_items=int(total),
     )
 
 
@@ -120,7 +177,61 @@ def get_production_record(
     db: Session, user: User, organization_id: uuid.UUID, record_id: uuid.UUID
 ) -> ProductionRecordResponse:
     require_cbam_view(db, user, organization_id)
-    return _to_response(_get_row(db, organization_id, record_id))
+    return _to_response(db, _get_row(db, organization_id, record_id))
+
+
+def get_production_profile_link_summary(
+    db: Session,
+    user: User,
+    organization_id: uuid.UUID,
+    binding_id: uuid.UUID,
+) -> ProductionProfileLinkSummary:
+    """Binding-scoped authoritative counts (not derived from one paginated page)."""
+    require_cbam_view(db, user, organization_id)
+    get_binding_for_org(db, organization_id, binding_id)
+    rows = list(
+        db.execute(
+            select(CbamProductionRecord).where(
+                CbamProductionRecord.organization_id == organization_id,
+                CbamProductionRecord.reporting_period_binding_id == binding_id,
+                CbamProductionRecord.status == 'active',
+            )
+        )
+        .scalars()
+        .all()
+    )
+    eligible = 0
+    missing = 0
+    outdated = 0
+    invalid = 0
+    for row in rows:
+        status, _, _ = compute_profile_link_state(db, row)
+        if status == 'MISSING':
+            missing += 1
+        elif status == 'OUTDATED':
+            outdated += 1
+            eligible += 1
+        elif status == 'READY':
+            eligible += 1
+        else:
+            invalid += 1
+    blocking: list[str] = []
+    if missing:
+        blocking.append('PRODUCTION_PROFILE_LINK_MISSING')
+    if invalid:
+        blocking.append('PRODUCTION_PROFILE_LINK_INVALID')
+    if not rows:
+        blocking.append('PRODUCTION_RECORDS_REQUIRED')
+    allocation_ready = missing == 0 and invalid == 0 and eligible > 0
+    return ProductionProfileLinkSummary(
+        eligible_record_count=eligible,
+        missing_profile_count=missing,
+        outdated_profile_count=outdated,
+        invalid_profile_count=invalid,
+        active_record_count=len(rows),
+        allocation_profile_ready=allocation_ready,
+        blocking_issue_codes=blocking,
+    )
 
 
 def create_production_record(
@@ -139,9 +250,8 @@ def create_production_record(
     require_writable_binding(binding)
     installation = get_installation_for_org(db, organization_id, payload.installation_profile_id)
     require_usable_installation(installation)
-    product_profile_id = payload.product_profile_version_id
-    if product_profile_id is not None:
-        get_product_profile_for_org(db, organization_id, product_profile_id)
+    profile_id = require_production_profile_id(payload.product_profile_version_id)
+    profile = require_linkable_product_profile(db, organization_id, profile_id)
     require_positive_quantity(payload.quantity)
     unit = require_unit(payload.unit)
     if payload.source_type not in RECORD_SOURCE_TYPES:
@@ -151,7 +261,7 @@ def create_production_record(
         organization_id=organization_id,
         reporting_period_binding_id=binding.id,
         installation_profile_id=installation.id,
-        product_profile_version_id=product_profile_id,
+        product_profile_version_id=profile.id,
         production_date=payload.production_date,
         period_start=payload.period_start,
         period_end=payload.period_end,
@@ -179,13 +289,15 @@ def create_production_record(
         metadata={
             'bindingId': str(binding.id),
             'installationProfileId': str(installation.id),
+            'productProfileVersionId': str(profile.id),
+            'productId': str(profile.product_id),
             'quantity': str(row.quantity),
             'unit': row.unit,
         },
     )
     db.commit()
     db.refresh(row)
-    return _to_response(row)
+    return _to_response(db, row)
 
 
 def update_production_record(
@@ -209,9 +321,13 @@ def update_production_record(
     data = payload.model_dump(exclude_unset=True, exclude={'row_version'})
     if 'product_profile_version_id' in data:
         pid = data['product_profile_version_id']
-        if pid is not None:
-            get_product_profile_for_org(db, organization_id, pid)
-        row.product_profile_version_id = pid
+        if pid is None:
+            raise BusinessRuleError(
+                'Select a published product profile before saving production data.',
+                details=[{'code': 'PRODUCT_PROFILE_REQUIRED'}],
+            )
+        profile = require_linkable_product_profile(db, organization_id, pid)
+        row.product_profile_version_id = profile.id
     if 'quantity' in data and data['quantity'] is not None:
         require_positive_quantity(data['quantity'])
         row.quantity = data['quantity']
@@ -237,7 +353,7 @@ def update_production_record(
     )
     db.commit()
     db.refresh(row)
-    return _to_response(row)
+    return _to_response(db, row)
 
 
 def archive_production_record(
@@ -258,6 +374,13 @@ def archive_production_record(
     check_row_version(row.row_version, payload.row_version, entity='CBAM production record')
     if row.status == 'archived':
         raise BusinessRuleError('Production record is already archived.')
+    from ecotrace.modules.cbam.application.direct_emissions_allocation_service import (
+        assert_production_record_not_referenced,
+    )
+
+    assert_production_record_not_referenced(
+        db, organization_id=organization_id, production_record_id=row.id
+    )
     row.status = 'archived'
     row.updated_by_user_id = user.id
     row.row_version += 1
@@ -275,4 +398,20 @@ def archive_production_record(
     )
     db.commit()
     db.refresh(row)
-    return _to_response(row)
+    return _to_response(db, row)
+
+
+# Re-export for typed callers / tests.
+__all__ = [
+    'ProductionProfileLinkSummary',
+    'ProductionRecordCreate',
+    'ProductionRecordResponse',
+    'ProductionRecordUpdate',
+    'ProductionRecordVersionRequest',
+    'archive_production_record',
+    'create_production_record',
+    'get_production_profile_link_summary',
+    'get_production_record',
+    'list_production_records',
+    'update_production_record',
+]

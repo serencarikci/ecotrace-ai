@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import Any
+
 
 class EcoTraceError(Exception):
 
@@ -32,7 +34,13 @@ class NotFoundError(EcoTraceError):
 
 class ConflictError(EcoTraceError):
 
-    def __init__(self, message: str='Resource conflict.', *, code: str='CONFLICT', details: list[dict[str, Any]] | None=None) -> None:
+    def __init__(
+        self,
+        message: str='Resource conflict.',
+        *,
+        code: str='CONFLICT',
+        details: list[dict[str, Any]] | None=None,
+    ) -> None:
         super().__init__(message, code=code, status_code=409, details=details)
 
 class BusinessRuleError(EcoTraceError):

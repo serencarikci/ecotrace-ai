@@ -13,13 +13,11 @@ from ecotrace.modules.identity.infrastructure.models import User
 from ecotrace.shared.domain.schemas import CamelModel
 
 FOUNDATION_MESSAGE = (
-    "CBAM/SKDM MVP through Phase 7 audit is available for domain-expert validation. "
-    "Exports use an internal development workbook template and Phase 5 calculation "
-    "results. Official CBAM workbook mapping remains BLOCKED. "
-    "Automatic IPCC/DEFRA/EPA import, GWP invent, CN, shipment, certificate/financial "
-    "liability, evidence upload, approve/lock, and official regulatory submission are "
-    "not implemented. No compliance claim is made. "
-    "Classification: READY_FOR_DOMAIN_VALIDATION (not production/regulatory ready)."
+    "SKDM tools are ready for visual review. You can enter period data, run calculations, "
+    "and download Internal Excel or Official Excel when the period is ready. "
+    "Official Excel is for review only — it is not a legal CBAM submission. "
+    "Certificate and tax liability, evidence upload, and formal approve/lock are still limited. "
+    "No compliance claim is made."
 )
 
 

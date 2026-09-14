@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from ecotrace.core.exceptions import NotFoundError, ValidationAppError
 from ecotrace.modules.cbam.application.calculation_math import (
     CALCULATION_TYPE_MULTIPLY,
+    CALCULATION_TYPE_PURCHASED_ELECTRICITY_INDIRECT,
+    CALCULATION_TYPE_STATIONARY_COMBUSTION_CO2,
     ENGINE_VERSION,
     FORMULA_VERSION,
     multiply_activity_by_factor,
@@ -38,7 +40,7 @@ class CalculationDefinitionResponse(CamelModel):
     name: str
     calculation_type: str
     source_type: str
-    factor_definition_id: uuid.UUID
+    factor_definition_id: uuid.UUID | None
     output_unit: str | None
     formula_version: str
     description: str | None
@@ -145,6 +147,10 @@ def _result_response(row: CbamCalculationResult) -> CalculationResultResponse:
 
 def ensure_platform_calculation_definitions(db: Session) -> None:
     from ecotrace.modules.cbam.application.factor_catalog_seed import ensure_platform_factor_catalog
+    from ecotrace.modules.cbam.application.stationary_combustion_math import (
+        FORMULA_VERSION_STATIONARY_COMBUSTION_CO2,
+    )
+    from ecotrace.modules.cbam.infrastructure.models import CbamFactorDefinition
 
     ensure_platform_factor_catalog(db)
     generic = db.execute(
@@ -152,64 +158,122 @@ def ensure_platform_calculation_definitions(db: Session) -> None:
             CbamCalculationDefinition.code == 'MULTIPLY_ACTIVITY_BY_GENERIC_EF'
         )
     ).scalar_one_or_none()
-    if generic is not None:
-        return
-    from ecotrace.modules.cbam.infrastructure.models import CbamFactorDefinition
-
-    ef = db.execute(
-        select(CbamFactorDefinition).where(CbamFactorDefinition.code == 'GENERIC_EMISSION_FACTOR')
-    ).scalar_one()
-    embedded = db.execute(
-        select(CbamFactorDefinition).where(
-            CbamFactorDefinition.code == 'SUPPLIER_EMBEDDED_EMISSION'
+    if generic is None:
+        ef = db.execute(
+            select(CbamFactorDefinition).where(CbamFactorDefinition.code == 'GENERIC_EMISSION_FACTOR')
+        ).scalar_one()
+        embedded = db.execute(
+            select(CbamFactorDefinition).where(
+                CbamFactorDefinition.code == 'SUPPLIER_EMBEDDED_EMISSION'
+            )
+        ).scalar_one()
+        seeds = (
+            (
+                'c1000000-0000-4000-8000-000000000001',
+                'MULTIPLY_ACTIVITY_BY_GENERIC_EF',
+                'Multiply activity quantity by generic emission factor',
+                'ACTIVITY_RECORD',
+                ef.id,
+            ),
+            (
+                'c1000000-0000-4000-8000-000000000002',
+                'MULTIPLY_ALLOCATION_BY_GENERIC_EF',
+                'Multiply allocated quantity by generic emission factor',
+                'ALLOCATION_RESULT',
+                ef.id,
+            ),
+            (
+                'c1000000-0000-4000-8000-000000000003',
+                'MULTIPLY_PURCHASED_BY_GENERIC_EF',
+                'Multiply purchased-input consumed quantity by generic emission factor',
+                'PURCHASED_INPUT_RECORD',
+                ef.id,
+            ),
+            (
+                'c1000000-0000-4000-8000-000000000004',
+                'MULTIPLY_PURCHASED_BY_SUPPLIER_EMBEDDED',
+                'Multiply purchased-input consumed quantity by resolved supplier embedded intensity',
+                'PURCHASED_INPUT_RECORD',
+                embedded.id,
+            ),
         )
-    ).scalar_one()
-    seeds = (
-        (
-            'c1000000-0000-4000-8000-000000000001',
-            'MULTIPLY_ACTIVITY_BY_GENERIC_EF',
-            'Multiply activity quantity by generic emission factor',
-            'ACTIVITY_RECORD',
-            ef.id,
-        ),
-        (
-            'c1000000-0000-4000-8000-000000000002',
-            'MULTIPLY_ALLOCATION_BY_GENERIC_EF',
-            'Multiply allocated quantity by generic emission factor',
-            'ALLOCATION_RESULT',
-            ef.id,
-        ),
-        (
-            'c1000000-0000-4000-8000-000000000003',
-            'MULTIPLY_PURCHASED_BY_GENERIC_EF',
-            'Multiply purchased-input consumed quantity by generic emission factor',
-            'PURCHASED_INPUT_RECORD',
-            ef.id,
-        ),
-        (
-            'c1000000-0000-4000-8000-000000000004',
-            'MULTIPLY_PURCHASED_BY_SUPPLIER_EMBEDDED',
-            'Multiply purchased-input consumed quantity by resolved supplier embedded intensity',
-            'PURCHASED_INPUT_RECORD',
-            embedded.id,
-        ),
-    )
-    for sid, code, name, source_type, factor_id in seeds:
+        for sid, code, name, source_type, factor_id in seeds:
+            db.add(
+                CbamCalculationDefinition(
+                    id=uuid.UUID(sid),
+                    code=code,
+                    name=name,
+                    calculation_type=CALCULATION_TYPE_MULTIPLY,
+                    source_type=source_type,
+                    factor_definition_id=factor_id,
+                    output_unit=None,
+                    formula_version=FORMULA_VERSION,
+                    description='Metadata-only definition. No numeric factors seeded.',
+                    status='ACTIVE',
+                )
+            )
+        db.flush()
+
+    sc = db.execute(
+        select(CbamCalculationDefinition.id).where(
+            CbamCalculationDefinition.code == 'STATIONARY_COMBUSTION_CO2_V1'
+        )
+    ).scalar_one_or_none()
+    if sc is None:
         db.add(
             CbamCalculationDefinition(
-                id=uuid.UUID(sid),
-                code=code,
-                name=name,
-                calculation_type=CALCULATION_TYPE_MULTIPLY,
-                source_type=source_type,
-                factor_definition_id=factor_id,
-                output_unit=None,
-                formula_version=FORMULA_VERSION,
-                description='Metadata-only definition. No numeric factors seeded.',
+                id=uuid.UUID('c1000000-0000-4000-8000-000000000010'),
+                code='STATIONARY_COMBUSTION_CO2_V1',
+                name='Stationary combustion fossil CO2 (V1)',
+                calculation_type=CALCULATION_TYPE_STATIONARY_COMBUSTION_CO2,
+                source_type='ACTIVITY_RECORD',
+                factor_definition_id=None,
+                output_unit='tCO2',
+                formula_version=FORMULA_VERSION_STATIONARY_COMBUSTION_CO2,
+                description=(
+                    'Typed stationary-combustion orchestration. Parameters come from the '
+                    'fuel catalog; density must be supplied explicitly for VOLUME fuels. '
+                    'Results persist in cbam_stationary_combustion_results.'
+                ),
                 status='ACTIVE',
             )
         )
-    db.flush()
+        db.flush()
+
+    pe = db.execute(
+        select(CbamCalculationDefinition.id).where(
+            CbamCalculationDefinition.code == 'PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1'
+        )
+    ).scalar_one_or_none()
+    if pe is None:
+        from ecotrace.modules.cbam.application.purchased_electricity_constants import (
+            FORMULA_VERSION as PE_FORMULA_VERSION,
+        )
+        from ecotrace.modules.cbam.application.purchased_electricity_constants import (
+            RESULT_UNIT as PE_RESULT_UNIT,
+        )
+
+        db.add(
+            CbamCalculationDefinition(
+                id=uuid.UUID('c1000000-0000-4000-8000-000000000011'),
+                code='PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1',
+                name='Purchased electricity indirect emissions (V1)',
+                calculation_type=CALCULATION_TYPE_PURCHASED_ELECTRICITY_INDIRECT,
+                source_type='ACTIVITY_RECORD',
+                factor_definition_id=None,
+                output_unit=PE_RESULT_UNIT,
+                formula_version=PE_FORMULA_VERSION,
+                description=(
+                    'Typed purchased-electricity indirect emissions. '
+                    'Formula: electricity_MWh × factor. Exported electricity is stored '
+                    'separately and not subtracted. No platform Turkey default is seeded '
+                    'without authoritative provenance. Results in '
+                    'cbam_purchased_electricity_results.'
+                ),
+                status='ACTIVE',
+            )
+        )
+        db.flush()
 
 
 def list_calculation_definitions(

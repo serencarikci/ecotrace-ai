@@ -67,10 +67,13 @@ UNITS: Final[tuple[UnitDef, ...]] = (
     UnitDef('MWh', 'Megawatt-hour', 'energy'),
     UnitDef('GJ', 'Gigajoule', 'energy'),
     UnitDef('MJ', 'Megajoule', 'energy'),
+    UnitDef('TJ', 'Terajoule', 'energy'),
     UnitDef('L', 'Litre', 'volume'),
     UnitDef('m3', 'Cubic metre', 'volume'),
+    UnitDef('Sm3', 'Standard cubic metre', 'volume'),
     UnitDef('kg', 'Kilogram', 'mass'),
     UnitDef('t', 'Tonne', 'mass'),
+    UnitDef('Gg', 'Gigagram', 'mass'),
     UnitDef('unit', 'Unit count', 'count'),
 )
 
@@ -80,6 +83,11 @@ PROPERTY_UNITS: Final[tuple[UnitDef, ...]] = (
     UnitDef('MJ/kg', 'Megajoule per kilogram', 'energy_per_mass'),
     UnitDef('GJ/m3', 'Gigajoule per cubic metre', 'energy_per_volume'),
     UnitDef('MJ/m3', 'Megajoule per cubic metre', 'energy_per_volume'),
+    UnitDef('TJ/Gg', 'Terajoule per gigagram', 'energy_per_mass'),
+    UnitDef('kg/Sm3', 'Kilogram per standard cubic metre', 'density'),
+    UnitDef('kg/m3', 'Kilogram per cubic metre', 'density'),
+    UnitDef('kgCO2/TJ', 'Kilogram CO2 per terajoule', 'emission_intensity_energy'),
+    UnitDef('kgCO2e/TJ', 'Kilogram CO2e per terajoule', 'emission_intensity_energy'),
     UnitDef('tCO2e/t', 'Declared embedded emission intensity', 'embedded_intensity'),
 )
 
@@ -102,11 +110,26 @@ _ACTIVITY_BY_CODE: Final[dict[str, ActivityTypeDef]] = {a.code: a for a in ACTIV
 _SCALE_TO_CANONICAL: Final[dict[str, tuple[str, Decimal]]] = {
     'MJ': ('J_canon', Decimal('1e6')),
     'GJ': ('J_canon', Decimal('1e9')),
+    'TJ': ('J_canon', Decimal('1e12')),
     'kWh': ('Wh_canon', Decimal('1000')),
     'MWh': ('Wh_canon', Decimal('1000000')),
     'kg': ('kg_canon', Decimal('1')),
     't': ('kg_canon', Decimal('1000')),
+    'Gg': ('kg_canon', Decimal('1000000')),
 }
+
+KG_PER_GG: Final[Decimal] = Decimal('1000000')
+KG_PER_TONNE: Final[Decimal] = Decimal('1000')
+
+VOLUME_DENSITY_PAIRS: Final[dict[str, str]] = {
+    'Sm3': 'kg/Sm3',
+    'm3': 'kg/m3',
+}
+
+NCV_UNITS: Final[frozenset[str]] = frozenset({'TJ/Gg'})
+CO2_EF_ENERGY_UNITS: Final[frozenset[str]] = frozenset({'kgCO2/TJ', 'kgCO2e/TJ'})
+MASS_ACTIVITY_UNITS: Final[frozenset[str]] = frozenset({'kg', 't', 'Gg'})
+VOLUME_ACTIVITY_UNITS: Final[frozenset[str]] = frozenset({'Sm3', 'm3'})
 
 EMISSION_INTENSITY_UNITS: Final[tuple[str, ...]] = (
     'kgCO2e/kWh',
@@ -133,7 +156,12 @@ def get_property_unit(code: str) -> UnitDef | None:
 
 
 def is_known_factor_unit(code: str) -> bool:
-    return get_property_unit(code) is not None or code in EMISSION_INTENSITY_UNITS
+    return (
+        get_property_unit(code) is not None
+        or code in EMISSION_INTENSITY_UNITS
+        or code in NCV_UNITS
+        or code in CO2_EF_ENERGY_UNITS
+    )
 
 
 def get_emission_intensity_parts(factor_unit: str) -> tuple[str, str] | None:
@@ -154,6 +182,25 @@ def convert_to_canonical(quantity: Decimal, unit: str) -> Decimal | None:
         return None
     _family, scale = _SCALE_TO_CANONICAL[unit]
     return quantity * scale
+
+
+def mass_to_kg(quantity: Decimal, unit: str) -> Decimal | None:
+    if unit not in MASS_ACTIVITY_UNITS:
+        return None
+    canon = convert_to_canonical(quantity, unit)
+    return canon
+
+
+def kg_to_gg(mass_kg: Decimal) -> Decimal:
+    return mass_kg / KG_PER_GG
+
+
+def kg_to_tonnes(mass_kg: Decimal) -> Decimal:
+    return mass_kg / KG_PER_TONNE
+
+
+def density_unit_for_volume(volume_unit: str) -> str | None:
+    return VOLUME_DENSITY_PAIRS.get(volume_unit)
 
 
 def units_exactly_compatible(unit_a: str, unit_b: str) -> bool:

@@ -322,10 +322,11 @@ def test_product_profile_draft_only_and_classification_fail_closed(seeded_db) ->
         seeded_db,
         admin,
         org.id,
-        ProductProfileCreate(product_id=product.id, version=1),
+        ProductProfileCreate(product_id=product.id),
     )
     assert created.status == "draft"
     assert created.classification_ready is False
+    assert any(i.code == "CN_CODE_REQUIRED" for i in created.missing_requirements)
 
     with pytest.raises(BusinessRuleError):
         reject_classification_ready_true()

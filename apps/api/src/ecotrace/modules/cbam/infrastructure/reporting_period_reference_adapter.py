@@ -22,4 +22,5 @@ def require_reporting_period_in_organization(
         status=period.status,
         start_date=period.start_date,
         end_date=period.end_date,
+        period_type=period.period_type,
     )

@@ -9,6 +9,7 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 from sqlalchemy import text
+from tests.cbam_api_profile_helpers import create_published_steel_profile
 from tests.helpers import api_login, auth_headers, current_org_id
 
 
@@ -100,6 +101,7 @@ def test_phase7_positive_end_to_end_mvp_workflow(client: TestClient, engine) -> 
     viewer = api_login(client, 'viewer@ecotrace.dev', 'EcoTraceViewer!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    profile_id = create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
 
     denied = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/production-records',
@@ -117,6 +119,7 @@ def test_phase7_positive_end_to_end_mvp_workflow(client: TestClient, engine) -> 
         headers=_auth(admin),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '500',
             'unit': 't',
         },
@@ -127,6 +130,7 @@ def test_phase7_positive_end_to_end_mvp_workflow(client: TestClient, engine) -> 
         headers=_auth(admin),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '100',
             'unit': 't',
         },
@@ -306,6 +310,7 @@ def test_phase7_negative_unresolved_factor(client: TestClient) -> None:
     admin = api_login(client, 'orgadmin@ecotrace.dev', 'EcoTraceOrgAdmin!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
     activity = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/activity-records',
         headers=_auth(admin),
@@ -357,6 +362,7 @@ def test_phase7_negative_ambiguous_factor(client: TestClient) -> None:
     admin = api_login(client, 'orgadmin@ecotrace.dev', 'EcoTraceOrgAdmin!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
     activity = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/activity-records',
         headers=_auth(admin),
@@ -403,6 +409,7 @@ def test_phase7_negative_incompatible_unit(client: TestClient) -> None:
     admin = api_login(client, 'orgadmin@ecotrace.dev', 'EcoTraceOrgAdmin!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
     activity = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/activity-records',
         headers=_auth(admin),
@@ -449,11 +456,13 @@ def test_phase7_negative_cross_tenant_and_stale_version(client: TestClient) -> N
     admin = api_login(client, 'orgadmin@ecotrace.dev', 'EcoTraceOrgAdmin!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    profile_id = create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
     prod = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/production-records',
         headers=_auth(admin),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '10',
             'unit': 't',
         },
@@ -483,6 +492,7 @@ def test_phase7_negative_purchased_missing_consumed(client: TestClient) -> None:
     admin = api_login(client, 'orgadmin@ecotrace.dev', 'EcoTraceOrgAdmin!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
     purchased = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/purchased-inputs',
         headers=_auth(admin),
@@ -522,6 +532,7 @@ def test_phase7_performance_sanity_list_and_summary(client: TestClient) -> None:
     admin = api_login(client, 'orgadmin@ecotrace.dev', 'EcoTraceOrgAdmin!2024')
     org_id = current_org_id(client, admin)
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    profile_id = create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
 
     for i in range(25):
         created = client.post(
@@ -529,6 +540,7 @@ def test_phase7_performance_sanity_list_and_summary(client: TestClient) -> None:
             headers=_auth(admin),
             json={
                 'installationProfileId': installation_id,
+                'productProfileVersionId': profile_id,
                 'quantity': str(i + 1),
                 'unit': 't',
             },

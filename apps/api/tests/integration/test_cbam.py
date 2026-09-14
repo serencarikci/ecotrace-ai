@@ -48,9 +48,14 @@ def test_cbam_module_status_authorized_org_admin(client: TestClient) -> None:
     assert "permissionVocabulary" not in body
     lowered = str(body).lower()
     assert "compliant" not in lowered
-    assert "blocked" in body["message"].lower()
-    assert "ready_for_domain_validation" in body["message"].lower()
-    assert "not implemented" in body["message"].lower()
+    # User-facing copy must stay plain English (no internal enum / blocked jargon).
+    message = body["message"].lower()
+    assert "blocked" not in message
+    assert "ready_for_domain_validation" not in message
+    assert "not implemented" not in message
+    assert "review only" in message
+    assert "not a legal cbam submission" in message
+    assert "no compliance claim" in message
 
 
 def test_cbam_module_status_viewer_allowed(client: TestClient) -> None:

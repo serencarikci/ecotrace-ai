@@ -64,6 +64,10 @@ from ecotrace.modules.cbam.application.export_template_service import (
     ensure_internal_export_template,
 )
 from ecotrace.modules.cbam.application.factor_catalog_seed import ensure_platform_factor_catalog
+from ecotrace.modules.cbam.application.stationary_combustion_catalog_seed import (
+    ensure_platform_stationary_combustion_catalog,
+)
+from ecotrace.modules.cbam.application.cn_catalog_seed import ensure_platform_cn_catalog
 
 
 def _admin_database_url() -> str:
@@ -128,6 +132,8 @@ def client(engine: Engine) -> Generator[TestClient, None, None]:
         try:
             run_seed(seed_session)
             ensure_platform_factor_catalog(seed_session)
+            ensure_platform_stationary_combustion_catalog(seed_session)
+            ensure_platform_cn_catalog(seed_session)
             ensure_platform_calculation_definitions(seed_session)
             ensure_internal_export_template(seed_session)
             seed_session.commit()
@@ -143,6 +149,8 @@ def seeded_db(engine: Engine) -> Generator[Session, None, None]:
     session = session_factory()
     run_seed(session)
     ensure_platform_factor_catalog(session)
+    ensure_platform_stationary_combustion_catalog(session)
+    ensure_platform_cn_catalog(session)
     ensure_platform_calculation_definitions(session)
     ensure_internal_export_template(session)
     session.commit()

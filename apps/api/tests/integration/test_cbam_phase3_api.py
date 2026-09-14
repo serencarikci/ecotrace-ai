@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi.testclient import TestClient
+from tests.cbam_api_profile_helpers import create_published_steel_profile
 from tests.helpers import api_login, auth_headers, current_org_id
 
 
@@ -67,12 +68,14 @@ def test_catalogs_and_data_collection_flow(client: TestClient) -> None:
     assert any(u['code'] == 'kWh' for u in units.json())
 
     binding_id, installation_id = _prepare_binding(client, admin, org_id)
+    profile_id = create_published_steel_profile(client, admin, org_id, headers=_auth(admin))
 
     denied = client.post(
         f'{_base(org_id)}/reporting-period-bindings/{binding_id}/production-records',
         headers=_auth(viewer),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '10',
             'unit': 't',
         },
@@ -84,6 +87,7 @@ def test_catalogs_and_data_collection_flow(client: TestClient) -> None:
         headers=_auth(admin),
         json={
             'installationProfileId': installation_id,
+            'productProfileVersionId': profile_id,
             'quantity': '10',
             'unit': 't',
             'notes': 'batch',

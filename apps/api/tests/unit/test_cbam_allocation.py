@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import select
+from tests.cbam_profile_helpers import create_active_ready_profile
 
 from ecotrace.core.exceptions import BusinessRuleError, ConflictError, ValidationAppError
 from ecotrace.db.seed import DEMO_ORG_SLUG
@@ -115,6 +116,7 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
     org = _org(seeded_db)
     admin = _admin(seeded_db)
     binding, installation = _setup(seeded_db, admin, org)
+    profile = create_active_ready_profile(seeded_db, admin, org.id)
 
     base = production_record_service.create_production_record(
         seeded_db,
@@ -122,6 +124,7 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         org.id,
         binding.id,
         ProductionRecordCreate(
+            product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
             quantity=Decimal('500'),
             unit='t',
@@ -133,6 +136,7 @@ def test_direct_assignment_and_production_ratio_flow(seeded_db) -> None:
         org.id,
         binding.id,
         ProductionRecordCreate(
+            product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
             quantity=Decimal('100'),
             unit='t',
@@ -228,12 +232,14 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
     org = _org(seeded_db)
     admin = _admin(seeded_db)
     binding, installation = _setup(seeded_db, admin, org)
+    profile = create_active_ready_profile(seeded_db, admin, org.id)
     base = production_record_service.create_production_record(
         seeded_db,
         admin,
         org.id,
         binding.id,
         ProductionRecordCreate(
+            product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
             quantity=Decimal('500'),
             unit='t',
@@ -245,6 +251,7 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
         org.id,
         binding.id,
         ProductionRecordCreate(
+            product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
             quantity=Decimal('100'),
             unit='kg',
@@ -270,6 +277,7 @@ def test_production_ratio_validation_rejects(seeded_db) -> None:
         org.id,
         binding.id,
         ProductionRecordCreate(
+            product_profile_version_id=profile.id,
             installation_profile_id=installation.id,
             quantity=Decimal('600'),
             unit='t',
