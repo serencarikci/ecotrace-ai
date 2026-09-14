@@ -43,10 +43,12 @@ from ecotrace.modules.cbam.application.purchased_electricity_math import (
 
 getcontext().prec = 50
 
+_ALLOC_WORKBOOK = Path(__file__).resolve().parents[4] / "local-reference" / WORKBOOK_FILENAME
 
+
+@pytest.mark.skipif(not _ALLOC_WORKBOOK.is_file(), reason="SKDM allocation workbook not in local-reference")
 def test_workbook_sha256_and_electricity_formula_refs() -> None:
-    root = Path(__file__).resolve().parents[4]
-    workbook = root / "local-reference" / WORKBOOK_FILENAME
+    workbook = _ALLOC_WORKBOOK
     assert workbook.is_file(), f"missing {workbook}"
     digest = hashlib.sha256(workbook.read_bytes()).hexdigest()
     assert digest == WORKBOOK_SHA256

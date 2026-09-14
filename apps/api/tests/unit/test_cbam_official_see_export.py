@@ -359,9 +359,9 @@ def test_migration_0030_chained_from_0029() -> None:
         / "0030_cbam_official_see_export.py"
     )
     source = path.read_text(encoding="utf-8")
-    assert "revision: str = '0030_cbam_official_see'" in source
+    assert 'revision: str = "0030_cbam_official_see"' in source
     assert len("0030_cbam_official_see") <= 32
-    assert "down_revision: str | None = '0029_cbam_pee_v2'" in source
+    assert 'down_revision: str | None = "0029_cbam_pee_v2"' in source
     assert "cbam_official_see_export_runs" in source
     assert "cbam_official_see_export_artifacts" in source
     assert "client_request_id" in source

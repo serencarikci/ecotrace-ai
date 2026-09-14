@@ -32,8 +32,8 @@ DEFAULT_VALUE_INDEXES = {
 
 def test_migration_0026_is_chained_and_creates_all_phase_10a_tables() -> None:
     source = MIGRATION.read_text(encoding="utf-8")
-    assert "revision: str = '0026_cbam_purchased_precursor'" in source
-    assert "down_revision: str | None = '0025_cbam_production_process'" in source
+    assert 'revision: str = "0026_cbam_purchased_precursor"' in source
+    assert 'down_revision: str | None = "0025_cbam_production_process"' in source
     for table in (
         "cbam_precursor_default_datasets",
         "cbam_precursor_default_values",

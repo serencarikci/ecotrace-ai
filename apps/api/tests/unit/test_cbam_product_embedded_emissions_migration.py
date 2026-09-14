@@ -44,9 +44,9 @@ CONTRIBUTION_INDEXES = {
 def test_migration_0027_is_chained_and_creates_all_phase_10c_tables() -> None:
     source = MIGRATION.read_text(encoding="utf-8")
     # alembic_version.version_num is varchar(32), so the id is abbreviated.
-    assert "revision: str = '0027_cbam_pee_rollup'" in source
+    assert 'revision: str = "0027_cbam_pee_rollup"' in source
     assert len("0027_cbam_pee_rollup") <= 32
-    assert "down_revision: str | None = '0026_cbam_purchased_precursor'" in source
+    assert 'down_revision: str | None = "0026_cbam_purchased_precursor"' in source
     for table in TABLES:
         assert f"CREATE TABLE {table}" in source
         assert f"DROP TABLE IF EXISTS {table}" in source
