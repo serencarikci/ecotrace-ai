@@ -41,7 +41,9 @@ H3 = Decimal("2.6928")
 _ALLOC_WORKBOOK = Path(__file__).resolve().parents[4] / "local-reference" / WORKBOOK_FILENAME
 
 
-@pytest.mark.skipif(not _ALLOC_WORKBOOK.is_file(), reason="SKDM allocation workbook not in local-reference")
+@pytest.mark.skipif(
+    not _ALLOC_WORKBOOK.is_file(), reason="SKDM allocation workbook not in local-reference"
+)
 def test_workbook_sha256_and_formula_refs_match_constants() -> None:
     workbook = _ALLOC_WORKBOOK
     assert workbook.is_file(), f"missing {workbook}"
