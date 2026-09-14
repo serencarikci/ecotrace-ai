@@ -1,0 +1,127 @@
+.monthly-allocation {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.monthly-allocation h3,
+.monthly-allocation h4 {
+  margin: 0 0 0.5rem;
+}
+
+.summary-card {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem 0;
+}
+
+.issue-list {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.compat-block {
+  margin-top: 0.75rem;
+}
+
+.month-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.month-card {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.month-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.status-text {
+  margin: 0;
+  font-weight: 600;
+}
+
+.month-values {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.month-values div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) 1fr;
+  gap: 0.5rem;
+}
+
+.month-values dt {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.month-values dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.month-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.error-text {
+  color: #b42318;
+  margin: 0.5rem 0;
+}
+
+.muted {
+  opacity: 0.8;
+  font-size: 0.92rem;
+}
+
+.help-text {
+  max-width: 48rem;
+  margin: 0.35rem 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 900px) {
+  .month-form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .month-form .actions,
+  .month-form .error-text {
+    grid-column: 1 / -1;
+  }
+}

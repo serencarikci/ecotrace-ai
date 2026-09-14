@@ -3,8 +3,8 @@
     <div>
       <h1 class="page-title">Reporting Period Details</h1>
       <p class="page-subtitle">
-        Data collection, allocation, factor resolution, basic calculation, and internal SKDM Excel/summary
-        export (official CBAM workbook / submission is BLOCKED).
+        Enter production and emissions data, run calculations, and download Internal Excel or Official Excel.
+        Official Excel is for review. It is not a legal CBAM submission.
       </p>
     </div>
     <a mat-stroked-button routerLink="/app/cbam/periods">Back</a>
@@ -20,14 +20,12 @@
 
   @if (!loading() && item(); as row) {
     <div class="surface-card detail-block">
-      <p><strong>Status:</strong> {{ row.status }}</p>
-      <p><strong>Reporting Period:</strong> {{ row.reportingPeriodId }}</p>
+      <p><strong>Status:</strong> {{ bindingStatusLabel(row.status) }}</p>
+      <p><strong>Reporting period:</strong> {{ periodLabel(row.reportingPeriodId) }}</p>
       <p><strong>Revision:</strong> {{ row.revisionNumber }}</p>
-      <p><strong>Version:</strong> {{ row.rowVersion }}</p>
       <p class="muted">
-        Approve/lock, official CBAM submission, and financial liability are not available.
-        Internal SKDM Excel/summary export uses Phase 5 calculation results.
-        Official workbook mapping is BLOCKED.
+        Lock and formal approval are limited in this review build. You can still collect data, calculate
+        results, and download Excel files when ready.
       </p>
     </div>
 
@@ -42,9 +40,34 @@
       </div>
     }
 
-    <mat-tab-group class="collection-tabs" animationDuration="0ms">
+    <mat-tab-group
+      class="collection-tabs"
+      animationDuration="0ms"
+      [selectedIndex]="selectedTabIndex()"
+      (selectedIndexChange)="onTabIndexChange($event)"
+    >
+      <mat-tab label="Product Profiles">
+        <ng-template matTabContent>
+          <div class="tab-panel">
+            <app-cbam-product-profiles [canConfigure]="canConfigure" />
+          </div>
+        </ng-template>
+      </mat-tab>
+
       <mat-tab label="Production">
         <div class="tab-panel">
+          @if (productionProfileLinkSummary(); as linkSummary) {
+            <p class="hint" data-testid="production-profile-link-summary">
+              Profile links: {{ linkSummary.eligibleRecordCount }} ready for allocation,
+              {{ linkSummary.missingProfileCount }} missing,
+              {{ linkSummary.outdatedProfileCount }} older,
+              {{ linkSummary.invalidProfileCount }} with problems
+              @if (!linkSummary.allocationProfileReady) {
+                <span> — not ready for allocation yet.</span>
+              }
+            </p>
+          }
+
           @if (productionRecords().length === 0) {
             <p class="empty-state">No production data has been added for this period.</p>
           } @else {
@@ -52,6 +75,22 @@
               <ng-container matColumnDef="installation">
                 <th mat-header-cell *matHeaderCellDef>Installation</th>
                 <td mat-cell *matCellDef="let r">{{ installationLabel(r.installationProfileId) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="product">
+                <th mat-header-cell *matHeaderCellDef>Product</th>
+                <td mat-cell *matCellDef="let r">{{ r.productName || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="profile">
+                <th mat-header-cell *matHeaderCellDef>Product profile</th>
+                <td mat-cell *matCellDef="let r">{{ profileVersionLabel(r) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="profileLink">
+                <th mat-header-cell *matHeaderCellDef>Profile link</th>
+                <td mat-cell *matCellDef="let r">
+                  <span [matTooltip]="profileLinkMessage(r.profileLinkStatus)">
+                    {{ profileLinkLabel(r.profileLinkStatus) }}
+                  </span>
+                </td>
               </ng-container>
               <ng-container matColumnDef="quantity">
                 <th mat-header-cell *matHeaderCellDef>Quantity</th>
@@ -72,6 +111,40 @@
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let r">
+                  @if (canMutateData && r.status === 'active' && r.profileLinkStatus === 'MISSING') {
+                    @if (linkingProductionId() === r.id) {
+                      <div class="form-grid compact-link">
+                        <mat-form-field appearance="outline">
+                          <mat-label>Product</mat-label>
+                          <mat-select (selectionChange)="onLinkProductChange($event.value)">
+                            @for (p of productionProducts(); track p.id) {
+                              <mat-option [value]="p.id">{{ p.code }} — {{ p.name }}</mat-option>
+                            }
+                          </mat-select>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline">
+                          <mat-label>Product profile</mat-label>
+                          <mat-select
+                            [value]="linkProfileVersionId()"
+                            (selectionChange)="linkProfileVersionId.set($event.value)"
+                          >
+                            @for (pr of selectableProfiles(); track pr.id) {
+                              <mat-option [value]="pr.id">
+                                v{{ pr.version }} · CN {{ pr.cnDisplayCode || pr.cnNormalizedCode }}
+                              </mat-option>
+                            }
+                          </mat-select>
+                          <mat-hint>Select a published profile.</mat-hint>
+                        </mat-form-field>
+                        <button mat-flat-button color="primary" type="button" (click)="confirmLinkProfile(r)">
+                          Save link
+                        </button>
+                        <button mat-button type="button" (click)="cancelLinkProfile()">Cancel</button>
+                      </div>
+                    } @else {
+                      <button mat-button type="button" (click)="startLinkProfile(r)">Link profile</button>
+                    }
+                  }
                   @if (canMutateData && r.status === 'active') {
                     <button mat-button type="button" (click)="archiveProduction(r)">Archive</button>
                   }
@@ -92,6 +165,25 @@
                     <mat-option [value]="inst.id">{{ inst.code }} — {{ inst.name }}</mat-option>
                   }
                 </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Product</mat-label>
+                <mat-select formControlName="productId">
+                  @for (p of productionProducts(); track p.id) {
+                    <mat-option [value]="p.id">{{ p.code }} — {{ p.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Product profile</mat-label>
+                <mat-select formControlName="productProfileVersionId">
+                  @for (pr of selectableProfiles(); track pr.id) {
+                    <mat-option [value]="pr.id">
+                      v{{ pr.version }} · CN {{ pr.cnDisplayCode || pr.cnNormalizedCode }}
+                    </mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select a published profile.</mat-hint>
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Quantity</mat-label>
@@ -115,6 +207,15 @@
               </mat-form-field>
               <button mat-flat-button color="primary" type="submit">Save</button>
             </form>
+          }
+
+          @if (bindingId) {
+            <app-cbam-monthly-allocation-data
+              [bindingId]="bindingId"
+              [canConfigure]="canConfigure"
+              [canMutate]="canMutateData"
+              (goToDirectEmissions)="selectDirectEmissionsTab()"
+            />
           }
         </div>
       </mat-tab>
@@ -230,8 +331,63 @@
         </div>
       </mat-tab>
 
+      <mat-tab label="Direct Emissions">
+        <ng-template matTabContent>
+          <div class="tab-panel">
+            @if (item(); as row) {
+              <app-cbam-stationary-combustion
+                [bindingId]="bindingId"
+                [reportingPeriodId]="row.reportingPeriodId"
+                [canConfigure]="canConfigure"
+                (goToActivities)="selectActivitiesTab()"
+              />
+            }
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <mat-tab label="Indirect Emissions">
+        <ng-template matTabContent>
+          <div class="tab-panel">
+            @if (bindingId) {
+              <app-cbam-purchased-electricity
+                [bindingId]="bindingId"
+                [canConfigure]="canConfigure"
+                [canMutate]="canMutateData"
+                (goToActivities)="selectActivitiesTab()"
+              />
+            }
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <mat-tab label="Processes">
+        <ng-template matTabContent>
+          <div class="tab-panel">
+            @if (bindingId) {
+              <app-cbam-production-processes
+                [bindingId]="bindingId"
+                [canConfigure]="canConfigure"
+                [canMutate]="canMutateData"
+                (goToDirectEmissionsAllocation)="selectAllocationTab()"
+                (goToIndirectEmissionsAllocation)="selectAllocationTab()"
+              />
+            }
+          </div>
+        </ng-template>
+      </mat-tab>
+
       <mat-tab label="Purchased Inputs">
         <div class="tab-panel">
+          @if (bindingId) {
+            <app-cbam-purchased-precursors
+              [bindingId]="bindingId"
+              [canConfigure]="canConfigure"
+              [canMutate]="canMutateData"
+            />
+          }
+
+          <h2>Other purchased inputs</h2>
           @if (purchasedInputs().length === 0) {
             <p class="empty-state">No purchased inputs have been added for this period.</p>
           } @else {
@@ -349,8 +505,48 @@
         </div>
       </mat-tab>
 
+      <mat-tab label="Product Results">
+        <ng-template matTabContent>
+          @if (bindingId) {
+            <app-cbam-product-embedded-emissions
+              [bindingId]="bindingId"
+              [canConfigure]="canConfigure"
+              [canMutate]="canMutateData"
+              (goToProductProfiles)="selectProductProfilesTab()"
+              (goToProduction)="selectProductionTab()"
+              (goToDirectEmissions)="selectDirectEmissionsTab()"
+              (goToIndirectEmissions)="selectIndirectEmissionsTab()"
+              (goToProcesses)="selectProcessesTab()"
+              (goToPurchasedInputs)="selectPurchasedInputsTab()"
+              (goToAllocation)="selectAllocationTab()"
+            />
+          }
+        </ng-template>
+      </mat-tab>
+
       <mat-tab label="Allocation">
         <div class="tab-panel">
+          @if (bindingId) {
+            <app-cbam-direct-emissions-allocation
+              [bindingId]="bindingId"
+              [canConfigure]="canConfigure"
+              [canMutate]="canMutateData"
+              (goToDirectEmissions)="selectDirectEmissionsTab()"
+              (goToProduction)="selectProductionTab()"
+              (goToMonthlyAllocationData)="selectProductionTab()"
+            />
+
+            <app-cbam-indirect-emissions-allocation
+              [bindingId]="bindingId"
+              [canConfigure]="canConfigure"
+              [canMutate]="canMutateData"
+              (goToIndirectEmissions)="selectIndirectEmissionsTab()"
+              (goToProduction)="selectProductionTab()"
+              (goToMonthlyAllocationData)="selectProductionTab()"
+            />
+          }
+
+          <h2>Generic allocation rules</h2>
           <p class="help-text">
             Allocation shows how much of a shared amount belongs to this product.
             This screen does not calculate emissions.
@@ -851,9 +1047,29 @@
       <mat-tab label="Report / Excel">
         <div class="tab-panel">
           <p class="help-text">
-            SKDM Period Summary and internal development Excel template.
-            This is not an official CBAM submission.
-            Official workbook mapping is BLOCKED.
+            SKDM Period Summary, internal development Excel, and official CBAM SEE Excel download.
+          </p>
+
+          @if (bindingId) {
+            <app-cbam-official-see-export
+              [bindingId]="bindingId"
+              [canConfigure]="canConfigure"
+              [canMutate]="canMutateData"
+              (goToProductProfiles)="selectProductProfilesTab()"
+              (goToProduction)="selectProductionTab()"
+              (goToDirectEmissions)="selectDirectEmissionsTab()"
+              (goToIndirectEmissions)="selectIndirectEmissionsTab()"
+              (goToProcesses)="selectProcessesTab()"
+              (goToPurchasedInputs)="selectPurchasedInputsTab()"
+              (goToProductResults)="selectProductResultsTab()"
+              (goToAllocation)="selectAllocationTab()"
+            />
+          }
+
+          <h2>Internal Excel</h2>
+          <p class="help-text">
+            Internal development Excel template for SKDM period summary.
+            This is not an official CBAM submission file.
           </p>
 
           @if (exportReadiness(); as readiness) {

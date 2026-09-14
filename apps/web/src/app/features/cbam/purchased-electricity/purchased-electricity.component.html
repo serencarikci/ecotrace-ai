@@ -1,0 +1,528 @@
+<section class="pe-panel" aria-labelledby="pe-heading">
+  <h2 id="pe-heading">Indirect Emissions</h2>
+  <p class="help-text">
+    Purchased electricity × emission factor. Product allocation is not included on this screen.
+    Results come from the server in tCO2e.
+  </p>
+
+  <div class="sr-only" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (loadError()) {
+    <div class="surface-card empty-state">
+      <p class="error-text" role="alert">{{ loadError() }}</p>
+      <button mat-stroked-button type="button" (click)="reload()">Retry</button>
+    </div>
+  } @else if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="28" aria-label="Loading electricity data"></mat-spinner>
+    </div>
+  } @else {
+    @if (readiness(); as ready) {
+      <section class="surface-card summary-card" aria-labelledby="pe-readiness-heading">
+        <h3 id="pe-readiness-heading">Readiness</h3>
+        <p>
+          <span class="result-badge" [attr.data-badge]="readinessLabel(ready.readinessStatus)">
+            {{ readinessLabel(ready.readinessStatus) }}
+          </span>
+        </p>
+        @if (ready.blockingIssueCodes.length > 0) {
+          <ul class="blocking-list" role="list">
+            @for (code of ready.blockingIssueCodes; track code) {
+              <li>{{ issueMessage(code) }}</li>
+            }
+          </ul>
+        }
+        @if (ready.informationalIssueCodes.length > 0) {
+          <ul class="info-list" role="list">
+            @for (code of ready.informationalIssueCodes; track code) {
+              <li>{{ infoMessage(code) }}</li>
+            }
+          </ul>
+        }
+      </section>
+    }
+
+    @if (summary(); as sum) {
+      <section class="surface-card summary-card" aria-labelledby="pe-summary-heading">
+        <h3 id="pe-summary-heading">Period summary</h3>
+        <div class="readonly-grid" aria-label="Electricity period totals">
+          <p>
+            <strong>Total electricity</strong><br />
+            {{ formatDecimal(sum.totalElectricityMwh) }} MWh
+          </p>
+          <p>
+            <strong>Indirect emissions</strong><br />
+            {{ formatDecimal(sum.totalIndirectEmissionsTco2e) }} {{ sum.resultUnit }}
+          </p>
+          <p>
+            <strong>Exported electricity</strong><br />
+            {{ formatDecimal(sum.totalExportedElectricityMwh) }} MWh
+          </p>
+          <p>
+            <strong>Result status</strong><br />
+            {{ readinessLabel(sum.readinessStatus) }}
+          </p>
+        </div>
+      </section>
+    }
+
+    @if (eligibleActivities().length === 0) {
+      <div class="empty-state surface-card">
+        <p>No electricity records are available.</p>
+        <button mat-stroked-button type="button" (click)="openActivitiesTab()">
+          Go to Activities
+        </button>
+      </div>
+    } @else {
+      <form class="surface-card form-grid" [formGroup]="form" (ngSubmit)="runCalculationAction()">
+        <h3>Electricity record</h3>
+        <mat-form-field appearance="outline">
+          <mat-label>Electricity record</mat-label>
+          <mat-select formControlName="activityRecordId" aria-required="true">
+            @for (activity of eligibleActivities(); track activity.id) {
+              <mat-option [value]="activity.id">{{ activityLabel(activity) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (selectedActivity(); as activity) {
+          <div class="readonly-grid" aria-label="Selected electricity quantity">
+            <p>
+              <strong>Quantity</strong><br />
+              {{ activity.quantity }}
+            </p>
+            <p>
+              <strong>Unit</strong><br />
+              {{ activity.unit }}
+            </p>
+            <p>
+              <strong>Activity date</strong><br />
+              {{ activity.activityDate ?? 'Not set' }}
+            </p>
+          </div>
+
+          @if (currentResultForSelected(); as current) {
+            <p>
+              <span
+                class="result-badge"
+                [attr.data-badge]="lifecycleLabel(current.isCurrent, current.isStale)"
+              >
+                {{ lifecycleLabel(current.isCurrent, current.isStale) }}
+              </span>
+            </p>
+            @if (current.isStale) {
+              <ul class="blocking-list" role="status">
+                @for (code of current.staleReasonCodes; track code) {
+                  <li class="warning-text">{{ staleReasonMessage(code) }}</li>
+                }
+              </ul>
+            }
+          }
+        }
+
+        <fieldset class="factor-source-fieldset">
+          <legend>Emission factor source</legend>
+          <mat-radio-group
+            formControlName="factorSourceMode"
+            aria-label="Emission factor source"
+            class="factor-source-group"
+          >
+            <mat-radio-button value="PLATFORM_DEFAULT">Platform default</mat-radio-button>
+            <mat-radio-button value="MANUAL">Manual factor</mat-radio-button>
+          </mat-radio-group>
+        </fieldset>
+
+        @if (factorMode() === 'PLATFORM_DEFAULT') {
+          @if (platformDefaultLoading()) {
+            <div class="loading-state" role="status" aria-live="polite">
+              <mat-spinner diameter="24" aria-label="Loading default factor"></mat-spinner>
+            </div>
+          } @else if (platformDefaultAvailable()) {
+            @if (platformDefault(); as def) {
+              <div class="readonly-grid" aria-label="Platform default factor">
+                <p>
+                  <strong>Factor</strong><br />
+                  {{ formatDecimal(def.factorValue) }} {{ def.factorUnit }}
+                </p>
+                <p>
+                  <strong>Source</strong><br />
+                  {{ def.sourceName || '—' }}
+                </p>
+                <p>
+                  <strong>Document</strong><br />
+                  {{ def.sourceDocument || '—' }}
+                </p>
+                <p>
+                  <strong>Dataset</strong><br />
+                  {{ def.datasetVersion || '—' }}
+                </p>
+              </div>
+            }
+          } @else {
+            <p class="warning-text" role="status">
+              {{
+                platformDefaultError() ||
+                  'A verified default factor is not available. Enter a manual factor and its source.'
+              }}
+            </p>
+          }
+        }
+
+        @if (factorMode() === 'MANUAL') {
+          <h3>Manual factor</h3>
+          <mat-form-field appearance="outline">
+            <mat-label>Factor value</mat-label>
+            <input matInput formControlName="manualValue" inputmode="decimal" aria-required="true" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Factor unit</mat-label>
+            <mat-select formControlName="manualUnit" aria-required="true">
+              @for (unit of factorUnits; track unit) {
+                <mat-option [value]="unit">{{ unit }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Source name</mat-label>
+            <input matInput formControlName="sourceName" aria-required="true" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Source document</mat-label>
+            <input matInput formControlName="sourceDocument" aria-required="true" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Dataset / version</mat-label>
+            <input matInput formControlName="datasetVersion" aria-required="true" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Reference description</mat-label>
+            <input matInput formControlName="referenceDescription" aria-required="true" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Effective / reference date</mat-label>
+            <input matInput type="date" formControlName="effectiveDate" />
+          </mat-form-field>
+        }
+
+        <h3>Exported electricity</h3>
+        <p class="help-text">
+          Exported electricity is reported separately. It is not subtracted from purchased
+          electricity here.
+        </p>
+        <div class="export-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Exported electricity</mat-label>
+            <input matInput formControlName="exportedQuantity" inputmode="decimal" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Unit</mat-label>
+            <mat-select formControlName="exportedUnit">
+              <mat-option value="MWh">MWh</mat-option>
+              <mat-option value="kWh">kWh</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Evidence notes</mat-label>
+          <textarea matInput rows="2" formControlName="evidenceNotes"></textarea>
+        </mat-form-field>
+
+        @if (actionError()) {
+          <p class="error-text" role="alert">{{ actionError() }}</p>
+        }
+        @if (successMessage()) {
+          <p class="success-text" role="status">{{ successMessage() }}</p>
+        }
+
+        <div class="actions">
+          @if (canConfigure() && canMutate()) {
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="!canExecute()"
+              [attr.aria-label]="calculationAriaLabel()"
+            >
+              {{ calculationActionLabel() }}
+            </button>
+          } @else {
+            <p class="muted">View only — calculation requires configure access and an open period.</p>
+          }
+        </div>
+      </form>
+    }
+
+    <section class="surface-card" aria-labelledby="pe-history-heading">
+      <h3 id="pe-history-heading">Calculation history</h3>
+      @if (results().length === 0) {
+        <p class="empty-state">No electricity calculations yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="results()" class="full-width">
+            <ng-container matColumnDef="created">
+              <th mat-header-cell *matHeaderCellDef>Created</th>
+              <td mat-cell *matCellDef="let row">
+                {{ row.createdAt | date: 'medium' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="electricity">
+              <th mat-header-cell *matHeaderCellDef>Electricity</th>
+              <td mat-cell *matCellDef="let row">
+                {{ formatDecimal(row.electricityMwh) }} MWh
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="factorSource">
+              <th mat-header-cell *matHeaderCellDef>Factor source</th>
+              <td mat-cell *matCellDef="let row">
+                {{ factorSourceLabel(row.factorSourceMode) }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="factor">
+              <th mat-header-cell *matHeaderCellDef>Factor</th>
+              <td mat-cell *matCellDef="let row">
+                {{ formatDecimal(row.factorValue) }} {{ row.factorUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="emissions">
+              <th mat-header-cell *matHeaderCellDef>Indirect emissions</th>
+              <td mat-cell *matCellDef="let row">
+                {{ formatDecimal(row.indirectEmissionsTco2e) }} {{ row.resultUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row">
+                <span
+                  class="result-badge"
+                  [attr.data-badge]="lifecycleLabel(row.isCurrent, row.isStale)"
+                >
+                  {{ lifecycleLabel(row.isCurrent, row.isStale) }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let row">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="viewDetails(row.resultId)"
+                  [attr.aria-label]="'View details for electricity result ' + row.resultId"
+                >
+                  View details
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: historyColumns"></tr>
+          </table>
+        </div>
+        <mat-paginator
+          [length]="resultsTotal()"
+          [pageIndex]="resultsPage() - 1"
+          [pageSize]="resultsPageSize()"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onHistoryPage($event)"
+          aria-label="Electricity calculation history pages"
+        ></mat-paginator>
+      }
+    </section>
+
+    @if (detailLoading()) {
+      <div class="loading-state" role="status" aria-live="polite">
+        <mat-spinner diameter="28" aria-label="Loading result detail"></mat-spinner>
+      </div>
+    } @else if (detailError()) {
+      <p class="error-text" role="alert">{{ detailError() }}</p>
+    } @else if (selectedDetail()) {
+      @if (selectedDetail(); as detail) {
+      <section class="surface-card detail-card" aria-labelledby="pe-detail-heading">
+        <h3 id="pe-detail-heading">Result detail</h3>
+        <p>
+          <span
+            class="result-badge"
+            [attr.data-badge]="lifecycleLabel(detail.isCurrent, detail.isStale)"
+          >
+            {{ lifecycleLabel(detail.isCurrent, detail.isStale) }}
+          </span>
+        </p>
+
+        <button
+          mat-button
+          type="button"
+          (click)="toggleSection('input')"
+          [attr.aria-expanded]="isSectionOpen('input')"
+        >
+          Input
+        </button>
+        @if (isSectionOpen('input')) {
+          <div class="readonly-grid" aria-label="Input snapshot">
+            <p>
+              <strong>Activity quantity</strong><br />
+              {{ formatDecimal(detail.activityQuantity) }} {{ detail.activityUnit }}
+            </p>
+            <p>
+              <strong>Electricity (MWh)</strong><br />
+              {{ formatDecimal(detail.electricityMwh) }} MWh
+            </p>
+            <p>
+              <strong>Reference date</strong><br />
+              {{ detail.calculationReferenceDate }}
+            </p>
+          </div>
+        }
+
+        <button
+          mat-button
+          type="button"
+          (click)="toggleSection('calculation')"
+          [attr.aria-expanded]="isSectionOpen('calculation')"
+        >
+          Calculation
+        </button>
+        @if (isSectionOpen('calculation')) {
+          <p class="help-text" role="note">
+            Electricity × emission factor = indirect emissions
+          </p>
+          <div class="readonly-grid" aria-label="Calculation snapshot">
+            <p>
+              <strong>Electricity</strong><br />
+              {{ formatDecimal(detail.electricityMwh) }} MWh
+            </p>
+            <p>
+              <strong>Factor (canonical)</strong><br />
+              {{ formatDecimal(detail.factorTco2ePerMwh) }} tCO2e/MWh
+            </p>
+            <p>
+              <strong>Indirect emissions</strong><br />
+              {{ formatDecimal(detail.indirectEmissionsTco2e) }} {{ detail.resultUnit }}
+            </p>
+          </div>
+        }
+
+        <button
+          mat-button
+          type="button"
+          (click)="toggleSection('factor')"
+          [attr.aria-expanded]="isSectionOpen('factor')"
+        >
+          Emission factor
+        </button>
+        @if (isSectionOpen('factor')) {
+          <div class="readonly-grid" aria-label="Emission factor snapshot">
+            <p>
+              <strong>Source mode</strong><br />
+              {{ factorSourceLabel(detail.factorSourceMode) }}
+            </p>
+            <p>
+              <strong>Factor</strong><br />
+              {{ formatDecimal(detail.factorValue) }} {{ detail.factorUnit }}
+            </p>
+            <p>
+              <strong>Source name</strong><br />
+              {{ detail.factorSourceName || '—' }}
+            </p>
+            <p>
+              <strong>Source document</strong><br />
+              {{ detail.factorSourceDocument || '—' }}
+            </p>
+            <p>
+              <strong>Dataset / version</strong><br />
+              {{ detail.factorDatasetVersion || '—' }}
+            </p>
+            <p>
+              <strong>Reference</strong><br />
+              {{ detail.factorReferenceDescription || '—' }}
+            </p>
+            <p>
+              <strong>Effective date</strong><br />
+              {{ detail.factorEffectiveDate || '—' }}
+            </p>
+            <p>
+              <strong>Valid from / until</strong><br />
+              {{ detail.factorValidFrom || '—' }} / {{ detail.factorValidUntil || '—' }}
+            </p>
+          </div>
+        }
+
+        <button
+          mat-button
+          type="button"
+          (click)="toggleSection('exported')"
+          [attr.aria-expanded]="isSectionOpen('exported')"
+        >
+          Exported electricity
+        </button>
+        @if (isSectionOpen('exported')) {
+          <div class="readonly-grid" aria-label="Exported electricity snapshot">
+            <p>
+              <strong>Quantity</strong><br />
+              {{ formatDecimal(detail.exportedElectricityQuantity) }}
+              {{ detail.exportedElectricityUnit || '' }}
+            </p>
+            <p>
+              <strong>Canonical MWh</strong><br />
+              {{ formatDecimal(detail.exportedElectricityMwh) }} MWh
+            </p>
+          </div>
+        }
+
+        <button
+          mat-button
+          type="button"
+          (click)="toggleSection('sources')"
+          [attr.aria-expanded]="isSectionOpen('sources')"
+        >
+          Sources
+        </button>
+        @if (isSectionOpen('sources')) {
+          <div class="readonly-grid" aria-label="Methodology sources">
+            <p>
+              <strong>Methodology</strong><br />
+              {{ detail.methodologyCode }} v{{ detail.methodologyVersion }}
+            </p>
+            <p>
+              <strong>Formula version</strong><br />
+              {{ detail.formulaVersion }}
+            </p>
+            <p>
+              <strong>Workbook refs</strong><br />
+              {{ detail.workbookFormulaRefs }}
+            </p>
+            <p>
+              <strong>Evidence notes</strong><br />
+              {{ detail.evidenceNotes || '—' }}
+            </p>
+          </div>
+        }
+
+        <button
+          mat-button
+          type="button"
+          (click)="toggleSection('audit')"
+          [attr.aria-expanded]="isSectionOpen('audit')"
+        >
+          Audit
+        </button>
+        @if (isSectionOpen('audit')) {
+          <div class="readonly-grid" aria-label="Audit snapshot">
+            <p>
+              <strong>Created</strong><br />
+              {{ detail.createdAt | date: 'medium' }}
+            </p>
+            <p>
+              <strong>Created by</strong><br />
+              {{ detail.createdByUserId ? 'Recorded user' : '—' }}
+            </p>
+            <p class="muted">
+              Support references are stored for this calculation. They are not shown here to keep the
+              screen simple.
+            </p>
+          </div>
+        }
+      </section>
+      }
+    }
+  }
+</section>

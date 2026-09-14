@@ -70,10 +70,17 @@ Period approval payload must be able to carry `calculationRunId` when activated.
 
 `/api/v1/cbam/reference-data/versions` (global) + org pin under organization path.
 
-### Product profiles (temporal)
+### Product profiles (temporal) + CN catalog (Phase 6A)
 
-`.../product-profile-versions` — Phase 2 foundation (product ref + version/lifecycle/temporal; **no CN/AGC/FU**; `classificationReady` always false).  
-Future CN-bearing shape may use `.../product-profiles` nesting (D-029); not implemented yet.
+`GET .../cn-codes` / `GET .../cn-codes/{id}` — platform SEE CN catalog (`cbam:view`; global reference data, org-scoped permission gate).
+
+`GET .../cn-controlled-lists/{listCode}` — controlled lists (e.g. reducing agents).
+
+`.../product-profile-versions` — create draft, patch draft, publish, archive, get/list (`cbam:view` / `cbam:configure`).
+
+`GET .../reporting-period-bindings/{bindingId}/product-profiles` — list org profiles available for a binding (ownership check).
+
+`classificationReady` is **server-computed** (CN snapshot + required steel fields + percentage rules). Clients cannot force it true. Published versions are immutable; corrections create a new version. Allocation remains unavailable.
 
 ### Production processes / routes (installation-scoped)
 
@@ -93,6 +100,14 @@ Under `.../reporting-period-bindings/{bindingId}/`:
 Plus detail/archive under `.../production-records/{id}`, `.../activity-records/{id}`, `.../purchased-inputs/{id}`.  
 Catalogs: `.../activity-types`, `.../units`, `.../activity-property-types`.  
 **Phase 3:** create/list/get/patch/archive only — **no** emission calculation, submit/accept workflow, or Excel.
+
+**Phase 6C:** production create/update must link an active classification-ready `productProfileVersionId`. Responses include `profileLinkStatus` / `profileLinkIssueCodes`. Binding summary: `.../production-profile-link-summary` (authoritative allocation-profile readiness counts; not a substitute for allocation).
+
+**Phase 7A-0:** monthly workbook D/E inputs under `.../monthly-production-basis` (+ `-summary`). Does **not** execute direct-emissions allocation.
+
+**Phase 7A-2:** dedicated direct-emissions allocation under `.../direct-emissions-allocation/` (`readiness`, `executions`, `results`, `summary`). Methodology `STATIONARY_COMBUSTION_DIRECT_EMISSIONS_ALLOCATION_V1`. Request body is `{ clientRequestId }` only — server resolves all D/E, SC sources, and product quantities. Does **not** cover electricity/process/precursor or Angular UI.
+
+**Phase 8A:** purchased-electricity indirect emissions under `.../purchased-electricity/` (`factors/default`, `readiness`, `summary`, `executions`, `results`, `results/{id}`). Methodology `PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1`. Client submits activity + factor source mode (and manual provenance when applicable); **must not** submit calculated emissions. Permissions: `cbam:view` for factors/readiness/results/summary; `cbam:configure` for execution. Does **not** cover product allocation, Angular UI, process/heat/waste gas/precursors, or Excel wiring.
 
 Future activity workflow ops (submit/accept/reject and **`rejected → draft`**) remain later-phase.
 

@@ -1,5 +1,6 @@
 .header-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
@@ -23,6 +24,8 @@
 
 .table-wrap {
   padding: 0.5rem 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .loading-state {
@@ -87,13 +90,27 @@
   margin: 0.75rem 0 1.25rem;
 }
 
-.help-text {
-  margin: 0 0 0.5rem;
-  font-size: 0.9rem;
-  opacity: 0.8;
-}
-
 .form-grid h3 {
   margin: 0;
   font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions a,
+  .actions button {
+    width: 100%;
+  }
 }

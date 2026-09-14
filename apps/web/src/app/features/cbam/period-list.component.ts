@@ -12,6 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { extractApiErrorMessage } from '../../core/services/error.util';
 import { ReportingPeriodService } from '../../core/services/reporting-period.service';
 import { canConfigureCbam } from '../../core/services/roles.util';
+import { bindingStatusLabel } from './cbam-display-labels';
 import { CbamApiService, CbamPeriodBinding } from './cbam-api.service';
 
 @Component({
@@ -52,12 +53,10 @@ export class CbamPeriodListComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    if (this.canConfigure) {
-      this.periodsApi.list({ page: 1, pageSize: 100 }).subscribe({
-        next: (page) => this.periods.set(page.items),
-        error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
-      });
-    }
+    this.periodsApi.list({ page: 1, pageSize: 200 }).subscribe({
+      next: (page) => this.periods.set(page.items),
+      error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
+    });
   }
 
   load(): void {
@@ -76,6 +75,15 @@ export class CbamPeriodListComponent implements OnInit {
           this.errorMessage.set(extractApiErrorMessage(err));
         },
       });
+  }
+
+  periodLabel(id: string): string {
+    const found = this.periods().find((p) => p.id === id);
+    return found ? `${found.code} — ${found.name}` : 'Reporting period';
+  }
+
+  statusLabel(status: string): string {
+    return bindingStatusLabel(status);
   }
 
   onPage(event: PageEvent): void {

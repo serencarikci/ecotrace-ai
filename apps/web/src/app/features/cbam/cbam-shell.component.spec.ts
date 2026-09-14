@@ -88,7 +88,7 @@ describe('CBAM / SKDM shell and guards', () => {
       calculationImplemented: true,
       reportingImplemented: true,
       message:
-        'CBAM/SKDM MVP through Phase 7 audit is available for domain-expert validation. Official CBAM workbook mapping remains BLOCKED. Classification: READY_FOR_DOMAIN_VALIDATION. No compliance claim is made.',
+        'SKDM tools are ready for review. Official Excel export is available when period data is complete. No compliance claim is made.',
       enforcedPermissions: ['cbam:view', 'cbam:configure'],
     });
     fixture.detectChanges();
@@ -96,9 +96,9 @@ describe('CBAM / SKDM shell and guards', () => {
     expect(text).toContain('SKDM');
     expect(text).toContain('Installations');
     expect(text).toContain('Reporting Periods');
-    expect(text).toContain('Basic calculation');
-    expect(text).toContain('BLOCKED');
-    expect(text).toContain('READY_FOR_DOMAIN_VALIDATION');
+    expect(text).toContain('Official Excel');
+    expect(text).not.toContain('BLOCKED');
+    expect(text).not.toContain('READY_FOR_DOMAIN_VALIDATION');
     expect(text.toLowerCase()).not.toContain('compliant');
     expect(text.toLowerCase()).not.toContain('tco2e');
     expect(fixture.nativeElement.querySelector('canvas')).toBeNull();
@@ -138,14 +138,14 @@ describe('CBAM / SKDM shell and guards', () => {
       calculationImplemented: true,
       reportingImplemented: true,
       message:
-        'CBAM/SKDM MVP through Phase 7 audit is available for domain-expert validation. Official CBAM workbook mapping remains BLOCKED. Classification: READY_FOR_DOMAIN_VALIDATION. No compliance claim is made.',
+        'SKDM tools are ready for review. Official Excel export is available when period data is complete. No compliance claim is made.',
       enforcedPermissions: ['cbam:view', 'cbam:configure'],
     });
     harness.detectChanges();
     expect(harness.routeNativeElement?.textContent).toContain('SKDM');
-    expect(harness.routeNativeElement?.textContent).toContain('Basic calculation');
-    expect(harness.routeNativeElement?.textContent).toContain('BLOCKED');
-    expect(harness.routeNativeElement?.textContent).toContain('READY_FOR_DOMAIN_VALIDATION');
+    expect(harness.routeNativeElement?.textContent).toContain('Official Excel');
+    expect(harness.routeNativeElement?.textContent).not.toContain('BLOCKED');
+    expect(harness.routeNativeElement?.textContent).not.toContain('READY_FOR_DOMAIN_VALIDATION');
   });
 
   it('organizationContextGuard redirects when organization context is missing', async () => {

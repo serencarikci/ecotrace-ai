@@ -33,11 +33,11 @@
       <table mat-table [dataSource]="items()" class="full-width">
         <ng-container matColumnDef="reportingPeriodId">
           <th mat-header-cell *matHeaderCellDef>Period</th>
-          <td mat-cell *matCellDef="let row">{{ row.reportingPeriodId }}</td>
+          <td mat-cell *matCellDef="let row">{{ periodLabel(row.reportingPeriodId) }}</td>
         </ng-container>
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let row">{{ row.status }}</td>
+          <td mat-cell *matCellDef="let row">{{ statusLabel(row.status) }}</td>
         </ng-container>
         <ng-container matColumnDef="revisionNumber">
           <th mat-header-cell *matHeaderCellDef>Revision</th>

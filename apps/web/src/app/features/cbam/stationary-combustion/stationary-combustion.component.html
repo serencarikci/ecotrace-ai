@@ -1,0 +1,540 @@
+<section class="sc-panel" aria-labelledby="sc-direct-emissions-heading">
+  <h2 id="sc-direct-emissions-heading">Direct Emissions</h2>
+  <p class="help-text">
+    Calculate fossil CO2 from fuel use for this period. Add fuel use records in the Activities tab
+    first.
+  </p>
+
+  @if (loadingBootstrap()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="36" aria-label="Loading direct emissions data"></mat-spinner>
+    </div>
+  } @else if (bootstrapError()) {
+    <p class="error-text" role="alert">{{ bootstrapError() }}</p>
+  } @else {
+    <section class="summary-section surface-card" aria-labelledby="sc-period-summary-heading">
+      <h3 id="sc-period-summary-heading">Period Summary</h3>
+
+      @if (loadingSummary()) {
+        <div class="loading-state" role="status" aria-live="polite">
+          <mat-spinner diameter="28" aria-label="Loading period summary"></mat-spinner>
+        </div>
+      } @else if (summaryError()) {
+        <p class="error-text" role="alert">{{ summaryError() }}</p>
+        <button mat-stroked-button type="button" (click)="retrySummary()">Retry</button>
+      } @else if (periodSummary()) {
+        <div class="summary-cards" role="group" aria-label="Period summary cards">
+          <article class="summary-card">
+            <h4>Status</h4>
+            <p class="summary-status" [attr.data-status]="readinessUi()">
+              <span class="status-text">{{ readinessStatusLabel() }}</span>
+            </p>
+            <p class="summary-message">{{ readinessStatusMessage() }}</p>
+          </article>
+          <article class="summary-card">
+            <h4>Fuel records</h4>
+            <ul class="coverage-list">
+              <li>Eligible fuel records: {{ periodSummary()!.eligibleActivityCount }}</li>
+              <li>Calculated records: {{ periodSummary()!.validCurrentResultCount }}</li>
+              <li>Missing calculations: {{ periodSummary()!.missingResultCount }}</li>
+              <li>Out-of-date calculations: {{ periodSummary()!.staleResultCount }}</li>
+            </ul>
+          </article>
+          <article class="summary-card">
+            <h4>Total energy</h4>
+            @if (readinessUi() === 'EMPTY') {
+              <p class="muted">No totals yet.</p>
+            } @else {
+              @if (showPartialTotals()) {
+                <p class="totals-caption">Current calculated total</p>
+              }
+              <p>
+                {{ formatDecimal(periodSummary()!.totalEnergyContentTj) }}
+                <span class="unit">TJ</span>
+              </p>
+            }
+          </article>
+          <article class="summary-card">
+            <h4>Fossil CO2</h4>
+            @if (readinessUi() === 'EMPTY') {
+              <p class="muted">No totals yet.</p>
+            } @else {
+              @if (showPartialTotals()) {
+                <p class="totals-caption">Current calculated total</p>
+              }
+              <p class="final-total">
+                {{ formatDecimal(periodSummary()!.finalResultValue) }}
+                <span class="unit">{{ periodSummary()!.finalResultUnit }}</span>
+              </p>
+              <p class="muted small">
+                Fuel mass {{ formatDecimal(periodSummary()!.totalFuelMassKg) }} kg
+                ({{ formatDecimal(periodSummary()!.totalFuelMassGg) }} Gg)
+              </p>
+            }
+          </article>
+        </div>
+
+        @if (mappedBlockingIssues().length > 0) {
+          <div class="blocking-block">
+            <h4>What needs attention</h4>
+            <ul class="blocking-list">
+              @for (issue of mappedBlockingIssues(); track issue) {
+                <li>{{ issue }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (readinessUi() === 'EMPTY') {
+          <div class="empty-state">
+            <button mat-stroked-button type="button" (click)="openActivitiesTab()">
+              Go to Activities
+            </button>
+          </div>
+        }
+
+        @if (showTotalsByFuel()) {
+          <div class="fuel-totals">
+            <h4>Totals by fuel</h4>
+            <div class="table-wrap">
+              <table mat-table [dataSource]="periodSummary()!.totalsByFuel" class="full-width">
+                <ng-container matColumnDef="fuel">
+                  <th mat-header-cell *matHeaderCellDef>Fuel</th>
+                  <td mat-cell *matCellDef="let row">{{ row.fuelName }}</td>
+                </ng-container>
+                <ng-container matColumnDef="activities">
+                  <th mat-header-cell *matHeaderCellDef>Records</th>
+                  <td mat-cell *matCellDef="let row">{{ row.activityCount }}</td>
+                </ng-container>
+                <ng-container matColumnDef="mass">
+                  <th mat-header-cell *matHeaderCellDef>Fuel mass</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ formatDecimal(row.totalFuelMassKg) }} kg
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="energy">
+                  <th mat-header-cell *matHeaderCellDef>Energy</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ formatDecimal(row.totalEnergyContentTj) }} TJ
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="fossilCo2">
+                  <th mat-header-cell *matHeaderCellDef>Fossil CO2</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ formatDecimal(row.totalFossilCo2Tonnes) }} t
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="final">
+                  <th mat-header-cell *matHeaderCellDef>Final result</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ formatDecimal(row.finalResultValue) }} {{ row.resultUnit }}
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="fuelTotalColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: fuelTotalColumns"></tr>
+              </table>
+            </div>
+          </div>
+        }
+      }
+    </section>
+
+    @if (coverageError()) {
+      <div class="surface-card empty-state">
+        <p class="error-text" role="alert">{{ coverageError() }}</p>
+        <button mat-stroked-button type="button" (click)="retryCoverage()">Retry</button>
+      </div>
+    } @else if (loadingCoverage()) {
+      <div class="loading-state" role="status" aria-live="polite">
+        <mat-spinner diameter="28" aria-label="Loading fuel use coverage"></mat-spinner>
+      </div>
+    } @else if (coverageTotal() === 0) {
+      <div class="empty-state surface-card">
+        <p>No fuel use records. Add fuel use in the Activities tab first.</p>
+        <button mat-stroked-button type="button" (click)="openActivitiesTab()">
+          Go to Activities
+        </button>
+      </div>
+    } @else {
+      <form class="surface-card form-grid" [formGroup]="form" (ngSubmit)="runCalculationAction()">
+        <h3>Fuel use record</h3>
+        <mat-form-field appearance="outline">
+          <mat-label>Fuel use record</mat-label>
+          <mat-select
+            formControlName="activityRecordId"
+            (selectionChange)="onActivityChange()"
+            aria-required="true"
+          >
+            @for (item of coverageItems(); track item.activityRecordId) {
+              <mat-option [value]="item.activityRecordId">
+                {{ coverageLabel(item) }} · {{ coverageStatusLabel(item.coverageStatus) }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-paginator
+          [length]="coverageTotal()"
+          [pageIndex]="coveragePage() - 1"
+          [pageSize]="coveragePageSize()"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onCoveragePage($event)"
+          aria-label="Fuel use coverage pages"
+        ></mat-paginator>
+
+        @if (selectedCoverage()) {
+          <p>
+            <span
+              class="result-badge"
+              [attr.data-badge]="selectedCoverageStatusLabel()"
+            >
+              {{ selectedCoverageStatusLabel() }}
+            </span>
+          </p>
+        }
+
+        @if (selectedActivity()) {
+          <div class="readonly-grid" aria-label="Selected fuel use details">
+            <p>
+              <strong>Fuel</strong><br />
+              {{ selectedCoverage()?.fuelName ?? selectedFuel()?.name ?? selectedActivity()!.activityType }}
+            </p>
+            <p>
+              <strong>Activity date</strong><br />
+              {{ selectedActivity()!.activityDate ?? 'Not set' }}
+            </p>
+            <p>
+              <strong>Amount</strong><br />
+              {{ selectedActivity()!.quantity }}
+            </p>
+            <p>
+              <strong>Unit</strong><br />
+              {{ selectedActivity()!.unit }}
+            </p>
+          </div>
+        }
+
+        @if (selectedActivityIsStale()) {
+          <ul class="blocking-list" role="status">
+            @for (message of selectedStaleMessages(); track message) {
+              <li class="warning-text">{{ message }}</li>
+            }
+          </ul>
+        }
+
+        @if (selectedActivity() && !selectedActivity()!.activityDate) {
+          <mat-form-field appearance="outline">
+            <mat-label>Calculation date</mat-label>
+            <input
+              matInput
+              type="date"
+              formControlName="calculationReferenceDate"
+              [attr.min]="period()?.startDate ?? null"
+              [attr.max]="period()?.endDate ?? null"
+              aria-required="true"
+            />
+            <mat-hint>Choose a date inside the reporting period.</mat-hint>
+          </mat-form-field>
+          @if (referenceDateOutsidePeriod()) {
+            <p class="error-text" role="alert">Choose a date inside the reporting period.</p>
+          }
+        }
+
+        <h3>Reference values</h3>
+        @if (loadingParameters()) {
+          <div class="loading-state" role="status" aria-live="polite">
+            <mat-spinner diameter="28" aria-label="Loading reference values"></mat-spinner>
+          </div>
+        } @else if (parameterError()) {
+          <p class="error-text" role="alert">{{ parameterError() }}</p>
+        } @else if (parameters()) {
+          <div class="readonly-grid" aria-label="Reference values">
+            <p>
+              <strong>Net calorific value</strong><br />
+              {{ parameters()!.netCalorificValue }} {{ parameters()!.netCalorificValueUnit }}
+            </p>
+            <p>
+              <strong>CO2 emission factor</strong><br />
+              {{ parameters()!.fossilCo2EmissionFactor }}
+              {{ parameters()!.fossilCo2EmissionFactorUnit }}
+            </p>
+            <p>
+              <strong>Oxidation factor</strong><br />
+              {{ parameters()!.oxidationFactor }}
+            </p>
+            <p>
+              <strong>Dataset version</strong><br />
+              {{ parameters()!.datasetVersion }}
+            </p>
+            <p>
+              <strong>Valid dates</strong><br />
+              {{ parameters()!.validFrom }}
+              @if (parameters()!.validUntil) {
+                – {{ parameters()!.validUntil }}
+              }
+            </p>
+            <p>
+              <strong>Data source</strong><br />
+              {{ parameters()!.ncvSource.sourceDocument }} /
+              {{ parameters()!.ncvSource.sourceTable }}
+            </p>
+          </div>
+        } @else {
+          <p class="muted">Select a fuel use record to load reference values.</p>
+        }
+
+        @if (densityRequired()) {
+          <h3>Required calculation input</h3>
+          <p class="help-text">Enter the fuel density used for this record.</p>
+          <div class="density-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Density</mat-label>
+              <input
+                matInput
+                formControlName="densityValue"
+                inputmode="decimal"
+                aria-required="true"
+                [attr.aria-invalid]="densityInvalid()"
+              />
+              @if (densityInvalid() && densityValueInput().trim()) {
+                <mat-error>Enter a density greater than zero.</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Density unit</mat-label>
+              <mat-select formControlName="densityUnit">
+                <mat-option value="kg/Sm3">kg/Sm3</mat-option>
+                <mat-option value="kg/m3">kg/m3</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        }
+
+        @if (formError()) {
+          <p class="error-text" role="alert">{{ formError() }}</p>
+        }
+        @if (successMessage()) {
+          <p class="success-text" role="status">{{ successMessage() }}</p>
+        }
+
+        <div class="actions">
+          @if (canConfigure()) {
+            @if (selectedActivityCalcState() === 'unknown') {
+              <p class="muted">Select a fuel use record to continue.</p>
+            } @else {
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="!canSubmit()"
+                [attr.aria-label]="calculationAriaLabel()"
+              >
+                {{ calculationActionLabel() }}
+              </button>
+            }
+          } @else {
+            <p class="muted">You can view results, but you cannot run a calculation.</p>
+          }
+        </div>
+      </form>
+    }
+
+    <section class="results-section" aria-labelledby="sc-results-heading">
+      <h3 id="sc-results-heading">Saved results</h3>
+      @if (loadingResults()) {
+        <div class="loading-state" role="status" aria-live="polite">
+          <mat-spinner diameter="28" aria-label="Loading results"></mat-spinner>
+        </div>
+      } @else if (resultsError()) {
+        <p class="error-text" role="alert">{{ resultsError() }}</p>
+      } @else if (results().length === 0) {
+        <p class="empty-state">No calculations saved for this period yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="results()" class="full-width">
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row">
+                <span
+                  class="result-badge"
+                  [attr.data-badge]="resultBadge(row.isCurrent, row.isStale)"
+                >
+                  {{ resultBadge(row.isCurrent, row.isStale) }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let row">{{ row.createdAt | date: 'mediumDate' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="fuel">
+              <th mat-header-cell *matHeaderCellDef>Fuel</th>
+              <td mat-cell *matCellDef="let row">{{ fuelDisplayName(row.fuelCode) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>Amount</th>
+              <td mat-cell *matCellDef="let row">
+                {{ row.activityQuantity }} {{ row.activityUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="energy">
+              <th mat-header-cell *matHeaderCellDef>Energy content</th>
+              <td mat-cell *matCellDef="let row">{{ formatDecimal(row.energyContentTj) }} TJ</td>
+            </ng-container>
+            <ng-container matColumnDef="fossilCo2">
+              <th mat-header-cell *matHeaderCellDef>Fossil CO2</th>
+              <td mat-cell *matCellDef="let row">
+                {{ formatDecimal(row.resultValue) }} {{ row.resultUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="dataset">
+              <th mat-header-cell *matHeaderCellDef>Dataset</th>
+              <td mat-cell *matCellDef="let row">{{ row.datasetVersion }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let row">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="viewDetails(row.resultId)"
+                  [attr.aria-label]="'View details for ' + row.fuelCode + ' result'"
+                >
+                  View details
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="resultColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: resultColumns"></tr>
+          </table>
+        </div>
+        <mat-paginator
+          [length]="resultsTotal()"
+          [pageIndex]="resultsPage() - 1"
+          [pageSize]="resultsPageSize()"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onResultsPage($event)"
+          aria-label="Results pages"
+        ></mat-paginator>
+      }
+    </section>
+
+    @if (loadingDetail()) {
+      <div class="loading-state" role="status" aria-live="polite">
+        <mat-spinner diameter="28" aria-label="Loading result details"></mat-spinner>
+      </div>
+    }
+
+    @if (resultDetail()) {
+      <section
+        class="surface-card detail-panel"
+        aria-labelledby="sc-detail-heading"
+      >
+        <div class="detail-header">
+          <h3 id="sc-detail-heading">Result details</h3>
+          <button mat-button type="button" (click)="closeDetails()" aria-label="Close details">
+            Close
+          </button>
+        </div>
+
+        <p>
+          <span
+            class="result-badge"
+            [attr.data-badge]="resultBadge(resultDetail()!.isCurrent, resultDetail()!.isStale)"
+          >
+            {{ resultBadge(resultDetail()!.isCurrent, resultDetail()!.isStale) }}
+          </span>
+        </p>
+
+        <h4>Input</h4>
+        <div class="readonly-grid">
+          <p><strong>Fuel</strong><br />{{ resultDetail()!.fuelName }}</p>
+          <p>
+            <strong>Amount</strong><br />{{ resultDetail()!.activityQuantity }}
+            {{ resultDetail()!.activityUnit }}
+          </p>
+          <p>
+            <strong>Density</strong><br />
+            @if (resultDetail()!.densityValue) {
+              {{ resultDetail()!.densityValue }} {{ resultDetail()!.densityUnit }}
+            } @else {
+              Not used
+            }
+          </p>
+          <p>
+            <strong>Reference date</strong><br />
+            {{ resultDetail()!.calculationReferenceDate ?? '—' }}
+          </p>
+        </div>
+
+        <h4>Calculation values</h4>
+        <div class="readonly-grid">
+          <p><strong>Fuel mass</strong><br />{{ formatDecimal(resultDetail()!.fuelMassKg) }} kg</p>
+          <p><strong>Fuel mass</strong><br />{{ formatDecimal(resultDetail()!.fuelMassGg) }} Gg</p>
+          <p>
+            <strong>Energy content</strong><br />{{ formatDecimal(resultDetail()!.energyContentTj) }}
+            TJ
+          </p>
+          <p><strong>Fossil CO2</strong><br />{{ formatDecimal(resultDetail()!.fossilCo2Kg) }} kg</p>
+          <p>
+            <strong>Fossil CO2</strong><br />{{ formatDecimal(resultDetail()!.fossilCo2Tonnes) }} t
+          </p>
+          <p>
+            <strong>Final result</strong><br />{{ formatDecimal(resultDetail()!.resultValue) }}
+            {{ resultDetail()!.resultUnit }}
+          </p>
+        </div>
+
+        <h4>Reference values</h4>
+        <div class="readonly-grid">
+          <p>
+            <strong>Net calorific value</strong><br />
+            {{ resultDetail()!.netCalorificValue }} {{ resultDetail()!.netCalorificValueUnit }}
+          </p>
+          <p>
+            <strong>CO2 emission factor</strong><br />
+            {{ resultDetail()!.fossilCo2EmissionFactor }}
+            {{ resultDetail()!.fossilCo2EmissionFactorUnit }}
+          </p>
+          <p><strong>Oxidation factor</strong><br />{{ resultDetail()!.oxidationFactor }}</p>
+          <p><strong>Dataset version</strong><br />{{ resultDetail()!.datasetVersion }}</p>
+          <p>
+            <strong>Valid dates</strong><br />
+            {{ resultDetail()!.validFrom }}
+            @if (resultDetail()!.validUntil) {
+              – {{ resultDetail()!.validUntil }}
+            }
+          </p>
+        </div>
+
+        <h4>Sources</h4>
+        <div class="readonly-grid">
+          <p>
+            <strong>NCV source</strong><br />
+            {{ resultDetail()!.ncvSourceDocument }} / {{ resultDetail()!.ncvSourceTable }}
+          </p>
+          <p>
+            <strong>CO2 factor source</strong><br />
+            {{ resultDetail()!.co2SourceDocument }} / {{ resultDetail()!.co2SourceTable }}
+          </p>
+        </div>
+
+        <h4>Audit</h4>
+        <div class="readonly-grid">
+          <p><strong>Result ID</strong><br />{{ resultDetail()!.id }}</p>
+          <p><strong>Run ID</strong><br />{{ resultDetail()!.calculationRunId }}</p>
+          <p><strong>Activity ID</strong><br />{{ resultDetail()!.activityRecordId }}</p>
+          <p>
+            <strong>Calculation</strong><br />
+            {{ resultDetail()!.calculationType }} / {{ resultDetail()!.formulaVersion }}
+          </p>
+          <p>
+            <strong>Calculated at</strong><br />{{ resultDetail()!.createdAt | date: 'medium' }}
+          </p>
+          @if (resultDetail()!.clientRequestId) {
+            <p><strong>Client request ID</strong><br />{{ resultDetail()!.clientRequestId }}</p>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>

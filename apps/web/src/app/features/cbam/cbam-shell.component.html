@@ -21,17 +21,13 @@
       <p class="status-kicker">Module status</p>
       <p class="status-message">{{ status()!.message }}</p>
       <ul class="status-facts">
-        <li>Installation and reporting period screens are available. There is no CN/product profile form yet.</li>
+        <li>You can manage installations, reporting periods, emissions data, and product results.</li>
         <li>
-          Basic calculation and internal SKDM Excel/report export are available. Official CBAM workbook
-          mapping and official submission are not available (BLOCKED).
+          Official Excel export is available when the period data is ready. This is for review and
+          internal use. It is not an official CBAM submission.
         </li>
-        <li>
-          Status: ready for domain-expert checks (READY_FOR_DOMAIN_VALIDATION).
-          Not ready for production or regulatory use.
-        </li>
+        <li>Values use demo or organization data. Do not use them for legal or regulatory claims.</li>
         <li>This screen does not claim compliance or certification.</li>
-        <li>Status code: {{ status()!.status }}</li>
       </ul>
     </div>
   }

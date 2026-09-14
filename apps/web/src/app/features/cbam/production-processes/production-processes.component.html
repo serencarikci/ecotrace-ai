@@ -1,0 +1,672 @@
+<section class="pp-panel" aria-labelledby="pp-heading" data-testid="production-processes">
+  <h2 id="pp-heading">Processes</h2>
+  <p class="help-text">
+    Conventional production processes for this reporting period. Balance, readiness, and
+    calculated heat or waste-gas results come from the server.
+  </p>
+
+  <div class="sr-only" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (loadError()) {
+    <div class="surface-card empty-state">
+      <p class="error-text" role="alert">{{ loadError() }}</p>
+      <button mat-stroked-button type="button" (click)="reload()">Retry</button>
+    </div>
+  } @else if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="28" aria-label="Loading production processes"></mat-spinner>
+    </div>
+  } @else {
+    @if (successMessage()) {
+      <p class="success-text" role="status">{{ successMessage() }}</p>
+    }
+    @if (actionError()) {
+      <p class="error-text" role="alert">{{ actionError() }}</p>
+    }
+    @if (conflictMessage()) {
+      <div class="surface-card conflict-banner" role="alert">
+        <p class="error-text">{{ conflictMessage() }}</p>
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="selected()?.id ? openProcess(selected()!.id) : reload()"
+        >
+          Reload
+        </button>
+      </div>
+    }
+
+    <div class="list-toolbar">
+      @if (canConfigure() && canMutate()) {
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="startCreate()"
+          [disabled]="submitting()"
+        >
+          Create draft process
+        </button>
+      }
+    </div>
+
+    @if (showCreateForm()) {
+      <form
+        class="surface-card form-grid"
+        [formGroup]="createForm"
+        (ngSubmit)="createDraft()"
+        aria-labelledby="pp-create-heading"
+      >
+        <h3 id="pp-create-heading">New draft process</h3>
+        <mat-form-field appearance="outline">
+          <mat-label>Installation</mat-label>
+          <mat-select formControlName="installationProfileId" aria-required="true">
+            @for (inst of installations(); track inst.id) {
+              <mat-option [value]="inst.id">{{ inst.name }} ({{ inst.code }})</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Process name</mat-label>
+          <input matInput formControlName="name" autocomplete="off" />
+        </mat-form-field>
+        <div class="actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+            Create draft
+          </button>
+          <button mat-stroked-button type="button" (click)="cancelCreate()">Cancel</button>
+        </div>
+      </form>
+    }
+
+    @if (processes().length === 0 && !showCreateForm()) {
+      <div class="empty-state surface-card" data-testid="pp-empty">
+        <p>No production processes have been added for this period.</p>
+        @if (canConfigure() && canMutate()) {
+          <button mat-stroked-button type="button" (click)="startCreate()">
+            Create draft process
+          </button>
+        }
+      </div>
+    } @else if (processes().length > 0) {
+      <div class="table-wrap surface-card">
+        <table mat-table [dataSource]="processes()" class="full-width" aria-label="Production processes">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Process</th>
+            <td mat-cell *matCellDef="let row">{{ row.name || 'Untitled process' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="product">
+            <th mat-header-cell *matHeaderCellDef>Product</th>
+            <td mat-cell *matCellDef="let row">
+              {{ profileName(row.productProfileVersionId) }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="method">
+            <th mat-header-cell *matHeaderCellDef>Method</th>
+            <td mat-cell *matCellDef="let row">{{ methodLabel(row.calculationMethod) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Readiness</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="result-badge">{{ readinessLabel(row.readiness.status) }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="balance">
+            <th mat-header-cell *matHeaderCellDef>Balance</th>
+            <td mat-cell *matCellDef="let row">
+              {{ balanceLabel(row.distribution.balanceStatus) }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <button
+                mat-button
+                type="button"
+                (click)="openProcess(row.id)"
+                [attr.aria-label]="'Open process ' + (row.name || row.id)"
+              >
+                Open
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="listColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: listColumns"></tr>
+        </table>
+      </div>
+    }
+
+    @if (detailLoading()) {
+      <div class="loading-state" role="status">
+        <mat-spinner diameter="28" aria-label="Loading process detail"></mat-spinner>
+      </div>
+    }
+
+    @if (selected(); as process) {
+      <form
+        class="surface-card form-grid"
+        [formGroup]="form"
+        (ngSubmit)="saveDraft()"
+        aria-labelledby="pp-detail-heading"
+        data-testid="pp-detail"
+      >
+        <h3 id="pp-detail-heading">{{ process.name || 'Process draft' }}</h3>
+
+        @if (readiness(); as ready) {
+          <section class="summary-card nested" aria-labelledby="pp-readiness-heading">
+            <h4 id="pp-readiness-heading">Readiness</h4>
+            <p>
+              <span
+                class="result-badge"
+                [attr.data-badge]="readinessLabel(ready.status)"
+                data-testid="pp-readiness-status"
+              >
+                {{ readinessLabel(ready.status) }}
+              </span>
+            </p>
+            @if (ready.blockingIssueCodes.length > 0) {
+              <ul class="blocking-list" role="list">
+                @for (code of ready.blockingIssueCodes; track code) {
+                  <li>{{ blockingMessage(code) }}</li>
+                }
+              </ul>
+            }
+          </section>
+        }
+
+        <section aria-labelledby="pp-identity-heading">
+          <h4 id="pp-identity-heading">Process details</h4>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Process name</mat-label>
+              <input matInput formControlName="name" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Process identifier</mat-label>
+              <input matInput formControlName="identifier" autocomplete="off" />
+            </mat-form-field>
+          </div>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Installation</mat-label>
+              <mat-select formControlName="installationProfileId">
+                @for (inst of installations(); track inst.id) {
+                  <mat-option [value]="inst.id">{{ inst.name }} ({{ inst.code }})</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Product profile</mat-label>
+              <mat-select formControlName="productProfileVersionId">
+                <mat-option value="">Not selected</mat-option>
+                @for (profile of profiles(); track profile.id) {
+                  <mat-option [value]="profile.id">{{ profileLabel(profile) }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <fieldset class="method-fieldset">
+            <legend>Calculation method</legend>
+            <mat-radio-group formControlName="calculationMethod" class="method-group">
+              <mat-radio-button [value]="methodConventional">Conventional</mat-radio-button>
+              <mat-radio-button [value]="methodProcessEmissions" disabled>
+                Process emissions — Not available yet
+              </mat-radio-button>
+              <mat-radio-button [value]="methodMassBalance" disabled>
+                Mass balance — Not available yet
+              </mat-radio-button>
+            </mat-radio-group>
+            <p class="muted">Only Conventional is available in this release.</p>
+          </fieldset>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Produced quantity</mat-label>
+              <input matInput formControlName="producedQuantity" inputmode="decimal" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Unit</mat-label>
+              <mat-select formControlName="producedQuantityUnit">
+                @for (unit of massUnits; track unit) {
+                  <mat-option [value]="unit">{{ unit }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section aria-labelledby="pp-distribution-heading">
+          <h4 id="pp-distribution-heading">Product distribution</h4>
+
+          <h5>Supplied to the market</h5>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Quantity</mat-label>
+              <input matInput formControlName="marketedQuantity" inputmode="decimal" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Unit</mat-label>
+              <mat-select formControlName="marketedQuantityUnit">
+                @for (unit of massUnits; track unit) {
+                  <mat-option [value]="unit">{{ unit }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <h5>Used in other CBAM products</h5>
+          @if (process.distribution.productUses.length === 0) {
+            <p class="muted">No other-CBAM product uses yet.</p>
+          } @else {
+            <ul class="product-use-list" role="list">
+              @for (use of process.distribution.productUses; track use.id) {
+                <li class="product-use-row">
+                  <span>{{ profileName(use.targetProductProfileVersionId) }}</span>
+                  <span>{{ formatDecimal(use.quantity) }} {{ use.unit }}</span>
+                  @if (canEdit()) {
+                    <button
+                      mat-button
+                      type="button"
+                      (click)="removeProductUse(use)"
+                      [attr.aria-label]="
+                        'Remove product use for ' + profileName(use.targetProductProfileVersionId)
+                      "
+                      [disabled]="submitting()"
+                    >
+                      Remove
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+          @if (canEdit()) {
+            <div class="product-use-add" [formGroup]="productUseForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Target product</mat-label>
+                <mat-select formControlName="targetProductProfileVersionId">
+                  @for (profile of targetProfileOptions(); track profile.id) {
+                    <mat-option [value]="profile.id">{{ profileLabel(profile) }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Quantity</mat-label>
+                <input matInput formControlName="quantity" inputmode="decimal" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <mat-select formControlName="unit">
+                  @for (unit of massUnits; track unit) {
+                    <mat-option [value]="unit">{{ unit }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="addProductUse()"
+                [disabled]="submitting()"
+              >
+                Add product use
+              </button>
+            </div>
+          }
+
+          <h5>Used in non-CBAM products</h5>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Quantity</mat-label>
+              <input matInput formControlName="nonCbamQuantity" inputmode="decimal" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Unit</mat-label>
+              <mat-select formControlName="nonCbamQuantityUnit">
+                @for (unit of massUnits; track unit) {
+                  <mat-option [value]="unit">{{ unit }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section aria-labelledby="pp-balance-heading" data-testid="pp-balance">
+          <h4 id="pp-balance-heading">Balance</h4>
+          <div class="readonly-grid" aria-label="Server balance values">
+            <p>
+              <strong>Produced quantity</strong><br />
+              {{ formatDecimal(process.distribution.producedQuantity) }}
+              {{ process.distribution.producedQuantityUnit || '' }}
+            </p>
+            <p>
+              <strong>Distributed quantity</strong><br />
+              {{ formatDecimal(process.distribution.distributedTonnes) }} t
+            </p>
+            <p>
+              <strong>Remaining quantity</strong><br />
+              {{ formatDecimal(process.distribution.remainingTonnes) }} t
+            </p>
+            <p>
+              <strong>Balance status</strong><br />
+              <span data-testid="pp-balance-status">
+                {{ balanceLabel(process.distribution.balanceStatus) }}
+              </span>
+            </p>
+          </div>
+          @if (balanceHelp(process.distribution.balanceStatus); as help) {
+            <p class="help-text">{{ help }}</p>
+          }
+        </section>
+
+        <section aria-labelledby="pp-emissions-heading" data-testid="pp-emissions">
+          <h4 id="pp-emissions-heading">Direct and indirect emissions</h4>
+          <p class="muted">Values come from current allocations. They are not entered here.</p>
+          <div class="readonly-grid">
+            <p>
+              <strong>Direct emissions</strong><br />
+              {{ formatDecimal(process.directEmissionsAllocation.productAllocatedValue) }}
+              {{ process.directEmissionsAllocation.resultUnit || 'tCO2' }}
+            </p>
+            <p data-testid="pp-allocated-indirect">
+              <strong>Allocated indirect emissions</strong><br />
+              {{
+                formatDecimal(
+                  process.indirectEmissionsAllocation.allocatedIndirectEmissionsTco2e ??
+                    process.indirectEmissionsAllocation.productAllocatedValue
+                )
+              }}
+              {{ process.indirectEmissionsAllocation.resultUnit || 'tCO2e' }}
+            </p>
+            <p data-testid="pp-allocated-electricity">
+              <strong>Allocated electricity</strong><br />
+              {{ formatDecimal(process.indirectEmissionsAllocation.allocatedElectricityMwh) }}
+              {{ process.indirectEmissionsAllocation.electricityUnit || 'MWh' }}
+            </p>
+            <p>
+              <strong>Exported electricity</strong><br />
+              {{ formatDecimal(process.exportedElectricity.exportedElectricityMwh) }}
+              {{ process.exportedElectricity.electricityUnit || 'MWh' }}
+            </p>
+          </div>
+          @if (
+            !process.directEmissionsAllocation.isReady ||
+            process.directEmissionsAllocation.isStale ||
+            process.directEmissionsAllocation.blockingCode
+          ) {
+            <div class="warning-banner" role="status">
+              <p class="warning-text">
+                {{
+                  blockingMessage(
+                    process.directEmissionsAllocation.blockingCode ||
+                      'DIRECT_EMISSIONS_ALLOCATION_NOT_READY'
+                  )
+                }}
+              </p>
+              <button mat-stroked-button type="button" (click)="goToDirectEmissionsAllocation.emit()">
+                Direct Emissions Allocation
+              </button>
+            </div>
+          }
+          @if (
+            !process.indirectEmissionsAllocation.isReady ||
+            process.indirectEmissionsAllocation.isStale ||
+            process.indirectEmissionsAllocation.blockingCode
+          ) {
+            <div class="warning-banner" role="status">
+              <p class="warning-text">
+                {{
+                  blockingMessage(
+                    process.indirectEmissionsAllocation.blockingCode ||
+                      'INDIRECT_EMISSIONS_ALLOCATION_NOT_READY'
+                  )
+                }}
+              </p>
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="goToIndirectEmissionsAllocation.emit()"
+              >
+                Indirect Emissions Allocation
+              </button>
+            </div>
+          }
+        </section>
+
+        <section aria-labelledby="pp-heat-heading" data-testid="pp-heat">
+          <h4 id="pp-heat-heading">Measurable heat</h4>
+          <fieldset class="method-fieldset">
+            <legend>Does this process use measurable heat?</legend>
+            <mat-radio-group formControlName="hasMeasurableHeat" class="method-group">
+              <mat-radio-button value="yes">Yes</mat-radio-button>
+              <mat-radio-button value="no">No</mat-radio-button>
+            </mat-radio-group>
+          </fieldset>
+          @if (heatVisible()) {
+            <p class="help-text">
+              Enter imported and exported heat amounts and emission factors. The attributed heat
+              result is calculated by the server.
+            </p>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Imported heat amount ({{ heatQuantityUnit }})</mat-label>
+                <input matInput formControlName="heatImportedQuantity" inputmode="decimal" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Imported heat factor ({{ heatFactorUnit }})</mat-label>
+                <input matInput formControlName="heatImportedEf" inputmode="decimal" />
+              </mat-form-field>
+            </div>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Exported heat amount ({{ heatQuantityUnit }})</mat-label>
+                <input matInput formControlName="heatExportedQuantity" inputmode="decimal" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Exported heat factor ({{ heatFactorUnit }})</mat-label>
+                <input matInput formControlName="heatExportedEf" inputmode="decimal" />
+              </mat-form-field>
+            </div>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Factor source</mat-label>
+                <input matInput formControlName="heatFactorSource" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Factor document</mat-label>
+                <input matInput formControlName="heatFactorDocument" />
+              </mat-form-field>
+            </div>
+          }
+          <div class="readonly-grid">
+            <p>
+              <strong>Calculated heat result</strong><br />
+              {{ formatDecimal(process.measurableHeat.attributedTco2) }} tCO2
+              <span class="muted">(server)</span>
+            </p>
+          </div>
+        </section>
+
+        <section aria-labelledby="pp-waste-heading" data-testid="pp-waste">
+          <h4 id="pp-waste-heading">Waste gas</h4>
+          <fieldset class="method-fieldset">
+            <legend>Does this process use waste gas?</legend>
+            <mat-radio-group formControlName="hasWasteGas" class="method-group">
+              <mat-radio-button value="yes">Yes</mat-radio-button>
+              <mat-radio-button value="no">No</mat-radio-button>
+            </mat-radio-group>
+          </fieldset>
+          @if (wasteGasVisible()) {
+            <p class="help-text">
+              Enter imported and exported waste-gas energy. The attributed result is calculated by
+              the server using the workbook factor.
+            </p>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Imported waste gas ({{ wasteGasQuantityUnit }})</mat-label>
+                <input matInput formControlName="wasteGasImportedQuantity" inputmode="decimal" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Exported waste gas ({{ wasteGasQuantityUnit }})</mat-label>
+                <input matInput formControlName="wasteGasExportedQuantity" inputmode="decimal" />
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline">
+              <mat-label>Provenance</mat-label>
+              <input matInput formControlName="wasteGasProvenance" />
+            </mat-form-field>
+          }
+          <div class="readonly-grid">
+            <p>
+              <strong>Calculated waste-gas result</strong><br />
+              {{ formatDecimal(process.wasteGas.attributedTco2) }} tCO2
+              <span class="muted">(server)</span>
+            </p>
+          </div>
+        </section>
+
+        <section aria-labelledby="pp-export-elec-heading" data-testid="pp-exported-electricity">
+          <h4 id="pp-export-elec-heading">Exported electricity</h4>
+          <fieldset class="method-fieldset">
+            <legend>Does this process export electricity?</legend>
+            <mat-radio-group formControlName="hasExportedElectricity" class="method-group">
+              <mat-radio-button value="yes">Yes</mat-radio-button>
+              <mat-radio-button value="no">No</mat-radio-button>
+            </mat-radio-group>
+          </fieldset>
+          @if (exportedElectricityVisible()) {
+            <p class="help-text">
+              Enter the exported quantity and emission factor. The attributed direct-emissions
+              reduction (workbook T72) is calculated by the server and is never derived from the
+              facility purchased-electricity export total.
+            </p>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Exported quantity ({{ exportedElectricityQuantityUnit }})</mat-label>
+                <input
+                  matInput
+                  formControlName="exportedElectricityQuantity"
+                  inputmode="decimal"
+                  data-testid="pp-export-elec-qty"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Emission factor ({{ exportedElectricityFactorUnit }})</mat-label>
+                <input
+                  matInput
+                  formControlName="exportedElectricityEmissionFactor"
+                  inputmode="decimal"
+                  data-testid="pp-export-elec-ef"
+                />
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline">
+              <mat-label>Provenance</mat-label>
+              <input matInput formControlName="exportedElectricityProvenance" />
+            </mat-form-field>
+          }
+          <div class="readonly-grid">
+            <p data-testid="pp-export-elec-attributed">
+              <strong>Attributed direct emissions (T72)</strong><br />
+              {{ formatDecimal(process.processExportedElectricity.attributedDirectTco2e) }} tCO2e
+              <span class="muted">(server)</span>
+            </p>
+          </div>
+          <p class="help-text">
+            Exported electricity reduces attributed direct emissions only. It is not subtracted from
+            allocated indirect emissions.
+          </p>
+          @if (process.processExportedElectricity.reconciliationStatus === 'MISMATCHED') {
+            <div class="warning-banner" role="status" data-testid="pp-export-elec-recon-warn">
+              <p class="warning-text">
+                {{ blockingMessage('EXPORTED_ELECTRICITY_RECONCILIATION_MISMATCH') }}
+              </p>
+              <p class="muted">{{ process.processExportedElectricity.reconciliationNote }}</p>
+            </div>
+          }
+        </section>
+
+        <section aria-labelledby="pp-dq-heading" data-testid="pp-data-quality">
+          <h4 id="pp-dq-heading">Data quality</h4>
+          <p class="muted">Optional. Options come from the process controlled lists.</p>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Data quality</mat-label>
+              <mat-select formControlName="dataQualityCode">
+                <mat-option value="">Not set</mat-option>
+                @for (item of dataQualityList()?.items ?? []; track item.code) {
+                  <mat-option [value]="item.code">{{ item.labelEn }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Data verification</mat-label>
+              <mat-select formControlName="dataVerificationCode">
+                <mat-option value="">Not set</mat-option>
+                @for (item of dataVerificationList()?.items ?? []; track item.code) {
+                  <mat-option [value]="item.code">{{ item.labelEn }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline">
+            <mat-label>Data quality justification</mat-label>
+            <mat-select formControlName="dataQualityJustificationCode">
+              <mat-option value="">Not set</mat-option>
+              @for (item of dataQualityJustificationList()?.items ?? []; track item.code) {
+                <mat-option [value]="item.code">{{ item.labelEn }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          @if (dataQualityList()?.helpEn; as help) {
+            <p class="help-text">{{ help }}</p>
+          }
+        </section>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Notes</mat-label>
+          <textarea matInput formControlName="notes" rows="2"></textarea>
+        </mat-form-field>
+
+        @if (canEdit()) {
+          <div class="actions">
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="submitting()"
+              data-testid="pp-save-draft"
+            >
+              Save draft
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="requestArchive()"
+              [disabled]="submitting()"
+            >
+              Archive
+            </button>
+          </div>
+        }
+
+        @if (showArchiveConfirm()) {
+          <div class="surface-card archive-confirm" role="alertdialog" aria-labelledby="pp-archive-title">
+            <h4 id="pp-archive-title">Archive this process?</h4>
+            <p>Archived processes stay readable in history but can no longer be edited.</p>
+            <div class="actions">
+              <button
+                mat-flat-button
+                color="warn"
+                type="button"
+                (click)="confirmArchive()"
+                [disabled]="submitting()"
+              >
+                Confirm archive
+              </button>
+              <button mat-stroked-button type="button" (click)="cancelArchive()">Cancel</button>
+            </div>
+          </div>
+        }
+      </form>
+    }
+  }
+</section>

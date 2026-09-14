@@ -51,3 +51,19 @@ export function readinessCheckLabel(status: string): string {
   };
   return map[status] ?? status;
 }
+
+/** Human-readable CBAM reporting-period binding status (A2–B1). */
+export function bindingStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    draft: 'Draft',
+    data_collection: 'Data collection',
+    ready_for_calculation: 'Ready for calculation',
+    calculating: 'Calculating',
+    calculated: 'Calculated',
+    under_review: 'Under review',
+    approved: 'Approved',
+    locked: 'Locked',
+    archived: 'Archived',
+  };
+  return map[status] ?? status.replaceAll('_', ' ');
+}

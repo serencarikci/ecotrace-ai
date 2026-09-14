@@ -1,0 +1,698 @@
+<section
+  class="pee-panel"
+  aria-labelledby="pee-heading"
+  data-testid="product-embedded-emissions"
+>
+  <h2 id="pee-heading">Product results</h2>
+  <p class="help-text">
+    Final product embedded emissions for this period. Totals come from the server. This screen does
+    not recalculate emissions in the browser.
+  </p>
+
+  <div class="sr-only" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="36" aria-label="Loading product results"></mat-spinner>
+    </div>
+  } @else if (loadError()) {
+    <p class="error-text" role="alert">{{ loadError() }}</p>
+    <button mat-stroked-button type="button" (click)="reload()">Retry</button>
+  } @else {
+    @if (readiness(); as ready) {
+      <section class="surface-card readiness-section" aria-labelledby="pee-readiness-heading">
+        <h3 id="pee-readiness-heading">Product results readiness</h3>
+        <p
+          class="readiness-status"
+          [attr.data-ready]="ready.rollupReady"
+          role="status"
+        >
+          <span class="status-text">{{ ready.rollupReady ? 'Ready' : 'Not ready' }}</span>
+        </p>
+        <p class="readiness-message">
+          @if (ready.rollupReady) {
+            Your data is ready to calculate product results.
+          } @else {
+            Complete the required data before calculating product results.
+          }
+        </p>
+
+        <dl class="readonly-grid readiness-grid">
+          <div>
+            <dt>Eligible products</dt>
+            <dd>{{ ready.eligibleProductCount }}</dd>
+          </div>
+          <div>
+            <dt>Blocked products</dt>
+            <dd>{{ ready.blockedProductCount }}</dd>
+          </div>
+          <div>
+            <dt>Process status</dt>
+            <dd>{{ processStatus() }}</dd>
+          </div>
+          <div>
+            <dt>Direct allocation status</dt>
+            <dd>{{ directAllocationStatus() }}</dd>
+          </div>
+          <div>
+            <dt>Indirect allocation status</dt>
+            <dd>{{ indirectAllocationStatus() }}</dd>
+          </div>
+          <div>
+            <dt>Precursor status</dt>
+            <dd>{{ precursorStatus() }}</dd>
+          </div>
+          <div>
+            <dt>Internal-flow status</dt>
+            <dd>{{ internalFlowStatus() }}</dd>
+          </div>
+          <div>
+            <dt>Current methodology</dt>
+            <dd>
+              {{ methodologyLabel(ready.methodologyCode) }}
+              @if (methodologyNote(ready.methodologyCode); as note) {
+                <span class="help-inline"> — {{ note }}</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Current result</dt>
+            <dd>
+              @if (!ready.currentResultId) {
+                None yet
+              } @else if (ready.currentIsStale) {
+                Out of date
+              } @else {
+                Current
+              }
+            </dd>
+          </div>
+        </dl>
+
+        @if (ready.blockingIssueCodes.length > 0) {
+          <div class="blocking-issues" role="alert">
+            <h4>Blocking issues</h4>
+            <ul>
+              @for (code of ready.blockingIssueCodes; track code) {
+                <li>{{ issueMessage(code) }}</li>
+              }
+            </ul>
+            <div class="nav-links">
+              <button
+                mat-button
+                type="button"
+                (click)="goToProductProfiles.emit()"
+                aria-label="Go to Product Profiles tab"
+              >
+                Product Profiles
+              </button>
+              <button
+                mat-button
+                type="button"
+                (click)="goToProduction.emit()"
+                aria-label="Go to Production tab"
+              >
+                Production
+              </button>
+              <button
+                mat-button
+                type="button"
+                (click)="goToDirectEmissions.emit()"
+                aria-label="Go to Direct Emissions tab"
+              >
+                Direct Emissions
+              </button>
+              <button
+                mat-button
+                type="button"
+                (click)="goToIndirectEmissions.emit()"
+                aria-label="Go to Indirect Emissions tab"
+              >
+                Indirect Emissions
+              </button>
+              <button
+                mat-button
+                type="button"
+                (click)="goToProcesses.emit()"
+                aria-label="Go to Processes tab"
+              >
+                Processes
+              </button>
+              <button
+                mat-button
+                type="button"
+                (click)="goToPurchasedInputs.emit()"
+                aria-label="Go to Purchased Inputs tab"
+              >
+                Purchased Inputs
+              </button>
+              <button
+                mat-button
+                type="button"
+                (click)="goToAllocation.emit()"
+                aria-label="Go to Allocation tab"
+              >
+                Allocation
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (canConfigure() && canMutate()) {
+          <div class="actions">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="!canExecute()"
+              (click)="executeRollup()"
+              [attr.aria-label]="executeButtonLabel()"
+            >
+              @if (submitting()) {
+                Working…
+              } @else {
+                {{ executeButtonLabel() }}
+              }
+            </button>
+          </div>
+        } @else if (canConfigure() && !canMutate()) {
+          <p class="help-text">This period is not writable. Product results cannot be calculated.</p>
+        }
+      </section>
+    }
+
+    @if (actionError()) {
+      <p class="error-text" role="alert" aria-live="assertive">{{ actionError() }}</p>
+    }
+    @if (successMessage()) {
+      <p class="success-text" role="status" aria-live="polite">{{ successMessage() }}</p>
+    }
+
+    @if (summary(); as sum) {
+      <section class="surface-card summary-section" aria-labelledby="pee-summary-heading">
+        <h3 id="pee-summary-heading">Current product summary</h3>
+        @if (!sum.currentResultId) {
+          <p class="empty-state">No product results have been calculated yet.</p>
+        } @else {
+          @if (sum.currentIsStale) {
+            <p class="stale-banner" role="status">
+              Some source data changed after this calculation. Update the product results.
+            </p>
+            @if (sum.staleReasonCodes.length > 0) {
+              <ul class="stale-reasons">
+                @for (code of sum.staleReasonCodes; track code) {
+                  <li>{{ staleReasonMessage(code) }}</li>
+                }
+              </ul>
+            }
+          }
+
+          <dl class="readonly-grid">
+            <div>
+              <dt>Methodology</dt>
+              <dd>
+                {{ methodologyLabel(sum.methodologyCode) }}
+                @if (methodologyNote(sum.methodologyCode); as note) {
+                  <span class="help-inline"> — {{ note }}</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Products</dt>
+              <dd>{{ sum.productCount ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Total direct</dt>
+              <dd>
+                <span class="mono">{{ formatDecimal(sum.totalDirectTco2e) }}</span>
+                {{ sum.resultUnit }}
+              </dd>
+            </div>
+            <div>
+              <dt>Total indirect</dt>
+              <dd>
+                <span class="mono">{{ formatDecimal(sum.totalIndirectTco2e) }}</span>
+                {{ sum.resultUnit }}
+              </dd>
+            </div>
+            <div>
+              <dt>Total embedded</dt>
+              <dd>
+                <span class="mono">{{ formatDecimal(sum.totalEmbeddedTco2e) }}</span>
+                {{ sum.resultUnit }}
+              </dd>
+            </div>
+          </dl>
+
+          @if (sum.totalsByProduct.length === 0) {
+            <p class="empty-state">No product rows in the current summary.</p>
+          } @else {
+            <div class="table-wrap">
+              <table
+                mat-table
+                [dataSource]="sum.totalsByProduct"
+                class="full-width product-table"
+                aria-label="Product embedded emissions summary"
+              >
+                <ng-container matColumnDef="product">
+                  <th mat-header-cell *matHeaderCellDef>Product</th>
+                  <td mat-cell *matCellDef="let p">
+                    <button
+                      mat-button
+                      type="button"
+                      class="product-select"
+                      (click)="selectProduct(p.productProfileVersionId)"
+                      [attr.aria-label]="'View breakdown for ' + p.productName"
+                      [attr.aria-pressed]="
+                        selectedProductProfileVersionId() === p.productProfileVersionId
+                      "
+                    >
+                      {{ p.productName }}
+                    </button>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="cn">
+                  <th mat-header-cell *matHeaderCellDef>CN code</th>
+                  <td mat-cell *matCellDef="let p">{{ p.cnDisplayCode || p.cnNormalizedCode }}</td>
+                </ng-container>
+                <ng-container matColumnDef="profile">
+                  <th mat-header-cell *matHeaderCellDef>Profile version</th>
+                  <td mat-cell *matCellDef="let p">{{ p.profileVersion }}</td>
+                </ng-container>
+                <ng-container matColumnDef="output">
+                  <th mat-header-cell *matHeaderCellDef>Output quantity</th>
+                  <td mat-cell *matCellDef="let p">
+                    <span class="mono">{{ formatDecimal(p.processProducedQuantity) }}</span>
+                    {{ p.processProducedQuantityUnit }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="direct">
+                  <th mat-header-cell *matHeaderCellDef>Direct embedded</th>
+                  <td mat-cell *matCellDef="let p">
+                    <span class="mono">{{ formatDecimal(p.totalDirectTco2e) }}</span>
+                    {{ p.resultUnit }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="indirect">
+                  <th mat-header-cell *matHeaderCellDef>Indirect embedded</th>
+                  <td mat-cell *matCellDef="let p">
+                    <span class="mono">{{ formatDecimal(p.totalIndirectTco2e) }}</span>
+                    {{ p.resultUnit }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef>Total embedded</th>
+                  <td mat-cell *matCellDef="let p">
+                    <span class="mono">{{ formatDecimal(p.totalEmbeddedTco2e) }}</span>
+                    {{ p.resultUnit }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="specificDirect">
+                  <th mat-header-cell *matHeaderCellDef>Specific direct</th>
+                  <td mat-cell *matCellDef="let p">
+                    <span class="mono">{{ formatDecimal(p.specificDirect) }}</span>
+                    {{ p.specificUnit }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="specificIndirect">
+                  <th mat-header-cell *matHeaderCellDef>Specific indirect</th>
+                  <td mat-cell *matCellDef="let p">
+                    <span class="mono">{{ formatDecimal(p.specificIndirect) }}</span>
+                    {{ p.specificUnit }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="specificTotal">
+                  <th mat-header-cell *matHeaderCellDef>Specific total</th>
+                  <td mat-cell *matCellDef="let p" class="primary-result">
+                    <strong class="mono">{{ formatDecimal(p.specificTotal) }}</strong>
+                    {{ p.specificUnit }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let p">
+                    <span class="status-text">{{ productStatusLabel() }}</span>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="productColumns"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let row; columns: productColumns"
+                  [class.selected-row]="
+                    selectedProductProfileVersionId() === row.productProfileVersionId
+                  "
+                ></tr>
+              </table>
+            </div>
+          }
+        }
+      </section>
+    }
+
+    <section class="surface-card history-section" aria-labelledby="pee-history-heading">
+      <h3 id="pee-history-heading">Product results history</h3>
+      @if (results().length === 0) {
+        <p class="empty-state">No product results yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="results()" class="full-width history-table">
+            <ng-container matColumnDef="created">
+              <th mat-header-cell *matHeaderCellDef>Created</th>
+              <td mat-cell *matCellDef="let r">{{ r.createdAt | date: 'short' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="method">
+              <th mat-header-cell *matHeaderCellDef>Method</th>
+              <td mat-cell *matCellDef="let r">{{ methodologyLabel(r.methodologyCode) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="products">
+              <th mat-header-cell *matHeaderCellDef>Products</th>
+              <td mat-cell *matCellDef="let r">{{ r.productCount }}</td>
+            </ng-container>
+            <ng-container matColumnDef="total">
+              <th mat-header-cell *matHeaderCellDef>Total embedded</th>
+              <td mat-cell *matCellDef="let r">
+                <span class="mono">{{ formatDecimal(r.totalEmbeddedTco2e) }}</span>
+                {{ r.resultUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let r">
+                <span class="status-text">{{ lifecycleLabel(r.isCurrent, r.isStale) }}</span>
+                ·
+                <span class="status-text">{{ executionLabel(r.status) }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Action</th>
+              <td mat-cell *matCellDef="let r">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="viewDetails(r.resultId)"
+                  [attr.aria-label]="'View details for product results created ' + r.createdAt"
+                >
+                  View details
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: historyColumns"></tr>
+          </table>
+        </div>
+
+        <div class="mobile-cards" aria-label="Product results history cards">
+          @for (r of results(); track r.resultId) {
+            <article class="history-card">
+              <p><strong>Created:</strong> {{ r.createdAt | date: 'short' }}</p>
+              <p><strong>Method:</strong> {{ methodologyLabel(r.methodologyCode) }}</p>
+              <p><strong>Products:</strong> {{ r.productCount }}</p>
+              <p>
+                <strong>Total embedded:</strong>
+                <span class="mono">{{ formatDecimal(r.totalEmbeddedTco2e) }}</span>
+                {{ r.resultUnit }}
+              </p>
+              <p>
+                <strong>Status:</strong>
+                <span class="status-text">{{ lifecycleLabel(r.isCurrent, r.isStale) }}</span>
+              </p>
+              <button
+                mat-button
+                type="button"
+                (click)="viewDetails(r.resultId)"
+                [attr.aria-label]="'View details for product results created ' + r.createdAt"
+              >
+                View details
+              </button>
+            </article>
+          }
+        </div>
+
+        <mat-paginator
+          [length]="resultsTotal()"
+          [pageIndex]="resultsPage() - 1"
+          [pageSize]="resultsPageSize()"
+          [pageSizeOptions]="[5, 10, 20]"
+          (page)="onHistoryPage($event)"
+          aria-label="Product results history pages"
+        />
+      }
+    </section>
+
+    <section class="surface-card detail-section" aria-labelledby="pee-detail-heading">
+      <h3 id="pee-detail-heading">Product breakdown</h3>
+      @if (detailLoading()) {
+        <div class="loading-state" role="status" aria-live="polite">
+          <mat-spinner diameter="28" aria-label="Loading product results detail"></mat-spinner>
+        </div>
+      } @else if (detailError()) {
+        <p class="error-text" role="alert">{{ detailError() }}</p>
+      } @else {
+        @if (selectedDetail(); as detail) {
+          <p class="detail-status status-text">
+            {{ lifecycleLabel(detail.isCurrent, detail.isStale) }}
+            · {{ methodologyLabel(detail.methodologyCode) }}
+            · {{ executionLabel(detail.status) }}
+          </p>
+          @if (methodologyNote(detail.methodologyCode); as note) {
+            <p class="help-text">{{ note }}</p>
+          }
+          @if (detail.isCurrent && detail.isStale) {
+            <p class="stale-banner" role="status">
+              Some source data changed after this calculation. Update the product results.
+            </p>
+          }
+
+          @if (selectedProduct(); as product) {
+            <p class="product-title">
+              <strong>{{ product.productName }}</strong>
+              · {{ product.cnDisplayCode || product.cnNormalizedCode }}
+              · profile v{{ product.profileVersion }}
+            </p>
+
+            <div class="detail-accordion">
+              <button
+                type="button"
+                class="section-toggle"
+                [attr.aria-expanded]="isSectionOpen('own')"
+                (click)="toggleSection('own')"
+              >
+                Own emissions
+              </button>
+              @if (isSectionOpen('own')) {
+                <div class="section-body" role="region" aria-label="Own emissions">
+                  <dl class="readonly-grid">
+                    <div>
+                      <dt>Allocated direct emissions</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.deaDirectTco2) }}</span>
+                        {{ product.deaSourceUnit || product.resultUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Measurable heat</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.heatAttributedTco2e) }}</span>
+                        {{ product.resultUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Waste gas</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.wasteGasAttributedTco2e) }}</span>
+                        {{ product.resultUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Exported-electricity adjustment (T72)</dt>
+                      <dd>
+                        <span class="mono">{{
+                          formatDecimal(product.exportedElectricityDirectTco2e)
+                        }}</span>
+                        {{ product.resultUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Allocated indirect emissions</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.ieaIndirectTco2e) }}</span>
+                        {{ product.resultUnit }}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              }
+
+              <button
+                type="button"
+                class="section-toggle"
+                [attr.aria-expanded]="isSectionOpen('precursors')"
+                (click)="toggleSection('precursors')"
+              >
+                Purchased precursors
+              </button>
+              @if (isSectionOpen('precursors')) {
+                <div class="section-body" role="region" aria-label="Purchased precursors">
+                  @if (precursorRowsForSelected().length === 0) {
+                    <p class="empty-state">No purchased-precursor contributions for this product.</p>
+                  } @else {
+                    <div class="table-wrap">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Precursor</th>
+                            <th scope="col">Source</th>
+                            <th scope="col">Quantity used</th>
+                            <th scope="col">Direct contribution</th>
+                            <th scope="col">Indirect contribution</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (c of precursorRowsForSelected(); track c.productUseId) {
+                            <tr>
+                              <td>{{ c.precursorName }}</td>
+                              <td>{{ dataSourceLabel(c.dataSourceMode) }}</td>
+                              <td>
+                                <span class="mono">{{ formatDecimal(c.quantityTonnes) }}</span>
+                                t
+                              </td>
+                              <td>
+                                <span class="mono">{{
+                                  formatDecimal(c.contributionDirectTco2e)
+                                }}</span>
+                                {{ c.resultUnit }}
+                              </td>
+                              <td>
+                                <span class="mono">{{
+                                  formatDecimal(c.contributionIndirectTco2e)
+                                }}</span>
+                                {{ c.resultUnit }}
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </div>
+              }
+
+              <button
+                type="button"
+                class="section-toggle"
+                [attr.aria-expanded]="isSectionOpen('internal')"
+                (click)="toggleSection('internal')"
+              >
+                Internal products
+              </button>
+              @if (isSectionOpen('internal')) {
+                <div class="section-body" role="region" aria-label="Internal products">
+                  @if (internalRowsForSelected().length === 0) {
+                    <p class="empty-state">No internal-product contributions for this product.</p>
+                  } @else {
+                    <div class="table-wrap">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Source product</th>
+                            <th scope="col">Quantity used</th>
+                            <th scope="col">Direct contribution</th>
+                            <th scope="col">Indirect contribution</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (c of internalRowsForSelected(); track c.productUseId) {
+                            <tr>
+                              <td>{{ supplierProductName(c.supplierProductProfileVersionId) }}</td>
+                              <td>
+                                <span class="mono">{{ formatDecimal(c.quantityTonnes) }}</span>
+                                t
+                              </td>
+                              <td>
+                                <span class="mono">{{
+                                  formatDecimal(c.contributionDirectTco2e)
+                                }}</span>
+                                {{ c.resultUnit }}
+                              </td>
+                              <td>
+                                <span class="mono">{{
+                                  formatDecimal(c.contributionIndirectTco2e)
+                                }}</span>
+                                {{ c.resultUnit }}
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </div>
+              }
+
+              <button
+                type="button"
+                class="section-toggle"
+                [attr.aria-expanded]="isSectionOpen('totals')"
+                (click)="toggleSection('totals')"
+              >
+                Totals
+              </button>
+              @if (isSectionOpen('totals')) {
+                <div class="section-body" role="region" aria-label="Totals">
+                  <dl class="readonly-grid">
+                    <div>
+                      <dt>Total direct</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.totalDirectTco2e) }}</span>
+                        {{ product.resultUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Total indirect</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.totalIndirectTco2e) }}</span>
+                        {{ product.resultUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Combined total</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.totalEmbeddedTco2e) }}</span>
+                        {{ product.resultUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Specific direct</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.specificDirect) }}</span>
+                        {{ product.specificUnit }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Specific indirect</dt>
+                      <dd>
+                        <span class="mono">{{ formatDecimal(product.specificIndirect) }}</span>
+                        {{ product.specificUnit }}
+                      </dd>
+                    </div>
+                    <div class="primary-result">
+                      <dt>Specific total</dt>
+                      <dd>
+                        <strong class="mono">{{ formatDecimal(product.specificTotal) }}</strong>
+                        {{ product.specificUnit }}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-state">Select a product from the summary table to view its breakdown.</p>
+          }
+        } @else {
+          <p class="empty-state">No result detail selected.</p>
+        }
+      }
+    </section>
+  }
+</section>

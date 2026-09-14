@@ -1,0 +1,740 @@
+<section
+  class="iea-panel"
+  aria-labelledby="iea-heading"
+  data-testid="indirect-emissions-allocation"
+>
+  <h2 id="iea-heading">Indirect emissions allocation</h2>
+  <p class="help-text">
+    Allocate purchased-electricity MWh and indirect emissions (tCO2e) to CBAM products for this
+    period. Totals come from the server. This screen does not recalculate allocation math in the
+    browser.
+  </p>
+  <p class="help-text unit-note">
+    Electricity is shown in MWh. Indirect emissions are shown in tCO2e.
+  </p>
+
+  <div class="sr-only" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="36" aria-label="Loading indirect emissions allocation"></mat-spinner>
+    </div>
+  } @else if (loadError()) {
+    <p class="error-text" role="alert">{{ loadError() }}</p>
+    <button mat-stroked-button type="button" (click)="reload()">Retry</button>
+  } @else {
+    @if (readiness(); as ready) {
+    <section class="surface-card readiness-section" aria-labelledby="iea-readiness-heading">
+      <h3 id="iea-readiness-heading">Allocation readiness</h3>
+      <p
+        class="readiness-status"
+        [attr.data-ready]="ready.allocationReady"
+        role="status"
+      >
+        <span class="status-text">{{ ready.allocationReady ? 'Ready' : 'Not ready' }}</span>
+      </p>
+      <p class="readiness-message">
+        @if (ready.allocationReady) {
+          Your data is ready for allocation.
+        } @else {
+          Complete the required data before allocation.
+        }
+      </p>
+
+      <dl class="readonly-grid readiness-grid">
+        <div>
+          <dt>Electricity calculation status</dt>
+          <dd>{{ subsystemLabel(ready.purchasedElectricityStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Monthly data status</dt>
+          <dd>{{ subsystemLabel(ready.monthlyProductionBasisStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Production data status</dt>
+          <dd>{{ subsystemLabel(ready.productionProfileStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Production reconciliation status</dt>
+          <dd>{{ subsystemLabel(ready.productionReconciliationStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Source record count</dt>
+          <dd>{{ ready.sourceResultCount }}</dd>
+        </div>
+        <div>
+          <dt>Month count</dt>
+          <dd>{{ ready.monthCount }}</dd>
+        </div>
+        <div>
+          <dt>Product count</dt>
+          <dd>{{ ready.productProfileGroupCount }}</dd>
+        </div>
+      </dl>
+
+      @if (ready.blockingIssueCodes.length > 0) {
+        <div class="blocking-issues" role="alert">
+          <h4>Blocking issues</h4>
+          <ul>
+            @for (code of ready.blockingIssueCodes; track code) {
+              <li>{{ issueMessage(code) }}</li>
+            }
+          </ul>
+          <div class="nav-links">
+            <button
+              mat-button
+              type="button"
+              (click)="goToIndirectEmissions.emit()"
+              aria-label="Go to Indirect Emissions tab"
+            >
+              Indirect Emissions
+            </button>
+            <button
+              mat-button
+              type="button"
+              (click)="goToProduction.emit()"
+              aria-label="Go to Production tab"
+            >
+              Production
+            </button>
+            <button
+              mat-button
+              type="button"
+              (click)="goToMonthlyAllocationData.emit()"
+              aria-label="Go to Monthly allocation data"
+            >
+              Monthly allocation data
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (canConfigure() && canMutate()) {
+        <div class="actions">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="!canExecute()"
+            (click)="executeAllocation()"
+            [attr.aria-label]="executeButtonLabel()"
+          >
+            @if (submitting()) {
+              Working…
+            } @else {
+              {{ executeButtonLabel() }}
+            }
+          </button>
+        </div>
+      } @else if (canConfigure() && !canMutate()) {
+        <p class="help-text">This period is not writable. Allocation cannot be run.</p>
+      }
+    </section>
+
+    @if (actionError()) {
+      <p class="error-text" role="alert" aria-live="assertive">{{ actionError() }}</p>
+    }
+    @if (successMessage()) {
+      <p class="success-text" role="status" aria-live="polite">{{ successMessage() }}</p>
+    }
+
+    @if (summary(); as sum) {
+      <section class="surface-card summary-section" aria-labelledby="iea-summary-heading">
+        <h3 id="iea-summary-heading">Current allocation summary</h3>
+        @if (!sum.currentResultId) {
+          <p class="empty-state">No allocation has been calculated yet.</p>
+        } @else {
+          @if (sum.currentIsStale) {
+            <p class="stale-banner" role="status">
+              The source data changed after this allocation. Update the allocation to use the latest
+              data.
+            </p>
+            @if (sum.staleReasonCodes.length > 0) {
+              <ul class="stale-reasons">
+                @for (code of sum.staleReasonCodes; track code) {
+                  <li>{{ staleReasonMessage(code) }}</li>
+                }
+              </ul>
+            }
+          }
+          <dl class="readonly-grid">
+            <div>
+              <dt>Facility electricity</dt>
+              <dd>
+                {{ formatDecimal(sum.facilityElectricityMwh) }}
+                {{ sum.electricityUnit || 'MWh' }}
+              </dd>
+            </div>
+            <div>
+              <dt>CBAM electricity</dt>
+              <dd>
+                {{ formatDecimal(sum.cbamElectricityMwh) }}
+                {{ sum.electricityUnit || 'MWh' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Non-CBAM electricity</dt>
+              <dd>
+                {{ formatDecimal(sum.nonCbamElectricityMwh) }}
+                {{ sum.electricityUnit || 'MWh' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Facility indirect emissions</dt>
+              <dd>
+                {{ formatDecimal(sum.facilityIndirectEmissionsTco2e) }}
+                {{ sum.emissionsUnit || 'tCO2e' }}
+              </dd>
+            </div>
+            <div>
+              <dt>CBAM indirect emissions</dt>
+              <dd>
+                {{ formatDecimal(sum.cbamIndirectEmissionsTco2e) }}
+                {{ sum.emissionsUnit || 'tCO2e' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Allocated indirect emissions</dt>
+              <dd>
+                {{ formatDecimal(sum.allocatedIndirectEmissionsTco2e) }}
+                {{ sum.emissionsUnit || 'tCO2e' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Remaining amount</dt>
+              <dd>
+                {{ formatDecimal(sum.remainingIndirectEmissionsTco2e) }}
+                {{ sum.emissionsUnit || 'tCO2e' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Balance status</dt>
+              <dd class="status-text">{{ balanceLabel(sum.balanceStatus) }}</dd>
+            </div>
+          </dl>
+          <aside class="exported-block" aria-label="Exported electricity">
+            <h4>Exported electricity</h4>
+            <p class="help-text">
+              Exported electricity is reported separately. It is not subtracted here.
+            </p>
+            <p>
+              {{ formatDecimal(sum.exportedElectricityMwh) }}
+              {{ sum.electricityUnit || 'MWh' }}
+            </p>
+          </aside>
+        }
+      </section>
+    }
+
+    <section class="surface-card history-section" aria-labelledby="iea-history-heading">
+      <h3 id="iea-history-heading">Allocation history</h3>
+      @if (results().length === 0) {
+        <p class="empty-state">No allocation results yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="results()" class="full-width history-table">
+            <ng-container matColumnDef="created">
+              <th mat-header-cell *matHeaderCellDef>Created</th>
+              <td mat-cell *matCellDef="let r">{{ r.createdAt | date: 'short' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let r">
+                <span class="status-text">{{ lifecycleLabel(r.isCurrent, r.isStale) }}</span>
+                ·
+                <span class="status-text">{{ executionLabel(r.status) }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="cbam">
+              <th mat-header-cell *matHeaderCellDef>CBAM electricity</th>
+              <td mat-cell *matCellDef="let r">
+                {{ formatDecimal(r.cbamElectricityMwh) }} {{ r.electricityUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="allocated">
+              <th mat-header-cell *matHeaderCellDef>Allocated indirect emissions</th>
+              <td mat-cell *matCellDef="let r">
+                {{ formatDecimal(r.allocatedIndirectEmissionsTco2e) }} {{ r.emissionsUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="balance">
+              <th mat-header-cell *matHeaderCellDef>Balance</th>
+              <td mat-cell *matCellDef="let r">
+                <span class="status-text">{{ balanceLabel(r.balanceStatus) }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Action</th>
+              <td mat-cell *matCellDef="let r">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="viewDetails(r.resultId)"
+                  [attr.aria-label]="'View details for allocation created ' + r.createdAt"
+                >
+                  View details
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: historyColumns"></tr>
+          </table>
+        </div>
+
+        <div class="mobile-cards" aria-label="Allocation history cards">
+          @for (r of results(); track r.resultId) {
+            <article class="history-card">
+              <p><strong>Created:</strong> {{ r.createdAt | date: 'short' }}</p>
+              <p>
+                <strong>Status:</strong>
+                <span class="status-text">{{ lifecycleLabel(r.isCurrent, r.isStale) }}</span>
+                ·
+                <span class="status-text">{{ executionLabel(r.status) }}</span>
+              </p>
+              <p>
+                <strong>CBAM electricity:</strong>
+                {{ formatDecimal(r.cbamElectricityMwh) }} {{ r.electricityUnit }}
+              </p>
+              <p>
+                <strong>Allocated indirect emissions:</strong>
+                {{ formatDecimal(r.allocatedIndirectEmissionsTco2e) }} {{ r.emissionsUnit }}
+              </p>
+              <p>
+                <strong>Balance:</strong>
+                <span class="status-text">{{ balanceLabel(r.balanceStatus) }}</span>
+              </p>
+              <button
+                mat-button
+                type="button"
+                (click)="viewDetails(r.resultId)"
+                [attr.aria-label]="'View details for allocation created ' + r.createdAt"
+              >
+                View details
+              </button>
+            </article>
+          }
+        </div>
+
+        <mat-paginator
+          [length]="resultsTotal()"
+          [pageIndex]="resultsPage() - 1"
+          [pageSize]="resultsPageSize()"
+          [pageSizeOptions]="[5, 10, 20]"
+          (page)="onHistoryPage($event)"
+          aria-label="Allocation history pages"
+        />
+      }
+    </section>
+
+    <section class="surface-card detail-section" aria-labelledby="iea-detail-heading">
+      <h3 id="iea-detail-heading">Allocation detail</h3>
+      @if (detailLoading()) {
+        <div class="loading-state" role="status" aria-live="polite">
+          <mat-spinner diameter="28" aria-label="Loading allocation detail"></mat-spinner>
+        </div>
+      } @else if (detailError()) {
+        <p class="error-text" role="alert">{{ detailError() }}</p>
+      } @else {
+        @if (selectedDetail(); as detail) {
+        <p class="detail-status status-text">
+          {{ lifecycleLabel(detail.isCurrent, detail.isStale) }}
+          · {{ executionLabel(detail.status) }}
+          · {{ balanceLabel(detail.balanceStatus) }}
+        </p>
+
+        <div class="detail-accordion">
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('overview')"
+            (click)="toggleSection('overview')"
+          >
+            Overview
+          </button>
+          @if (isSectionOpen('overview')) {
+            <div class="section-body" role="region" aria-label="Overview">
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Facility electricity</dt>
+                  <dd>
+                    {{ formatDecimal(detail.facilityElectricityMwh) }} {{ detail.electricityUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>CBAM electricity</dt>
+                  <dd>
+                    {{ formatDecimal(detail.cbamElectricityMwh) }} {{ detail.electricityUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Non-CBAM electricity</dt>
+                  <dd>
+                    {{ formatDecimal(detail.nonCbamElectricityMwh) }} {{ detail.electricityUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Facility indirect emissions</dt>
+                  <dd>
+                    {{ formatDecimal(detail.facilityIndirectEmissionsTco2e) }}
+                    {{ detail.emissionsUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>CBAM indirect emissions</dt>
+                  <dd>
+                    {{ formatDecimal(detail.cbamIndirectEmissionsTco2e) }}
+                    {{ detail.emissionsUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Allocated indirect emissions</dt>
+                  <dd>
+                    {{ formatDecimal(detail.allocatedIndirectEmissionsTco2e) }}
+                    {{ detail.emissionsUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Remaining amount</dt>
+                  <dd>
+                    {{ formatDecimal(detail.remainingIndirectEmissionsTco2e) }}
+                    {{ detail.emissionsUnit }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('monthly')"
+            (click)="toggleSection('monthly')"
+          >
+            Monthly attribution
+          </button>
+          @if (isSectionOpen('monthly')) {
+            <div class="section-body" role="region" aria-label="Monthly attribution">
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Month</th>
+                      <th scope="col">Total production</th>
+                      <th scope="col">Importer amount</th>
+                      <th scope="col">Monthly share</th>
+                      <th scope="col">Facility electricity</th>
+                      <th scope="col">CBAM electricity</th>
+                      <th scope="col">Non-CBAM electricity</th>
+                      <th scope="col">CBAM indirect emissions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of detail.monthlyBasis; track m.basisRecordId) {
+                      <tr>
+                        <td>{{ formatMonth(m.monthStart) }}</td>
+                        <td>
+                          {{ formatDecimal(m.totalProductionQuantity) }} {{ m.quantityUnit }}
+                        </td>
+                        <td>{{ formatDecimal(m.cbamQuantity) }} {{ m.quantityUnit }}</td>
+                        <td>{{ formatDecimal(m.monthlyShareRaw) }}</td>
+                        <td>
+                          {{
+                            formatDecimal(
+                              monthField(detail.totalsByMonth, m.monthStart, [
+                                'facilityElectricityMwh',
+                                'facility_electricity_mwh',
+                              ])
+                            )
+                          }}
+                          {{ detail.electricityUnit }}
+                        </td>
+                        <td>
+                          {{
+                            formatDecimal(
+                              monthField(detail.totalsByMonth, m.monthStart, [
+                                'cbamElectricityMwh',
+                                'cbam_electricity_mwh',
+                              ])
+                            )
+                          }}
+                          {{ detail.electricityUnit }}
+                        </td>
+                        <td>
+                          {{
+                            formatDecimal(
+                              monthField(detail.totalsByMonth, m.monthStart, [
+                                'nonCbamElectricityMwh',
+                                'non_cbam_electricity_mwh',
+                              ])
+                            )
+                          }}
+                          {{ detail.electricityUnit }}
+                        </td>
+                        <td>
+                          {{
+                            formatDecimal(
+                              monthField(detail.totalsByMonth, m.monthStart, [
+                                'cbamIndirectEmissionsTco2e',
+                                'cbam_indirect_emissions_tco2e',
+                              ])
+                            )
+                          }}
+                          {{ detail.emissionsUnit }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('sources')"
+            (click)="toggleSection('sources')"
+          >
+            Electricity sources
+          </button>
+          @if (isSectionOpen('sources')) {
+            <div class="section-body" role="region" aria-label="Electricity sources">
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Activity date</th>
+                      <th scope="col">Quantity</th>
+                      <th scope="col">Electricity</th>
+                      <th scope="col">Factor</th>
+                      <th scope="col">Facility electricity</th>
+                      <th scope="col">CBAM electricity</th>
+                      <th scope="col">CBAM indirect emissions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (s of detail.sources; track s.sourceResultId) {
+                      <tr>
+                        <td>{{ s.activityDate }}</td>
+                        <td>
+                          {{ formatDecimal(s.activityQuantity) }} {{ s.activityUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(s.electricityMwh) }} {{ detail.electricityUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(s.factorValue) }} {{ s.factorUnit }}
+                          ({{ s.factorSourceMode }})
+                        </td>
+                        <td>
+                          {{ formatDecimal(s.facilityElectricityMwh) }}
+                          {{ detail.electricityUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(s.cbamElectricityMwh) }} {{ detail.electricityUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(s.cbamIndirectEmissionsTco2e) }}
+                          {{ detail.emissionsUnit }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('products')"
+            (click)="toggleSection('products')"
+          >
+            Product allocations
+          </button>
+          @if (isSectionOpen('products')) {
+            <div class="section-body" role="region" aria-label="Product allocations">
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Product</th>
+                      <th scope="col">CN code</th>
+                      <th scope="col">Profile version</th>
+                      <th scope="col">Production quantity</th>
+                      <th scope="col">Share</th>
+                      <th scope="col">Allocated electricity</th>
+                      <th scope="col">Allocated indirect emissions</th>
+                      <th scope="col">Rounding adjustment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of detail.products; track p.productProfileVersionId) {
+                      <tr>
+                        <td>{{ p.productName }}</td>
+                        <td>{{ p.cnDisplayCode || p.cnNormalizedCode }}</td>
+                        <td>{{ p.profileVersion }}</td>
+                        <td>{{ formatDecimal(p.normalizedQuantityTonnes) }} t</td>
+                        <td>{{ formatDecimal(p.rawShare) }}</td>
+                        <td>
+                          {{ formatDecimal(p.finalAllocatedElectricityMwh) }}
+                          {{ p.electricityUnit || detail.electricityUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(p.finalAllocatedIndirectEmissionsTco2e) }}
+                          {{ p.emissionsUnit || detail.emissionsUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(p.emissionsRoundingAdjustment) }}
+                          {{ p.emissionsUnit || detail.emissionsUnit }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('exported')"
+            (click)="toggleSection('exported')"
+          >
+            Exported electricity
+          </button>
+          @if (isSectionOpen('exported')) {
+            <div class="section-body" role="region" aria-label="Exported electricity">
+              <p class="help-text">
+                Exported electricity is reported separately. It is not subtracted here.
+              </p>
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Exported electricity</dt>
+                  <dd>
+                    {{ formatDecimal(detail.exportedElectricityMwh) }}
+                    {{ detail.electricityUnit }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('balance')"
+            (click)="toggleSection('balance')"
+          >
+            Balance
+          </button>
+          @if (isSectionOpen('balance')) {
+            <div class="section-body" role="region" aria-label="Balance">
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Allocated electricity</dt>
+                  <dd>
+                    {{ formatDecimal(detail.allocatedElectricityMwh) }}
+                    {{ detail.electricityUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>CBAM electricity</dt>
+                  <dd>
+                    {{ formatDecimal(detail.cbamElectricityMwh) }} {{ detail.electricityUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Allocated indirect emissions</dt>
+                  <dd>
+                    {{ formatDecimal(detail.allocatedIndirectEmissionsTco2e) }}
+                    {{ detail.emissionsUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>CBAM indirect emissions</dt>
+                  <dd>
+                    {{ formatDecimal(detail.cbamIndirectEmissionsTco2e) }}
+                    {{ detail.emissionsUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Remaining amount</dt>
+                  <dd>
+                    {{ formatDecimal(detail.remainingIndirectEmissionsTco2e) }}
+                    {{ detail.emissionsUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Balance status</dt>
+                  <dd class="status-text">{{ balanceLabel(detail.balanceStatus) }}</dd>
+                </div>
+              </dl>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('method')"
+            (click)="toggleSection('method')"
+          >
+            Method and audit
+          </button>
+          @if (isSectionOpen('method')) {
+            <div class="section-body" role="region" aria-label="Method and audit">
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Methodology</dt>
+                  <dd>{{ detail.methodologyCode }} {{ detail.methodologyVersion }}</dd>
+                </div>
+                <div>
+                  <dt>Workbook</dt>
+                  <dd>{{ detail.workbookFilename }}</dd>
+                </div>
+                <div>
+                  <dt>Workbook formula refs</dt>
+                  <dd>{{ detail.workbookFormulaRefs }}</dd>
+                </div>
+                <div>
+                  <dt>Electricity unit</dt>
+                  <dd>{{ detail.electricityUnit }}</dd>
+                </div>
+                <div>
+                  <dt>Emissions unit</dt>
+                  <dd>{{ detail.emissionsUnit }}</dd>
+                </div>
+                <div>
+                  <dt>Result ID</dt>
+                  <dd>{{ detail.resultId }}</dd>
+                </div>
+                <div>
+                  <dt>Client request ID</dt>
+                  <dd>{{ detail.clientRequestId }}</dd>
+                </div>
+                <div>
+                  <dt>Created</dt>
+                  <dd>{{ detail.createdAt | date: 'medium' }}</dd>
+                </div>
+                <div>
+                  <dt>Created by</dt>
+                  <dd>{{ detail.createdByUserId || '—' }}</dd>
+                </div>
+                <div>
+                  <dt>Workbook SHA-256</dt>
+                  <dd class="mono">{{ detail.workbookSha256 }}</dd>
+                </div>
+              </dl>
+            </div>
+          }
+        </div>
+        } @else {
+          <p class="empty-state">Select a result to inspect details.</p>
+        }
+      }
+    </section>
+    }
+  }
+</section>

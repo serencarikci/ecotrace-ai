@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -11,6 +12,10 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../core/services/auth.service';
 import { extractApiErrorMessage } from '../../core/services/error.util';
+import {
+  Product,
+  ProductSustainabilityService,
+} from '../../core/services/product-sustainability.service';
 import { canConfigureCbam } from '../../core/services/roles.util';
 import {
   calculationStatusLabel as mapCalculationStatusLabel,
@@ -18,7 +23,20 @@ import {
   readinessCheckLabel as mapReadinessCheckLabel,
   readinessStatusLabel as mapReadinessStatusLabel,
   resolutionStatusLabel as mapResolutionStatusLabel,
+  bindingStatusLabel as mapBindingStatusLabel,
 } from './cbam-display-labels';
+import { ReportingPeriod } from '../../core/models/reporting-period.models';
+import { ReportingPeriodService } from '../../core/services/reporting-period.service';
+import { CbamStationaryCombustionComponent } from './stationary-combustion/stationary-combustion.component';
+import { CbamProductProfilesComponent } from './product-profiles/product-profiles.component';
+import { CbamMonthlyAllocationDataComponent } from './monthly-allocation-data/monthly-allocation-data.component';
+import { CbamDirectEmissionsAllocationComponent } from './direct-emissions-allocation/direct-emissions-allocation.component';
+import { CbamIndirectEmissionsAllocationComponent } from './indirect-emissions-allocation/indirect-emissions-allocation.component';
+import { CbamPurchasedElectricityComponent } from './purchased-electricity/purchased-electricity.component';
+import { CbamProductionProcessesComponent } from './production-processes/production-processes.component';
+import { CbamPurchasedPrecursorsComponent } from './purchased-precursors/purchased-precursors.component';
+import { CbamProductEmbeddedEmissionsComponent } from './product-embedded-emissions/product-embedded-emissions.component';
+import { CbamOfficialSeeExportComponent } from './official-see-export/official-see-export.component';
 import {
   CbamActivityRecord,
   CbamActivityType,
@@ -37,11 +55,28 @@ import {
   CbamInstallation,
   CbamPeriodBinding,
   CbamPeriodSummary,
+  CbamProductionProfileLinkSummary,
   CbamProductionRecord,
+  CbamProfileLinkStatus,
+  CbamProductProfile,
   CbamPurchasedInput,
   CbamReferenceSource,
   CbamUnit,
 } from './cbam-api.service';
+
+const PROFILE_LINK_LABELS: Record<CbamProfileLinkStatus, string> = {
+  MISSING: 'Profile missing',
+  READY: 'Ready',
+  OUTDATED: 'Older profile',
+  INVALID: 'Profile problem',
+};
+
+const PROFILE_LINK_MESSAGES: Record<CbamProfileLinkStatus, string> = {
+  MISSING: 'Select a published product profile before allocation.',
+  READY: 'This record uses a published product profile.',
+  OUTDATED: 'This record uses an older product profile. You can still view it.',
+  INVALID: 'The selected profile does not match this product.',
+};
 
 @Component({
   selector: 'app-cbam-period-detail',
@@ -57,25 +92,48 @@ import {
     MatTabsModule,
     MatTableModule,
     MatTooltipModule,
+    CbamStationaryCombustionComponent,
+    CbamProductProfilesComponent,
+    CbamMonthlyAllocationDataComponent,
+    CbamDirectEmissionsAllocationComponent,
+    CbamIndirectEmissionsAllocationComponent,
+    CbamPurchasedElectricityComponent,
+    CbamProductionProcessesComponent,
+    CbamPurchasedPrecursorsComponent,
+    CbamProductEmbeddedEmissionsComponent,
+    CbamOfficialSeeExportComponent,
   ],
   templateUrl: './period-detail.component.html',
   styleUrl: './cbam-pages.scss',
 })
 export class CbamPeriodDetailComponent implements OnInit {
   private readonly api = inject(CbamApiService);
+  private readonly productsApi = inject(ProductSustainabilityService);
+  private readonly periodsApi = inject(ReportingPeriodService);
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly item = signal<CbamPeriodBinding | null>(null);
+  readonly periods = signal<ReportingPeriod[]>([]);
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly canConfigure = canConfigureCbam(this.auth.currentRoles());
+  /** Default to Production (index 1); Product Profiles is index 0. */
+  readonly selectedTabIndex = signal(1);
+  /** Binding id for child feature tabs. */
+  bindingId = '';
 
   readonly installations = signal<CbamInstallation[]>([]);
   readonly activityTypes = signal<CbamActivityType[]>([]);
   readonly units = signal<CbamUnit[]>([]);
   readonly productionRecords = signal<CbamProductionRecord[]>([]);
+  readonly productionProducts = signal<Product[]>([]);
+  readonly selectableProfiles = signal<CbamProductProfile[]>([]);
+  readonly productionProfileLinkSummary = signal<CbamProductionProfileLinkSummary | null>(null);
+  readonly linkingProductionId = signal<string | null>(null);
+  readonly linkProfileVersionId = signal('');
   readonly activityRecords = signal<CbamActivityRecord[]>([]);
   readonly purchasedInputs = signal<CbamPurchasedInput[]>([]);
   readonly allocationRules = signal<CbamAllocationRule[]>([]);
@@ -94,7 +152,17 @@ export class CbamPeriodDetailComponent implements OnInit {
   readonly exportRuns = signal<CbamExportRun[]>([]);
   readonly exportBusy = signal(false);
 
-  readonly productionColumns = ['installation', 'quantity', 'unit', 'date', 'status', 'actions'];
+  readonly productionColumns = [
+    'installation',
+    'product',
+    'profile',
+    'profileLink',
+    'quantity',
+    'unit',
+    'date',
+    'status',
+    'actions',
+  ];
   readonly activityColumns = [
     'type',
     'quantity',
@@ -161,6 +229,8 @@ export class CbamPeriodDetailComponent implements OnInit {
 
   readonly productionForm = this.fb.nonNullable.group({
     installationProfileId: ['', Validators.required],
+    productId: ['', Validators.required],
+    productProfileVersionId: ['', Validators.required],
     quantity: ['', Validators.required],
     unit: ['t', Validators.required],
     productionDate: [''],
@@ -224,10 +294,12 @@ export class CbamPeriodDetailComponent implements OnInit {
     factorDefinitionCode: ['NET_CALORIFIC_VALUE', Validators.required],
   });
 
-  private bindingId = '';
-
   ngOnInit(): void {
     this.bindingId = this.route.snapshot.paramMap.get('bindingId') ?? '';
+    this.periodsApi.list({ page: 1, pageSize: 200 }).subscribe({
+      next: (page) => this.periods.set(page.items),
+      error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
+    });
     this.reload();
     this.api.listInstallations({ page: 1, pageSize: 100 }).subscribe({
       next: (page) => this.installations.set(page.items.filter((i) => i.status !== 'archived')),
@@ -241,6 +313,62 @@ export class CbamPeriodDetailComponent implements OnInit {
       next: (items) => this.units.set(items),
       error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
     });
+    this.productsApi.listProducts({ page: 1, pageSize: 100, isActive: true }).subscribe({
+      next: (page) => this.productionProducts.set(page.items),
+      error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
+    });
+    this.productionForm.controls.productId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((productId) => {
+        this.productionForm.controls.productProfileVersionId.setValue('');
+        this.selectableProfiles.set([]);
+        if (productId) {
+          this.loadSelectableProfiles(productId);
+        }
+      });
+  }
+
+  selectProductProfilesTab(): void {
+    this.selectedTabIndex.set(0);
+  }
+
+  selectActivitiesTab(): void {
+    // Tabs: 0 Product Profiles, 1 Production, 2 Activities, 3 Direct Emissions,
+    // 4 Indirect Emissions, 5 Processes, 6 Purchased Inputs, 7 Product Results,
+    // 8 Allocation, …
+    this.selectedTabIndex.set(2);
+  }
+
+  selectProductionTab(): void {
+    this.selectedTabIndex.set(1);
+  }
+
+  selectDirectEmissionsTab(): void {
+    this.selectedTabIndex.set(3);
+  }
+
+  selectIndirectEmissionsTab(): void {
+    this.selectedTabIndex.set(4);
+  }
+
+  selectProcessesTab(): void {
+    this.selectedTabIndex.set(5);
+  }
+
+  selectPurchasedInputsTab(): void {
+    this.selectedTabIndex.set(6);
+  }
+
+  selectProductResultsTab(): void {
+    this.selectedTabIndex.set(7);
+  }
+
+  selectAllocationTab(): void {
+    this.selectedTabIndex.set(8);
+  }
+
+  onTabIndexChange(index: number): void {
+    this.selectedTabIndex.set(index);
   }
 
   reload(): void {
@@ -262,6 +390,10 @@ export class CbamPeriodDetailComponent implements OnInit {
   reloadCollections(): void {
     this.api.listProductionRecords(this.bindingId).subscribe({
       next: (page) => this.productionRecords.set(page.items),
+      error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
+    });
+    this.api.getProductionProfileLinkSummary(this.bindingId).subscribe({
+      next: (summary) => this.productionProfileLinkSummary.set(summary),
       error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
     });
     this.api.listActivityRecords(this.bindingId).subscribe({
@@ -694,6 +826,7 @@ export class CbamPeriodDetailComponent implements OnInit {
     this.api
       .createProductionRecord(this.bindingId, {
         installationProfileId: v.installationProfileId,
+        productProfileVersionId: v.productProfileVersionId,
         quantity: v.quantity,
         unit: v.unit,
         productionDate: v.productionDate || null,
@@ -701,7 +834,12 @@ export class CbamPeriodDetailComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          this.productionForm.patchValue({ quantity: '', notes: '', productionDate: '' });
+          this.productionForm.patchValue({
+            productProfileVersionId: '',
+            quantity: '',
+            notes: '',
+            productionDate: '',
+          });
           this.reloadCollections();
           this.errorMessage.set(null);
         },
@@ -717,6 +855,83 @@ export class CbamPeriodDetailComponent implements OnInit {
       next: () => this.reloadCollections(),
       error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
     });
+  }
+
+  loadSelectableProfiles(productId: string): void {
+    this.api
+      .listProductProfiles({ page: 1, pageSize: 100, productId, status: 'active' })
+      .subscribe({
+        next: (page) =>
+          this.selectableProfiles.set(
+            page.items.filter((p) => p.classificationReady === true),
+          ),
+        error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
+      });
+  }
+
+  profileLinkLabel(status: string | null | undefined): string {
+    if (status === 'MISSING' || status === 'READY' || status === 'OUTDATED' || status === 'INVALID') {
+      return PROFILE_LINK_LABELS[status];
+    }
+    return 'Profile status unknown';
+  }
+
+  profileLinkMessage(status: string | null | undefined): string {
+    if (status === 'MISSING' || status === 'READY' || status === 'OUTDATED' || status === 'INVALID') {
+      return PROFILE_LINK_MESSAGES[status];
+    }
+    return 'Profile link status is unavailable. Refresh or contact support.';
+  }
+
+  profileVersionLabel(row: CbamProductionRecord): string {
+    if (!row.productProfileVersionId) {
+      return '—';
+    }
+    const version = row.profileVersion != null ? `v${row.profileVersion}` : 'version';
+    const cn = row.cnDisplayCode || row.cnNormalizedCode;
+    return cn ? `${version} · CN ${cn}` : version;
+  }
+
+  startLinkProfile(row: CbamProductionRecord): void {
+    if (!this.canMutateData || row.profileLinkStatus !== 'MISSING') {
+      return;
+    }
+    this.linkingProductionId.set(row.id);
+    this.linkProfileVersionId.set('');
+    this.selectableProfiles.set([]);
+  }
+
+  cancelLinkProfile(): void {
+    this.linkingProductionId.set(null);
+    this.linkProfileVersionId.set('');
+  }
+
+  confirmLinkProfile(row: CbamProductionRecord): void {
+    const profileId = this.linkProfileVersionId();
+    if (!this.canMutateData || !profileId) {
+      return;
+    }
+    this.api
+      .updateProductionRecord(row.id, {
+        rowVersion: row.rowVersion,
+        productProfileVersionId: profileId,
+      })
+      .subscribe({
+        next: () => {
+          this.cancelLinkProfile();
+          this.reloadCollections();
+          this.errorMessage.set(null);
+        },
+        error: (err: unknown) => this.errorMessage.set(extractApiErrorMessage(err)),
+      });
+  }
+
+  onLinkProductChange(productId: string): void {
+    this.linkProfileVersionId.set('');
+    this.selectableProfiles.set([]);
+    if (productId) {
+      this.loadSelectableProfiles(productId);
+    }
   }
 
   submitActivity(): void {
@@ -817,6 +1032,15 @@ export class CbamPeriodDetailComponent implements OnInit {
   installationLabel(id: string): string {
     const found = this.installations().find((i) => i.id === id);
     return found ? `${found.code} — ${found.name}` : id;
+  }
+
+  periodLabel(id: string): string {
+    const found = this.periods().find((p) => p.id === id);
+    return found ? `${found.code} — ${found.name}` : 'Reporting period';
+  }
+
+  bindingStatusLabel(status: string): string {
+    return mapBindingStatusLabel(status);
   }
 
   submitAllocationRule(): void {

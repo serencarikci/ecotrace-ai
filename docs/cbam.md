@@ -14,6 +14,11 @@
 | Phase 4A routes | allocation rules / allocate / allocation results |
 | Phase 4B routes | reference sources / factor definitions / values / resolutions |
 | Phase 5 routes | calculation definitions / runs / execute / results / recalculate |
+| Phase 4A stationary combustion | fuels / parameters / executions / results (no UI) |
+| Phase 5A stationary combustion | current-result pointer + period summary/readiness (no allocation) |
+| Phase 5B stationary combustion | Direct Emissions UI + activity-coverage API (authoritative per-activity status) |
+| Phase 6A / 6A+ product classification | CN catalog (SEE workbook seed) + versioned product profiles + authoritative `fieldApplicability` + computed readiness |
+| Phase 6B Product Profiles UI | Period-detail tab: CN search, applicability-driven fields, draft/publish/new version/archive |
 | Phase 6 routes | export-templates, export-readiness, exports, artifacts/download, summary |
 | Phase 7 | Final MVP audit / hardening / release readiness (no new business capability) |
 
@@ -61,13 +66,15 @@ This document set defines an isolated CBAM/SKDM bounded context inside the exist
 | [cbam/phase-5-calculation.md](cbam/phase-5-calculation.md) | Phase 5 minimal calculation overview |
 | [cbam/calculation-model.md](cbam/calculation-model.md) | Calculation run/result model |
 | [cbam/calculation-formulas.md](cbam/calculation-formulas.md) | Supported formulas |
+| [cbam/stationary-combustion-fuel-catalog.md](cbam/stationary-combustion-fuel-catalog.md) | Stationary-combustion fuel catalog + orchestration/result snapshot |
 | [cbam/calculation-unit-rules.md](cbam/calculation-unit-rules.md) | Unit compatibility rules |
 | [cbam/calculation-limitations.md](cbam/calculation-limitations.md) | Explicit non-goals |
 | [cbam/phase-5-implementation-report.md](cbam/phase-5-implementation-report.md) | Phase 5 verification report |
 | [cbam/phase-6-excel-reporting.md](cbam/phase-6-excel-reporting.md) | Phase 6 Excel/reporting overview |
 | [cbam/excel-template-model.md](cbam/excel-template-model.md) | Export template model |
 | [cbam/excel-mapping.md](cbam/excel-mapping.md) | Mapping rules |
-| [cbam/export-readiness.md](cbam/export-readiness.md) | Readiness checklist |
+| [cbam/cn-catalog-product-profiles.md](cbam/cn-catalog-product-profiles.md) | CN catalog + product profile classification (Phase 6A / 6A+) |
+
 | [cbam/export-traceability.md](cbam/export-traceability.md) | Manifest / audit |
 | [cbam/internal-skdm-template.md](cbam/internal-skdm-template.md) | Internal workbook |
 | [cbam/reporting-limitations.md](cbam/reporting-limitations.md) | Explicit non-goals |
