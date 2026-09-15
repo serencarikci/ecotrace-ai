@@ -1,10 +1,12 @@
 /**
- * Production browser environment.
+ * Production browser environment for Vercel / static hosting.
  *
- * - Empty `apiUrl` = same-origin relative calls (nginx/Caddy reverse-proxy).
- * - For Vercel SPA + separate API host, replace this file at build time or set
- *   `apiUrl` to the HTTPS API origin (example: `https://api.example.com`).
- * - Never ship `http://localhost` in a production bundle.
+ * At build time, set `ECOTRACE_API_URL` (HTTPS API origin, no trailing slash).
+ * The `apps/web/scripts/write-production-env.mjs` helper rewrites this file
+ * before `ng build --configuration=production`.
+ *
+ * Empty `apiUrl` means same-origin relative calls (only valid behind a reverse proxy).
+ * Never ship a loopback API origin in a production bundle.
  */
 export const environment = {
   production: true,
