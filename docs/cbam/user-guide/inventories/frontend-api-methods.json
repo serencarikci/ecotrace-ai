@@ -1,0 +1,599 @@
+{
+  "total": 99,
+  "methods": [
+    {
+      "method": "getModuleStatus",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/module-status",
+      "raw": "`${this.orgBase(organizationId)}/module-status`);"
+    },
+    {
+      "method": "getInstallation",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/installations/{id}",
+      "raw": "`${this.orgBase()}/installations/${installationId}`);"
+    },
+    {
+      "method": "createInstallation",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/installations",
+      "raw": "`${this.orgBase()}/installations`"
+    },
+    {
+      "method": "updateInstallation",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/installations/{id}",
+      "raw": "`${this.orgBase()}/installations/${installationId}`"
+    },
+    {
+      "method": "activateInstallation",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/installations/{id}/activate",
+      "raw": "`${this.orgBase()}/installations/${installationId}/activate`"
+    },
+    {
+      "method": "archiveInstallation",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/installations/{id}/archive",
+      "raw": "`${this.orgBase()}/installations/${installationId}/archive`"
+    },
+    {
+      "method": "getPeriodBinding",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}`"
+    },
+    {
+      "method": "createPeriodBinding",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings",
+      "raw": "`${this.orgBase()}/reporting-period-bindings`"
+    },
+    {
+      "method": "openDataCollection",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/open-data-collection",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/open-data-collection`"
+    },
+    {
+      "method": "archivePeriodBinding",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/archive",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/archive`"
+    },
+    {
+      "method": "listActivityTypes",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/activity-types",
+      "raw": "`${this.orgBase()}/activity-types`);"
+    },
+    {
+      "method": "listUnits",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/units",
+      "raw": "`${this.orgBase()}/units`);"
+    },
+    {
+      "method": "createProductionRecord",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-records",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-records`"
+    },
+    {
+      "method": "updateProductionRecord",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/production-records/{id}",
+      "raw": "`${this.orgBase()}/production-records/${recordId}`"
+    },
+    {
+      "method": "getProductionProfileLinkSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-profile-link-summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-profile-link-summary`"
+    },
+    {
+      "method": "getMonthlyProductionBasisSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/monthly-production-basis-summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/monthly-production-basis-summary`"
+    },
+    {
+      "method": "createMonthlyProductionBasis",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/monthly-production-basis",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/monthly-production-basis`"
+    },
+    {
+      "method": "updateMonthlyProductionBasis",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/monthly-production-basis/{id}",
+      "raw": "`${this.orgBase()}/monthly-production-basis/${recordId}`"
+    },
+    {
+      "method": "deleteMonthlyProductionBasis",
+      "http": "DELETE",
+      "path": "/api/v1/cbam/organizations/{organization_id}/monthly-production-basis/{id}",
+      "raw": "`${this.orgBase()}/monthly-production-basis/${recordId}`);"
+    },
+    {
+      "method": "getDirectEmissionsAllocationReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/direct-emissions-allocation/readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/direct-emissions-allocation/readiness`"
+    },
+    {
+      "method": "executeDirectEmissionsAllocation",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/direct-emissions-allocation/executions",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/direct-emissions-allocation/executions`"
+    },
+    {
+      "method": "getDirectEmissionsAllocationResult",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/direct-emissions-allocation/results/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/direct-emissions-allocation/results/${resu"
+    },
+    {
+      "method": "getDirectEmissionsAllocationSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/direct-emissions-allocation/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/direct-emissions-allocation/summary`"
+    },
+    {
+      "method": "getIndirectEmissionsAllocationReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/indirect-emissions-allocation/readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/indirect-emissions-allocation/readiness`"
+    },
+    {
+      "method": "executeIndirectEmissionsAllocation",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/indirect-emissions-allocation/executions",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/indirect-emissions-allocation/executions`"
+    },
+    {
+      "method": "getIndirectEmissionsAllocationResult",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/indirect-emissions-allocation/results/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/indirect-emissions-allocation/results/${re"
+    },
+    {
+      "method": "getIndirectEmissionsAllocationSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/indirect-emissions-allocation/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/indirect-emissions-allocation/summary`"
+    },
+    {
+      "method": "getProductEmbeddedEmissionsReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/product-embedded-emissions/readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/product-embedded-emissions/readiness`"
+    },
+    {
+      "method": "executeProductEmbeddedEmissions",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/product-embedded-emissions/executions",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/product-embedded-emissions/executions`"
+    },
+    {
+      "method": "getProductEmbeddedEmissionsResult",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/product-embedded-emissions/results/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/product-embedded-emissions/results/${resul"
+    },
+    {
+      "method": "getProductEmbeddedEmissionsSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/product-embedded-emissions/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/product-embedded-emissions/summary`"
+    },
+    {
+      "method": "getProductionProcessMetadata",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/production-processes/metadata",
+      "raw": "`${this.orgBase()}/production-processes/metadata`"
+    },
+    {
+      "method": "listProductionProcessControlledLists",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/production-processes/controlled-lists",
+      "raw": "`${this.orgBase()}/production-processes/controlled-lists`"
+    },
+    {
+      "method": "getProductionProcessControlledList",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/production-processes/controlled-lists/{id}",
+      "raw": "`${this.orgBase()}/production-processes/controlled-lists/${encodeURIComponent(listCode)}`"
+    },
+    {
+      "method": "getProductionProcessBindingSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/summary`"
+    },
+    {
+      "method": "getProductionProcess",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/${processId}`"
+    },
+    {
+      "method": "getProductionProcessReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/{id}/readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/${processId}/readines"
+    },
+    {
+      "method": "createProductionProcess",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes`"
+    },
+    {
+      "method": "updateProductionProcessDraft",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/${processId}`"
+    },
+    {
+      "method": "archiveProductionProcess",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/{id}/archive",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/${processId}/archive`"
+    },
+    {
+      "method": "createProductionProcessProductUse",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/{id}/product-uses",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/${processId}/product-"
+    },
+    {
+      "method": "updateProductionProcessProductUse",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/{id}/product-uses/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/${processId}/product-"
+    },
+    {
+      "method": "deleteProductionProcessProductUse",
+      "http": "DELETE",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/production-processes/{id}/product-uses/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/production-processes/${processId}/product-"
+    },
+    {
+      "method": "archiveProductionRecord",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/production-records/{id}/archive",
+      "raw": "`${this.orgBase()}/production-records/${recordId}/archive`"
+    },
+    {
+      "method": "createActivityRecord",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/activity-records",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/activity-records`"
+    },
+    {
+      "method": "archiveActivityRecord",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{id}/archive",
+      "raw": "`${this.orgBase()}/activity-records/${recordId}/archive`"
+    },
+    {
+      "method": "createPurchasedInput",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-inputs",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-inputs`"
+    },
+    {
+      "method": "archivePurchasedInput",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/purchased-inputs/{id}/archive",
+      "raw": "`${this.orgBase()}/purchased-inputs/${recordId}/archive`"
+    },
+    {
+      "method": "createAllocationRule",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/allocation-rules",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/allocation-rules`"
+    },
+    {
+      "method": "activateAllocationRule",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{id}/activate",
+      "raw": "`${this.orgBase()}/allocation-rules/${ruleId}/activate`"
+    },
+    {
+      "method": "archiveAllocationRule",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{id}/archive",
+      "raw": "`${this.orgBase()}/allocation-rules/${ruleId}/archive`"
+    },
+    {
+      "method": "allocateActivityRecord",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{id}/allocate/activity-records/{id}",
+      "raw": "`${this.orgBase()}/allocation-rules/${ruleId}/allocate/activity-records/${activityRecordId}`"
+    },
+    {
+      "method": "allocatePurchasedInput",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{id}/allocate/purchased-inputs/{id}",
+      "raw": "`${this.orgBase()}/allocation-rules/${ruleId}/allocate/purchased-inputs/${inputRecordId}`"
+    },
+    {
+      "method": "recalculateAllocationResult",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/allocation-results/{id}/recalculate",
+      "raw": "`${this.orgBase()}/allocation-results/${resultId}/recalculate`"
+    },
+    {
+      "method": "addActivityProperty",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{id}/properties",
+      "raw": "`${this.orgBase()}/activity-records/${recordId}/properties`"
+    },
+    {
+      "method": "resolveActivityFactor",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{id}/factor-resolutions/{id}/resolve",
+      "raw": "`${this.orgBase()}/activity-records/${recordId}/factor-resolutions/${factorDefinitionCode}/resolve`"
+    },
+    {
+      "method": "resolvePurchasedFactor",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/purchased-inputs/{id}/factor-resolutions/{id}/resolve",
+      "raw": "`${this.orgBase()}/purchased-inputs/${recordId}/factor-resolutions/${factorDefinitionCode}/resolve`"
+    },
+    {
+      "method": "resolveAllocationFactor",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/allocation-results/{id}/factor-resolutions/{id}/resolve",
+      "raw": "`${this.orgBase()}/allocation-results/${resultId}/factor-resolutions/${factorDefinitionCode}/resolve"
+    },
+    {
+      "method": "createCalculationRun",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/calculation-runs",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/calculation-runs`"
+    },
+    {
+      "method": "executeCalculationRun",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/calculation-runs/{id}/execute",
+      "raw": "`${this.orgBase()}/calculation-runs/${runId}/execute`"
+    },
+    {
+      "method": "recalculateCalculationResult",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/calculation-results/{id}/recalculate",
+      "raw": "`${this.orgBase()}/calculation-results/${resultId}/recalculate`"
+    },
+    {
+      "method": "getExportReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/export-readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/export-readiness`"
+    },
+    {
+      "method": "getPeriodSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/summary`"
+    },
+    {
+      "method": "createExportRun",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/exports",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/exports`"
+    },
+    {
+      "method": "listExportArtifacts",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/exports/{id}/artifacts",
+      "raw": "`${this.orgBase()}/exports/${exportRunId}/artifacts`"
+    },
+    {
+      "method": "downloadExportArtifact",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/export-artifacts/{id}/download",
+      "raw": "`${this.orgBase()}/export-artifacts/${artifactId}/download`"
+    },
+    {
+      "method": "getOfficialSeeExportReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/official-see-export/readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/official-see-export/readiness`"
+    },
+    {
+      "method": "createOfficialSeeExportRun",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/official-see-export/executions",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/official-see-export/executions`"
+    },
+    {
+      "method": "getOfficialSeeExportRun",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/official-see-export/runs/{id}",
+      "raw": "`${this.orgBase()}/official-see-export/runs/${runId}`"
+    },
+    {
+      "method": "listOfficialSeeExportArtifacts",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/official-see-export/runs/{id}/artifacts",
+      "raw": "`${this.orgBase()}/official-see-export/runs/${runId}/artifacts`"
+    },
+    {
+      "method": "downloadOfficialSeeExportArtifact",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/official-see-export/artifacts/{id}/download",
+      "raw": "`${this.orgBase()}/official-see-export/artifacts/${artifactId}/download`"
+    },
+    {
+      "method": "listStationaryCombustionFuels",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/stationary-combustion/fuels",
+      "raw": "`${this.orgBase()}/stationary-combustion/fuels`"
+    },
+    {
+      "method": "resolveStationaryCombustionParameters",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/stationary-combustion/fuels/{id}/parameters",
+      "raw": "`${this.orgBase()}/stationary-combustion/fuels/${encodeURIComponent(fuelCode)}/parameters`"
+    },
+    {
+      "method": "executeStationaryCombustion",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/stationary-combustion/executions",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/stationary-combustion/executions`"
+    },
+    {
+      "method": "getStationaryCombustionResult",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/stationary-combustion/results/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/stationary-combustion/results/${resultId}`"
+    },
+    {
+      "method": "getStationaryCombustionSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/stationary-combustion/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/stationary-combustion/summary`"
+    },
+    {
+      "method": "getPurchasedElectricityDefaultFactor",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-electricity/factors/default",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-electricity/factors/default`"
+    },
+    {
+      "method": "getPurchasedElectricityReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-electricity/readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-electricity/readiness`"
+    },
+    {
+      "method": "getPurchasedElectricitySummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-electricity/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-electricity/summary`"
+    },
+    {
+      "method": "executePurchasedElectricity",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-electricity/executions",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-electricity/executions`"
+    },
+    {
+      "method": "getPurchasedElectricityResult",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-electricity/results/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-electricity/results/${resultId}`"
+    },
+    {
+      "method": "getCnCode",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/cn-codes/{id}",
+      "raw": "`${this.orgBase()}/cn-codes/${cnCodeId}`);"
+    },
+    {
+      "method": "listCnControlledListValues",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/cn-controlled-lists/{id}",
+      "raw": "`${this.orgBase()}/cn-controlled-lists/${encodeURIComponent(listCode)}`"
+    },
+    {
+      "method": "getProductProfile",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{id}",
+      "raw": "`${this.orgBase()}/product-profile-versions/${profileId}`"
+    },
+    {
+      "method": "createProductProfile",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions",
+      "raw": "`${this.orgBase()}/product-profile-versions`"
+    },
+    {
+      "method": "updateProductProfileDraft",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{id}",
+      "raw": "`${this.orgBase()}/product-profile-versions/${profileId}`"
+    },
+    {
+      "method": "publishProductProfile",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{id}/publish",
+      "raw": "`${this.orgBase()}/product-profile-versions/${profileId}/publish`"
+    },
+    {
+      "method": "archiveProductProfile",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{id}/archive",
+      "raw": "`${this.orgBase()}/product-profile-versions/${profileId}/archive`"
+    },
+    {
+      "method": "getPurchasedPrecursorMetadata",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/purchased-precursors/metadata",
+      "raw": "`${this.orgBase()}/purchased-precursors/metadata`"
+    },
+    {
+      "method": "resolvePrecursorDefaultValue",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/purchased-precursors/default-values/resolve",
+      "raw": "`${this.orgBase()}/purchased-precursors/default-values/resolve`"
+    },
+    {
+      "method": "getPurchasedPrecursorBindingSummary",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/summary",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/summary`"
+    },
+    {
+      "method": "getPurchasedPrecursor",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/${precursorId}`"
+    },
+    {
+      "method": "getPurchasedPrecursorReadiness",
+      "http": "GET",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/{id}/readiness",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/${precursorId}/readin"
+    },
+    {
+      "method": "createPurchasedPrecursor",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors`"
+    },
+    {
+      "method": "updatePurchasedPrecursorDraft",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/${precursorId}`"
+    },
+    {
+      "method": "archivePurchasedPrecursor",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/{id}/archive",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/${precursorId}/archiv"
+    },
+    {
+      "method": "createPrecursorProductUse",
+      "http": "POST",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/{id}/product-uses",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/${precursorId}/produc"
+    },
+    {
+      "method": "updatePrecursorProductUse",
+      "http": "PATCH",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/{id}/product-uses/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/${precursorId}/produc"
+    },
+    {
+      "method": "deletePrecursorProductUse",
+      "http": "DELETE",
+      "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{id}/purchased-precursors/{id}/product-uses/{id}",
+      "raw": "`${this.orgBase()}/reporting-period-bindings/${bindingId}/purchased-precursors/${precursorId}/produc"
+    }
+  ]
+}
