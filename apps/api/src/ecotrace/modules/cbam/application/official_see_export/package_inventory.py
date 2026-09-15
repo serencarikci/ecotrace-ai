@@ -247,6 +247,8 @@ LO_REGENERATED_OR_OPTIONAL_PARTS: tuple[str, ...] = (
     "xl/comments",
     "xl/persons/",
     "xl/drawings/",
+    "xl/theme/theme1.xml",
+    "xl/theme/",
 )
 
 

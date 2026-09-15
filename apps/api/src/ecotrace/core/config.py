@@ -4,7 +4,10 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
-from ecotrace.core.constants import INSECURE_SECRET_DEFAULTS
+from ecotrace.core.constants import (
+    INSECURE_BOOTSTRAP_PASSWORD_DEFAULTS,
+    INSECURE_SECRET_DEFAULTS,
+)
 from ecotrace.version import __version__
 
 AppEnv = Literal["development", "test", "production"]
@@ -96,6 +99,19 @@ class Settings(BaseSettings):
     )
     enable_hsts: bool = Field(default=False, alias="ENABLE_HSTS")
     enable_metrics: bool = Field(default=True, alias="ENABLE_METRICS")
+    enable_api_docs: bool = Field(default=True, alias="ENABLE_API_DOCS")
+    libreoffice_soffice_path: str | None = Field(default=None, alias="LIBREOFFICE_SOFFICE_PATH")
+    libreoffice_recalc_timeout_seconds: int = Field(
+        default=300, alias="LIBREOFFICE_RECALC_TIMEOUT_SECONDS", ge=30
+    )
+    official_see_template_path: str | None = Field(default=None, alias="OFFICIAL_SEE_TEMPLATE_PATH")
+    official_see_max_concurrent_per_org: int = Field(
+        default=2, alias="OFFICIAL_SEE_MAX_CONCURRENT_PER_ORG", ge=1
+    )
+    official_see_max_file_size_mb: int = Field(
+        default=50, alias="OFFICIAL_SEE_MAX_FILE_SIZE_MB", ge=1
+    )
+    official_see_retention_days: int = Field(default=90, alias="OFFICIAL_SEE_RETENTION_DAYS", ge=1)
     login_max_failures: int = Field(default=8, alias="LOGIN_MAX_FAILURES", ge=1)
     login_lockout_minutes: int = Field(default=15, alias="LOGIN_LOCKOUT_MINUTES", ge=1)
     retention_days_notifications: int = Field(
@@ -152,8 +168,11 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_production_secrets(self) -> "Settings":
         if self.app_env == "production":
-            lowered = self.secret_key.lower()
-            if any(default in lowered for default in INSECURE_SECRET_DEFAULTS):
+            lowered = self.secret_key.strip().lower()
+            insecure_lower = {d.lower() for d in INSECURE_SECRET_DEFAULTS}
+            if lowered in insecure_lower or any(
+                default in lowered for default in insecure_lower if len(default) >= 8
+            ):
                 raise ValueError(
                     "SECRET_KEY uses an insecure default and is not allowed in production"
                 )
@@ -161,8 +180,17 @@ class Settings(BaseSettings):
                 raise ValueError("APP_DEBUG must be false in production")
             if len(self.secret_key) < 48:
                 raise ValueError("SECRET_KEY must be at least 48 characters in production")
+            if "*" in self.cors_allowed_origins or any(
+                o.strip() == "*" for o in self.cors_allowed_origins
+            ):
+                raise ValueError("Wildcard CORS origins are not allowed in production")
             if "localhost" in self.cors_allowed_origins and self.enable_hsts:
                 raise ValueError("Production HSTS with localhost CORS origins is unsafe")
+            if self.initial_admin_password in INSECURE_BOOTSTRAP_PASSWORD_DEFAULTS:
+                raise ValueError(
+                    "INITIAL_ADMIN_PASSWORD uses a development/default value and is not "
+                    "allowed in production"
+                )
         return self
 
     @property

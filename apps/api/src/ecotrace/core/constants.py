@@ -23,8 +23,17 @@ INSECURE_SECRET_DEFAULTS: Final[frozenset[str]] = frozenset(
     {
         "change-me",
         "change-me-to-a-long-random-secret-at-least-32-chars",
-        "secret",
-        "password",
         "dev-secret",
+        "replace-with-a-long-random-secret-at-least-48-characters",
+    }
+)
+# Known development / example bootstrap passwords — forbidden when APP_ENV=production.
+INSECURE_BOOTSTRAP_PASSWORD_DEFAULTS: Final[frozenset[str]] = frozenset(
+    {
+        "EcoTraceAdmin!2024",
+        "EcoTraceOrgAdmin!2024",
+        "EcoTraceAnalyst!2024",
+        "EcoTraceViewer!2024",
+        "replace-with-strong-password",
     }
 )

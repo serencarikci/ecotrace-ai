@@ -1,107 +1,42 @@
 # CBAM Frontend Feature Map
 
-Proposed location: `apps/web/src/app/features/cbam/`
-
-Follow existing Angular 19 standalone + lazy routes + role guards patterns (`app.routes.ts`, `roles.util.ts`).
+> **DEPRECATED as route authority (2026-09).**  
+> Use [user-guide/README.md](user-guide/README.md) and [technical-ui-data-traceability.md](technical-ui-data-traceability.md) for current screens.  
+> This file is retained only as historical proposal context. Do not treat listed routes below as implemented unless they appear in `apps/web/src/app/app.routes.ts`.
 
 **UI language note:** Navigation and page titles may show **SKDM**; code, routes, and API clients use `cbam`.
 
-**Phase 1:** lazy shell at `app/cbam` (Turkish title **SKDM**) is implemented. It states that calculation/reporting are not implemented yet. Sub-routes below remain map-only.
+## Implemented routes (authoritative)
 
-## Canonical naming
+From `app.routes.ts`:
 
-| Concept | UI / code label |
-|---------|-----------------|
-| Activity entity | **CBAM activity records** (API `activity-records`, domain `CbamActivityRecord`) |
-| Do not use as entity name | `CbamActivityData`, `CbamActivity` |
+| Route | Component |
+|-------|-----------|
+| `/app/cbam` | `CbamShellComponent` |
+| `/app/cbam/installations` | `CbamInstallationListComponent` |
+| `/app/cbam/installations/new` | `CbamInstallationFormComponent` |
+| `/app/cbam/installations/:installationId` | `CbamInstallationDetailComponent` |
+| `/app/cbam/periods` | `CbamPeriodListComponent` |
+| `/app/cbam/periods/:bindingId` | `CbamPeriodDetailComponent` |
 
-## Route structure (proposed)
+Period detail hosts these tabs (exact UI labels): Product Profiles, Production, Activities, Direct Emissions, Indirect Emissions, Processes, Purchased Inputs, Product Results, Allocation, Factors, Calculation, Report / Excel.
 
-Under authenticated shell `app/`:
+Embedded child UIs (implemented — do not document as missing): monthly allocation data, stationary combustion, purchased electricity, production processes, purchased precursors, product embedded emissions (PEE V2), direct/indirect emissions allocation, Official SEE Excel (readiness / generate / history / download).
 
-```
-app/cbam
-  app/cbam/installations
-  app/cbam/installations/new
-  app/cbam/installations/:installationId
-  app/cbam/installations/:installationId/setup
-  app/cbam/installations/:installationId/processes
-  app/cbam/installations/:installationId/processes/:processId
-  app/cbam/installations/:installationId/routes
-  app/cbam/installations/:installationId/routes/:routeId
-  app/cbam/product-profiles
-  app/cbam/product-profiles/:profileId/versions
-  app/cbam/periods
-  app/cbam/periods/:bindingId
-  app/cbam/periods/:bindingId/dashboard
-  app/cbam/periods/:bindingId/configuration   # read-only selected/snapshotted process/route refs
-  app/cbam/periods/:bindingId/activity-records
-  app/cbam/periods/:bindingId/inventory
-  app/cbam/periods/:bindingId/precursors
-  app/cbam/periods/:bindingId/allocation
-  app/cbam/periods/:bindingId/shipments
-  app/cbam/periods/:bindingId/evidence
-  app/cbam/periods/:bindingId/validation
-  app/cbam/periods/:bindingId/calculations
-  app/cbam/periods/:bindingId/calculations/:runId
-  app/cbam/periods/:bindingId/calculations/:runId/trace
-  app/cbam/periods/:bindingId/approvals
-  app/cbam/periods/:bindingId/reports
-  app/cbam/periods/:bindingId/verification-package
-  app/cbam/reference
-```
+**Not blocked:** Official SEE Excel export is present on the Report / Excel tab. Runtime requires LibreOffice **26.8** on the API host (TDF image). GitHub CI does not claim golden LibreOffice parity yet.
 
-### Ownership alignment (F-05)
+## Permissions
 
-- Process and route **setup** is **installation-scoped**.
-- Reporting-period screens may **display** selected or snapshotted configuration; they must **not** redefine process/route master ownership.
+- View CBAM screens: roles covered by `canViewCbam` / viewer+analyst+manager+admin patterns (`cbam:view` enforced on API)
+- Configure / mutate: `canConfigureCbam` → system admin, organization admin, sustainability manager (`cbam:configure` on API)
 
-Public routes: none for CBAM.
+## Historical proposal (not registered)
 
-## User roles (baseline)
+The following paths were proposed in earlier phases and are **not** present in `app.routes.ts`:
 
-Reuse existing roles; add `canReadCbam`, `canWriteCbam`, `canReviewCbam`, `canApproveCbam`, `canLockCbam` in a future `cbam-roles.util.ts` (final mapping D-019).
+- `/app/cbam/product-profiles` (standalone)
+- `/app/cbam/installations/:id/setup|processes|routes`
+- `/app/cbam/periods/:id/dashboard|configuration|shipments|evidence|validation|approvals|verification-package`
+- Standalone `/app/cbam/reference`
 
-| UI area | viewer | analyst | sustainability_manager | organization_admin | system_admin |
-|---------|--------|---------|------------------------|--------------------|--------------|
-| Dashboards / traces | R | R | R | R | R |
-| Data entry | — | RW | RW | RW | RW |
-| Expert review | — | — | RW | RW | RW |
-| Approve / lock | — | — | A/L* | A/L* | A/L* |
-| Unlock / revise | — | — | — | Y | Y |
-| Reference publish | — | — | — | — | Y |
-| Verifier read-only | structural support D-038 | | | | |
-
-\* Final approve/lock activation gated by **D-030** — UI must not present these as production-complete until resolved.
-
-## Navigation
-
-Shell nav group **SKDM** (feature-flagged): Tesisler (installations), Ürün profilleri, Dönemler, Referans (admin). Not under Carbon Inventories or LCA menus.
-
-## Screen map
-
-| Screen | Purpose |
-|--------|---------|
-| Installation setup wizard | Select facility → CBAM profile (D-041 pilot cardinality) |
-| Process & route setup | **Installation-scoped** masters, boundaries, flows |
-| Product profile versions | Temporal CN/AGC/FU versions (D-029) |
-| Reporting-period dashboard | Binding status, completeness, findings, latest run, CBAM lock state |
-| Period configuration (read-only) | Show snapshotted/selected process/route refs |
-| CBAM activity records | Typed entry; rejection reopen with history |
-| Inventory | Receipts, lots, consumptions, reversals |
-| Precursor collection | Lots, declarations, graph |
-| Allocation configuration | Applications; show `BLOCKED_DOMAIN` detail codes clearly |
-| Shipment management | Optional for product SEE; required for shipment SEE |
-| Evidence management | Per D-042 storage choice |
-| Validation & findings | |
-| Calculation trace | status `blocked` + detail code; navigate run→step→snapshot→source→evidence |
-| Approval & locking | Disabled/incomplete until D-030; revision reason modal |
-| Reports / verification package | |
-
-## UX constraints
-
-- Provenance badges (`actual` / `default` / `alternative_default`)
-- Disable edits when CBAM binding `locked` (independent of generic RP lock)
-- Never present corporate inventory or LCA/PCF totals as SKDM results
-- Empty catalogs: regulatory content awaits expert configuration
-- Do not label run status as `BLOCKED_DOMAIN`; show status `blocked` with detail code
+Do not document these as live operator screens.
