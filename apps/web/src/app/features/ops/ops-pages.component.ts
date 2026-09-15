@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { OpsApiService } from '../../core/services/ops-api.service';
+import { OpsApiService, OpsDto } from '../../core/services/ops-api.service';
 import { extractApiErrorMessage } from '../../core/services/error.util';
 
 const SHARED = [
@@ -56,9 +56,9 @@ function schedulePreview(expression: string): string {
             <a [routerLink]="['/app/automation', r.id]">{{ r.name }}</a>
             <span>{{ r.status }} · {{ r.triggerType }} · {{ r.actionType }}</span>
             <div class="row">
-              <button mat-button type="button" (click)="activate(r.id)">Activate</button>
-              <button mat-button type="button" (click)="pause(r.id)">Pause</button>
-              <button mat-button type="button" (click)="run(r.id)">Run now</button>
+              <button mat-button type="button" (click)="r.id && activate(r.id)">Activate</button>
+              <button mat-button type="button" (click)="r.id && pause(r.id)">Pause</button>
+              <button mat-button type="button" (click)="r.id && run(r.id)">Run now</button>
               <a mat-button [routerLink]="['/app/automation', r.id, 'executions']">History</a>
             </div>
           </li>
@@ -75,7 +75,7 @@ function schedulePreview(expression: string): string {
 })
 export class AutomationListComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   readonly loading = signal(false);
   readonly error = signal('');
   ngOnInit() { this.load(); }
@@ -125,8 +125,8 @@ export class AutomationListComponent implements OnInit {
 export class AutomationFormComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly templates = signal<any[]>([]);
-  readonly rule = signal<any>(null);
+  readonly templates = signal<OpsDto[]>([]);
+  readonly rule = signal<OpsDto | null>(null);
   readonly error = signal('');
   id = '';
   templateCode = 'weekly_anomaly_scan';
@@ -154,7 +154,7 @@ export class AutomationFormComponent implements OnInit {
       name: this.name || this.templateCode,
       templateCode: this.templateCode,
     }).subscribe({
-      next: (r) => (window.location.href = `/app/automation/${r.id}`),
+      next: (r) => (window.location.href = `/app/automation/${r.id ?? ''}`),
       error: (e) => this.error.set(extractApiErrorMessage(e)),
     });
   }
@@ -176,7 +176,7 @@ export class AutomationFormComponent implements OnInit {
 export class AutomationExecutionsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   readonly error = signal('');
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -210,7 +210,7 @@ export class AutomationExecutionsComponent implements OnInit {
 })
 export class AgentsListComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly agents = signal<any[]>([]);
+  readonly agents = signal<OpsDto[]>([]);
   readonly error = signal('');
   ngOnInit() {
     this.api.listAgents().subscribe({
@@ -249,8 +249,8 @@ export class AgentsListComponent implements OnInit {
 export class AgentDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly agent = signal<any>(null);
-  readonly result = signal<any>(null);
+  readonly agent = signal<OpsDto | null>(null);
+  readonly result = signal<OpsDto | null>(null);
   readonly error = signal('');
   prompt = 'Summarize current sustainability status using allowlisted tools.';
   ngOnInit() {
@@ -286,7 +286,7 @@ export class AgentDetailComponent implements OnInit {
 })
 export class AgentExecutionsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.listExecutions().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -305,7 +305,7 @@ export class AgentExecutionsComponent implements OnInit {
 export class AgentExecutionDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly item = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
   ngOnInit() {
     this.api.getExecution(this.route.snapshot.paramMap.get('id')!).subscribe({ next: (r) => this.item.set(r) });
   }
@@ -325,11 +325,11 @@ export class AgentExecutionDetailComponent implements OnInit {
           <p>Risk: {{ r.riskLevel }} · Status: {{ r.status }}</p>
           <pre>{{ r.proposedChanges | json }}</pre>
           @if (r.status === 'pending') {
-            <button mat-flat-button color="primary" type="button" (click)="approve(r.id)">Approve</button>
-            <button mat-stroked-button type="button" (click)="reject(r.id)">Reject</button>
+            <button mat-flat-button color="primary" type="button" (click)="r.id && approve(r.id)">Approve</button>
+            <button mat-stroked-button type="button" (click)="r.id && reject(r.id)">Reject</button>
           }
           @if (r.status === 'approved') {
-            <button mat-flat-button type="button" (click)="execute(r.id)">Execute approved action</button>
+            <button mat-flat-button type="button" (click)="r.id && execute(r.id)">Execute approved action</button>
           }
         </article>
       }
@@ -339,7 +339,7 @@ export class AgentExecutionDetailComponent implements OnInit {
 })
 export class AgentApprovalsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   readonly error = signal('');
   ngOnInit() { this.reload(); }
   reload() { this.api.listActionRequests().subscribe({ next: (r) => this.items.set(r), error: (e) => this.error.set(extractApiErrorMessage(e)) }); }
@@ -368,7 +368,7 @@ export class AgentApprovalsComponent implements OnInit {
 })
 export class AnomaliesComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.listAnomalies().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -391,7 +391,7 @@ export class AnomaliesComponent implements OnInit {
 export class AnomalyDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly item = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
   readonly error = signal('');
   ngOnInit() { this.reload(); }
   reload() {
@@ -412,7 +412,7 @@ export class AnomalyDetailComponent implements OnInit {
       @for (r of items(); track r.id) {
         <div class="surface-card">
           <strong>{{ r.name }}</strong> · {{ r.detectionMethod }}
-          <button mat-button type="button" (click)="run(r.id)">Run</button>
+          <button mat-button type="button" (click)="r.id && run(r.id)">Run</button>
         </div>
       }
     </section>
@@ -420,7 +420,7 @@ export class AnomalyDetailComponent implements OnInit {
 })
 export class AnomalyRulesComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.listAnomalyRules().subscribe({ next: (r) => this.items.set(r) }); }
   run(id: string) { this.api.runAnomalyRule(id).subscribe(); }
 }
@@ -448,7 +448,7 @@ export class AnomalyRulesComponent implements OnInit {
 })
 export class ForecastsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.listForecasts().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -489,8 +489,8 @@ export class ForecastFormComponent implements OnInit {
   code = '';
   name = '';
   method = 'linear_trend';
-  readonly item = signal<any>(null);
-  readonly runResult = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
+  readonly runResult = signal<OpsDto | null>(null);
   readonly error = signal('');
   readonly insufficient = signal(false);
   ngOnInit() {
@@ -499,7 +499,7 @@ export class ForecastFormComponent implements OnInit {
   }
   create() {
     this.api.createForecast({ code: this.code, name: this.name, method: this.method, metricType: 'total_emissions' }).subscribe({
-      next: (r) => (window.location.href = `/app/forecasts/${r.id}`),
+      next: (r) => (window.location.href = `/app/forecasts/${r.id ?? ''}`),
       error: (e) => this.error.set(extractApiErrorMessage(e)),
     });
   }
@@ -536,15 +536,15 @@ export class ForecastFormComponent implements OnInit {
 export class ForecastResultsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly runs = signal<any[]>([]);
-  readonly points = signal<any[]>([]);
-  readonly trajectory = signal<any[]>([]);
+  readonly runs = signal<OpsDto[]>([]);
+  readonly points = signal<OpsDto[]>([]);
+  readonly trajectory = signal<OpsDto[]>([]);
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.api.forecastRuns(id).subscribe({
       next: (runs) => {
         this.runs.set(runs);
-        if (runs[0]?.id) this.api.forecastPoints(runs[0].id).subscribe({ next: (p) => this.points.set(p) });
+        if (runs[0]?.id) this.api.forecastPoints(runs[0].id as string).subscribe({ next: (p) => this.points.set(p) });
       },
     });
     this.api.targetTrajectory().subscribe({ next: (t) => this.trajectory.set(t) });
@@ -569,7 +569,7 @@ export class ForecastResultsComponent implements OnInit {
 })
 export class DataQualityComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.reload(); }
   reload() { this.api.dqIssues().subscribe({ next: (r) => this.items.set(r) }); }
   scan() { this.api.dqScan().subscribe({ next: () => this.reload() }); }
@@ -590,7 +590,7 @@ export class DataQualityComponent implements OnInit {
 export class DataQualityDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly item = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
   ngOnInit() { this.api.dqIssue(this.route.snapshot.paramMap.get('id')!).subscribe({ next: (r) => this.item.set(r) }); }
   resolve() { this.api.dqResolve(this.route.snapshot.paramMap.get('id')!, 'Resolved').subscribe({ next: (r) => this.item.set(r) }); }
 }
@@ -612,7 +612,7 @@ export class DataQualityDetailComponent implements OnInit {
 })
 export class AlertsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.listAlerts().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -632,7 +632,7 @@ export class AlertsComponent implements OnInit {
 export class AlertDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly item = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
   ngOnInit() { this.reload(); }
   reload() { this.api.getAlert(this.route.snapshot.paramMap.get('id')!).subscribe({ next: (r) => this.item.set(r) }); }
   ack() { this.api.ackAlert(this.route.snapshot.paramMap.get('id')!).subscribe({ next: () => this.reload() }); }
@@ -650,7 +650,7 @@ export class AlertDetailComponent implements OnInit {
       <a mat-button routerLink="/app/notification-settings">Settings</a>
       <ul>
         @for (n of items(); track n.id) {
-          <li>{{ n.title }} · {{ n.status }} <button mat-button type="button" (click)="read(n.id)">Read</button></li>
+          <li>{{ n.title }} · {{ n.status }} <button mat-button type="button" (click)="n.id && read(n.id)">Read</button></li>
         }
       </ul>
     </section>
@@ -658,7 +658,7 @@ export class AlertDetailComponent implements OnInit {
 })
 export class NotificationsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.reload(); }
   reload() { this.api.notifications().subscribe({ next: (r) => this.items.set(r) }); }
   read(id: string) { this.api.markRead(id).subscribe({ next: () => this.reload() }); }
@@ -688,9 +688,9 @@ export class NotificationsComponent implements OnInit {
 })
 export class NotificationSettingsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly prefs = signal<any>(null);
+  readonly prefs = signal<OpsDto | null>(null);
   minSeverity = 'medium';
-  ngOnInit() { this.api.getPrefs().subscribe({ next: (p) => { this.prefs.set(p); this.minSeverity = p?.minimumSeverity || 'medium'; } }); }
+  ngOnInit() { this.api.getPrefs().subscribe({ next: (p) => { this.prefs.set(p); this.minSeverity = p?.minimumSeverity ?? 'medium'; } }); }
   save() { this.api.updatePrefs({ minimumSeverity: this.minSeverity }).subscribe({ next: (p) => this.prefs.set(p) }); }
 }
 
@@ -708,7 +708,7 @@ export class NotificationSettingsComponent implements OnInit {
           <li>
             <a [routerLink]="['/app/scheduled-reports', r.id]">{{ r.name }}</a>
             · next {{ r.nextGenerationAt || 'n/a' }}
-            <button mat-button type="button" (click)="run(r.id)">Run</button>
+            <button mat-button type="button" (click)="r.id && run(r.id)">Run</button>
           </li>
         }
       </ul>
@@ -717,7 +717,7 @@ export class NotificationSettingsComponent implements OnInit {
 })
 export class ScheduledReportsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.reload(); }
   reload() { this.api.scheduledReports().subscribe({ next: (r) => this.items.set(r) }); }
   run(id: string) { this.api.runScheduled(id).subscribe({ next: () => this.reload() }); }
@@ -751,14 +751,14 @@ export class ScheduledReportFormComponent implements OnInit {
   id = '';
   code = '';
   name = '';
-  readonly item = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id') || '';
     if (this.id) this.api.getScheduledReport(this.id).subscribe({ next: (r) => this.item.set(r) });
   }
   create() {
     this.api.createScheduledReport({ code: this.code, name: this.name, scheduleExpression: 'monthly', outputFormat: 'json' }).subscribe({
-      next: (r) => (window.location.href = `/app/scheduled-reports/${r.id}`),
+      next: (r) => (window.location.href = `/app/scheduled-reports/${r.id ?? ''}`),
     });
   }
   activate() { this.api.activateScheduled(this.id).subscribe({ next: (r) => this.item.set(r) }); }
@@ -783,7 +783,7 @@ export class ScheduledReportFormComponent implements OnInit {
 })
 export class GeneratedReportsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.generatedReports().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -802,7 +802,7 @@ export class GeneratedReportsComponent implements OnInit {
 export class GeneratedReportDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly item = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
   ngOnInit() { this.api.getGenerated(this.route.snapshot.paramMap.get('id')!).subscribe({ next: (r) => this.item.set(r) }); }
   download() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -837,7 +837,7 @@ export class GeneratedReportDetailComponent implements OnInit {
 })
 export class SupplierMonitoringComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.supplierMonitoring().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -859,8 +859,8 @@ export class SupplierMonitoringComponent implements OnInit {
 export class SupplierMonitoringDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly profile = signal<any>(null);
-  readonly assessments = signal<any[]>([]);
+  readonly profile = signal<OpsDto | null>(null);
+  readonly assessments = signal<OpsDto[]>([]);
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('supplierId')!;
     this.api.supplierProfile(id).subscribe({ next: (r) => this.profile.set(r) });
@@ -895,7 +895,7 @@ const REG_DISCLAIMER =
 export class RegulatoryListComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   readonly disclaimer = REG_DISCLAIMER;
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.regulatoryDocs().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -915,7 +915,7 @@ export class RegulatoryDetailComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   private readonly route = inject(ActivatedRoute);
   readonly disclaimer = REG_DISCLAIMER;
-  readonly item = signal<any>(null);
+  readonly item = signal<OpsDto | null>(null);
   ngOnInit() { this.api.regulatoryDoc(this.route.snapshot.paramMap.get('id')!).subscribe({ next: (r) => this.item.set(r) }); }
 }
 
@@ -931,8 +931,8 @@ export class RegulatoryDetailComponent implements OnInit {
       @for (a of items(); track a.id) {
         <article class="surface-card">
           <pre>{{ a | json }}</pre>
-          <button mat-button type="button" (click)="review(a.id, 'applicable')">Mark applicable</button>
-          <button mat-button type="button" (click)="review(a.id, 'not_applicable')">Not applicable</button>
+          <button mat-button type="button" (click)="a.id && review(a.id, 'applicable')">Mark applicable</button>
+          <button mat-button type="button" (click)="a.id && review(a.id, 'not_applicable')">Not applicable</button>
         </article>
       }
     </section>
@@ -941,7 +941,7 @@ export class RegulatoryDetailComponent implements OnInit {
 export class RegulatoryAssessmentsComponent implements OnInit {
   private readonly api = inject(OpsApiService);
   readonly disclaimer = REG_DISCLAIMER;
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.reload(); }
   reload() { this.api.regulatoryAssessments().subscribe({ next: (r) => this.items.set(r) }); }
   scan() { this.api.scanRegulatory().subscribe({ next: () => this.reload() }); }
@@ -961,7 +961,7 @@ export class RegulatoryAssessmentsComponent implements OnInit {
 })
 export class JobMonitoringComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly items = signal<any[]>([]);
+  readonly items = signal<OpsDto[]>([]);
   ngOnInit() { this.api.listJobs().subscribe({ next: (r) => this.items.set(r) }); }
 }
 
@@ -981,8 +981,8 @@ export class JobMonitoringComponent implements OnInit {
 })
 export class SystemHealthComponent implements OnInit {
   private readonly api = inject(OpsApiService);
-  readonly health = signal<any>(null);
-  readonly version = signal<any>(null);
+  readonly health = signal<OpsDto | null>(null);
+  readonly version = signal<OpsDto | null>(null);
   readonly error = signal('');
   ngOnInit() { this.load(); }
   load() {

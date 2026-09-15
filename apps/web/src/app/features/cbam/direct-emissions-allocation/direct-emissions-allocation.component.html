@@ -1,0 +1,620 @@
+<section
+  class="dea-panel"
+  aria-labelledby="dea-heading"
+  data-testid="direct-emissions-allocation"
+>
+  <h2 id="dea-heading">Direct emissions allocation</h2>
+  <p class="help-text">
+    Allocate facility fossil CO2 from stationary combustion to CBAM products for this period.
+    Totals come from the server. This screen does not recalculate allocation math in the browser.
+  </p>
+  <p class="help-text unit-note">
+    Primary stored unit: tCO2. The Excel report may show this value as tCO2e. For fossil CO2, the
+    value is the same.
+  </p>
+
+  <div class="sr-only" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="36" aria-label="Loading direct emissions allocation"></mat-spinner>
+    </div>
+  } @else if (loadError()) {
+    <p class="error-text" role="alert">{{ loadError() }}</p>
+    <button mat-stroked-button type="button" (click)="reload()">Retry</button>
+  } @else {
+    @if (readiness(); as ready) {
+    <section class="surface-card readiness-section" aria-labelledby="dea-readiness-heading">
+      <h3 id="dea-readiness-heading">Allocation readiness</h3>
+      <p
+        class="readiness-status"
+        [attr.data-ready]="ready.allocationReady"
+        role="status"
+      >
+        <span class="status-text">{{ ready.allocationReady ? 'Ready' : 'Not ready' }}</span>
+      </p>
+      <p class="readiness-message">
+        @if (ready.allocationReady) {
+          Your data is ready for allocation.
+        } @else {
+          Complete the required data before allocation.
+        }
+      </p>
+
+      <dl class="readonly-grid readiness-grid">
+        <div>
+          <dt>Direct emissions status</dt>
+          <dd>{{ subsystemLabel(ready.stationaryCombustionStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Monthly data status</dt>
+          <dd>{{ subsystemLabel(ready.monthlyProductionBasisStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Production data status</dt>
+          <dd>{{ subsystemLabel(ready.productionProfileStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Reconciliation status</dt>
+          <dd>{{ subsystemLabel(ready.productionReconciliationStatus) }}</dd>
+        </div>
+        <div>
+          <dt>Source record count</dt>
+          <dd>{{ ready.sourceResultCount }}</dd>
+        </div>
+        <div>
+          <dt>Month count</dt>
+          <dd>{{ ready.monthCount }}</dd>
+        </div>
+        <div>
+          <dt>Fuel count</dt>
+          <dd>{{ ready.fuelCount }}</dd>
+        </div>
+        <div>
+          <dt>Product count</dt>
+          <dd>{{ ready.productProfileGroupCount }}</dd>
+        </div>
+      </dl>
+
+      @if (ready.blockingIssueCodes.length > 0) {
+        <div class="blocking-issues" role="alert">
+          <h4>Blocking issues</h4>
+          <ul>
+            @for (code of ready.blockingIssueCodes; track code) {
+              <li>{{ issueMessage(code) }}</li>
+            }
+          </ul>
+          <div class="nav-links">
+            <button
+              mat-button
+              type="button"
+              (click)="goToDirectEmissions.emit()"
+              aria-label="Go to Direct Emissions tab"
+            >
+              Direct Emissions
+            </button>
+            <button
+              mat-button
+              type="button"
+              (click)="goToProduction.emit()"
+              aria-label="Go to Production tab"
+            >
+              Production
+            </button>
+            <button
+              mat-button
+              type="button"
+              (click)="goToMonthlyAllocationData.emit()"
+              aria-label="Go to Monthly allocation data"
+            >
+              Monthly allocation data
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (canConfigure() && canMutate()) {
+        <div class="actions">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="!canExecute()"
+            (click)="executeAllocation()"
+            [attr.aria-label]="executeButtonLabel()"
+          >
+            @if (submitting()) {
+              Working…
+            } @else {
+              {{ executeButtonLabel() }}
+            }
+          </button>
+        </div>
+      } @else if (canConfigure() && !canMutate()) {
+        <p class="help-text">This period is not writable. Allocation cannot be run.</p>
+      }
+    </section>
+
+    @if (actionError()) {
+      <p class="error-text" role="alert" aria-live="assertive">{{ actionError() }}</p>
+    }
+    @if (successMessage()) {
+      <p class="success-text" role="status" aria-live="polite">{{ successMessage() }}</p>
+    }
+
+    @if (summary(); as sum) {
+      <section class="surface-card summary-section" aria-labelledby="dea-summary-heading">
+        <h3 id="dea-summary-heading">Current allocation summary</h3>
+        @if (!sum.currentResultId) {
+          <p class="empty-state">No allocation has been calculated yet.</p>
+        } @else {
+          @if (sum.currentIsStale) {
+            <p class="stale-banner" role="status">
+              The source data changed after this allocation. Update the allocation to use the latest
+              data.
+            </p>
+            @if (sum.staleReasonCodes.length > 0) {
+              <ul class="stale-reasons">
+                @for (code of sum.staleReasonCodes; track code) {
+                  <li>{{ staleReasonMessage(code) }}</li>
+                }
+              </ul>
+            }
+          }
+          <dl class="readonly-grid">
+            <div>
+              <dt>Facility fossil CO2</dt>
+              <dd>
+                {{ formatDecimal(sum.facilityFossilCo2Tonnes) }}
+                {{ sum.resultUnit || 'tCO2' }}
+              </dd>
+            </div>
+            <div>
+              <dt>CBAM fossil CO2</dt>
+              <dd>
+                {{ formatDecimal(sum.cbamFossilCo2Tonnes) }}
+                {{ sum.resultUnit || 'tCO2' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Non-CBAM fossil CO2</dt>
+              <dd>
+                {{ formatDecimal(sum.nonCbamFossilCo2Tonnes) }}
+                {{ sum.resultUnit || 'tCO2' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Allocated fossil CO2</dt>
+              <dd>
+                {{ formatDecimal(sum.allocatedFossilCo2Tonnes) }}
+                {{ sum.resultUnit || 'tCO2' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Remaining amount</dt>
+              <dd>
+                {{ formatDecimal(sum.remainingFossilCo2Tonnes) }}
+                {{ sum.resultUnit || 'tCO2' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Balance status</dt>
+              <dd class="status-text">{{ balanceLabel(sum.balanceStatus) }}</dd>
+            </div>
+          </dl>
+        }
+      </section>
+    }
+
+    <section class="surface-card history-section" aria-labelledby="dea-history-heading">
+      <h3 id="dea-history-heading">Allocation history</h3>
+      @if (results().length === 0) {
+        <p class="empty-state">No allocation results yet.</p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="results()" class="full-width history-table">
+            <ng-container matColumnDef="created">
+              <th mat-header-cell *matHeaderCellDef>Created</th>
+              <td mat-cell *matCellDef="let r">{{ r.createdAt | date: 'short' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let r">
+                <span class="status-text">{{ lifecycleLabel(r.isCurrent, r.isStale) }}</span>
+                ·
+                <span class="status-text">{{ executionLabel(r.status) }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="cbam">
+              <th mat-header-cell *matHeaderCellDef>CBAM fossil CO2</th>
+              <td mat-cell *matCellDef="let r">
+                {{ formatDecimal(r.cbamFossilCo2Tonnes) }} {{ r.resultUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="allocated">
+              <th mat-header-cell *matHeaderCellDef>Allocated fossil CO2</th>
+              <td mat-cell *matCellDef="let r">
+                {{ formatDecimal(r.allocatedFossilCo2Tonnes) }} {{ r.resultUnit }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="balance">
+              <th mat-header-cell *matHeaderCellDef>Balance</th>
+              <td mat-cell *matCellDef="let r">
+                <span class="status-text">{{ balanceLabel(r.balanceStatus) }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Action</th>
+              <td mat-cell *matCellDef="let r">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="viewDetails(r.resultId)"
+                  [attr.aria-label]="'View details for allocation created ' + r.createdAt"
+                >
+                  View details
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: historyColumns"></tr>
+          </table>
+        </div>
+
+        <div class="mobile-cards" aria-label="Allocation history cards">
+          @for (r of results(); track r.resultId) {
+            <article class="history-card">
+              <p><strong>Created:</strong> {{ r.createdAt | date: 'short' }}</p>
+              <p>
+                <strong>Status:</strong>
+                <span class="status-text">{{ lifecycleLabel(r.isCurrent, r.isStale) }}</span>
+                ·
+                <span class="status-text">{{ executionLabel(r.status) }}</span>
+              </p>
+              <p>
+                <strong>CBAM fossil CO2:</strong>
+                {{ formatDecimal(r.cbamFossilCo2Tonnes) }} {{ r.resultUnit }}
+              </p>
+              <p>
+                <strong>Allocated fossil CO2:</strong>
+                {{ formatDecimal(r.allocatedFossilCo2Tonnes) }} {{ r.resultUnit }}
+              </p>
+              <p>
+                <strong>Balance:</strong>
+                <span class="status-text">{{ balanceLabel(r.balanceStatus) }}</span>
+              </p>
+              <button
+                mat-button
+                type="button"
+                (click)="viewDetails(r.resultId)"
+                [attr.aria-label]="'View details for allocation created ' + r.createdAt"
+              >
+                View details
+              </button>
+            </article>
+          }
+        </div>
+
+        <mat-paginator
+          [length]="resultsTotal()"
+          [pageIndex]="resultsPage() - 1"
+          [pageSize]="resultsPageSize()"
+          [pageSizeOptions]="[5, 10, 20]"
+          (page)="onHistoryPage($event)"
+          aria-label="Allocation history pages"
+        />
+      }
+    </section>
+
+    <section class="surface-card detail-section" aria-labelledby="dea-detail-heading">
+      <h3 id="dea-detail-heading">Allocation detail</h3>
+      @if (detailLoading()) {
+        <div class="loading-state" role="status" aria-live="polite">
+          <mat-spinner diameter="28" aria-label="Loading allocation detail"></mat-spinner>
+        </div>
+      } @else if (detailError()) {
+        <p class="error-text" role="alert">{{ detailError() }}</p>
+      } @else {
+        @if (selectedDetail(); as detail) {
+        <p class="detail-status status-text">
+          {{ lifecycleLabel(detail.isCurrent, detail.isStale) }}
+          · {{ executionLabel(detail.status) }}
+          · {{ balanceLabel(detail.balanceStatus) }}
+        </p>
+
+        <div class="detail-accordion">
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('overview')"
+            (click)="toggleSection('overview')"
+          >
+            Overview
+          </button>
+          @if (isSectionOpen('overview')) {
+            <div class="section-body" role="region" aria-label="Overview">
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Facility fossil CO2</dt>
+                  <dd>
+                    {{ formatDecimal(detail.facilityFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>CBAM fossil CO2</dt>
+                  <dd>
+                    {{ formatDecimal(detail.cbamFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Non-CBAM fossil CO2</dt>
+                  <dd>
+                    {{ formatDecimal(detail.nonCbamFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Allocated fossil CO2</dt>
+                  <dd>
+                    {{ formatDecimal(detail.allocatedFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Remaining amount</dt>
+                  <dd>
+                    {{ formatDecimal(detail.remainingFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('monthly')"
+            (click)="toggleSection('monthly')"
+          >
+            Monthly attribution
+          </button>
+          @if (isSectionOpen('monthly')) {
+            <div class="section-body" role="region" aria-label="Monthly attribution">
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Month</th>
+                      <th scope="col">Total production</th>
+                      <th scope="col">Importer amount</th>
+                      <th scope="col">Monthly share</th>
+                      <th scope="col">CBAM CO2</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of detail.monthlyBasis; track m.basisRecordId) {
+                      <tr>
+                        <td>{{ formatMonth(m.monthStart) }}</td>
+                        <td>
+                          {{ formatDecimal(m.totalProductionQuantity) }} {{ m.quantityUnit }}
+                        </td>
+                        <td>{{ formatDecimal(m.cbamQuantity) }} {{ m.quantityUnit }}</td>
+                        <td>{{ formatDecimal(m.monthlyShareRaw) }}</td>
+                        <td>
+                          {{
+                            formatDecimal(monthTotal(detail.totalsByMonth, m.monthStart))
+                          }}
+                          {{ detail.resultUnit }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('fuels')"
+            (click)="toggleSection('fuels')"
+          >
+            Fuels
+          </button>
+          @if (isSectionOpen('fuels')) {
+            <div class="section-body" role="region" aria-label="Fuels">
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Fuel</th>
+                      <th scope="col">Source quantity</th>
+                      <th scope="col">Energy</th>
+                      <th scope="col">Facility CO2</th>
+                      <th scope="col">CBAM CO2</th>
+                      <th scope="col">Non-CBAM CO2</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (s of detail.sourceCalculations; track s.sourceResultId) {
+                      <tr>
+                        <td>{{ s.fuelName || s.fuelCode }}</td>
+                        <td>
+                          {{ formatDecimal(s.activityQuantity) }} {{ s.activityUnit }}
+                        </td>
+                        <td>{{ formatDecimal(s.facilityEnergyContentTj) }} TJ</td>
+                        <td>
+                          {{ formatDecimal(s.facilityFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(s.cbamFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                        </td>
+                        <td>
+                          {{ formatDecimal(s.nonCbamFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('products')"
+            (click)="toggleSection('products')"
+          >
+            Products
+          </button>
+          @if (isSectionOpen('products')) {
+            <div class="section-body" role="region" aria-label="Products">
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Product</th>
+                      <th scope="col">CN code</th>
+                      <th scope="col">Profile version</th>
+                      <th scope="col">Production quantity</th>
+                      <th scope="col">Allocation share</th>
+                      <th scope="col">Allocated fossil CO2</th>
+                      <th scope="col">Rounding adjustment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of detail.productAllocations; track p.productProfileVersionId) {
+                      <tr>
+                        <td>{{ p.productName }}</td>
+                        <td>{{ p.cnDisplayCode || p.cnNormalizedCode }}</td>
+                        <td>{{ p.profileVersion }}</td>
+                        <td>{{ formatDecimal(p.normalizedQuantityTonnes) }} t</td>
+                        <td>{{ formatDecimal(p.rawShare) }}</td>
+                        <td>
+                          {{ formatDecimal(p.finalAllocatedFossilCo2Tonnes) }}
+                          {{ p.resultUnit || detail.resultUnit }}
+                        </td>
+                        <td>{{ formatDecimal(p.roundingAdjustment) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('balance')"
+            (click)="toggleSection('balance')"
+          >
+            Balance
+          </button>
+          @if (isSectionOpen('balance')) {
+            <div class="section-body" role="region" aria-label="Balance">
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Allocated fossil CO2</dt>
+                  <dd>
+                    {{ formatDecimal(detail.allocatedFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>CBAM fossil CO2</dt>
+                  <dd>
+                    {{ formatDecimal(detail.cbamFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Remaining amount</dt>
+                  <dd>
+                    {{ formatDecimal(detail.remainingFossilCo2Tonnes) }} {{ detail.resultUnit }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Balance status</dt>
+                  <dd class="status-text">{{ balanceLabel(detail.balanceStatus) }}</dd>
+                </div>
+              </dl>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('method')"
+            (click)="toggleSection('method')"
+          >
+            Method and sources
+          </button>
+          @if (isSectionOpen('method')) {
+            <div class="section-body" role="region" aria-label="Method and sources">
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Methodology</dt>
+                  <dd>{{ detail.methodologyCode }} {{ detail.methodologyVersion }}</dd>
+                </div>
+                <div>
+                  <dt>Workbook</dt>
+                  <dd>{{ detail.workbookFilename }}</dd>
+                </div>
+                <div>
+                  <dt>Workbook formula refs</dt>
+                  <dd>{{ detail.workbookFormulaRefs }}</dd>
+                </div>
+                <div>
+                  <dt>Result unit</dt>
+                  <dd>{{ detail.resultUnit }}</dd>
+                </div>
+                <div>
+                  <dt>Workbook reporting unit</dt>
+                  <dd>{{ detail.workbookReportingUnit }}</dd>
+                </div>
+              </dl>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="section-toggle"
+            [attr.aria-expanded]="isSectionOpen('audit')"
+            (click)="toggleSection('audit')"
+          >
+            Audit
+          </button>
+          @if (isSectionOpen('audit')) {
+            <div class="section-body" role="region" aria-label="Audit">
+              <dl class="readonly-grid">
+                <div>
+                  <dt>Result ID</dt>
+                  <dd>{{ detail.resultId }}</dd>
+                </div>
+                <div>
+                  <dt>Client request ID</dt>
+                  <dd>{{ detail.clientRequestId }}</dd>
+                </div>
+                <div>
+                  <dt>Created</dt>
+                  <dd>{{ detail.createdAt | date: 'medium' }}</dd>
+                </div>
+                <div>
+                  <dt>Created by</dt>
+                  <dd>{{ detail.createdByUserId || '—' }}</dd>
+                </div>
+                <div>
+                  <dt>Workbook SHA-256</dt>
+                  <dd class="mono">{{ detail.workbookSha256 }}</dd>
+                </div>
+              </dl>
+            </div>
+          }
+        </div>
+        } @else {
+          <p class="empty-state">Select a result to inspect details.</p>
+        }
+      }
+    </section>
+    }
+  }
+</section>

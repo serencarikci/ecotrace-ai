@@ -6,7 +6,7 @@ Follow existing Angular 19 standalone + lazy routes + role guards patterns (`app
 
 **UI language note:** Navigation and page titles may show **SKDM**; code, routes, and API clients use `cbam`.
 
-**Not implemented** — map only.
+**Phase 1:** lazy shell at `app/cbam` (Turkish title **SKDM**) is implemented. It states that calculation/reporting are not implemented yet. Sub-routes below remain map-only.
 
 ## Canonical naming
 

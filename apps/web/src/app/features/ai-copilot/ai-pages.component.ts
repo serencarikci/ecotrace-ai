@@ -49,8 +49,9 @@ import { extractApiErrorMessage } from '../../core/services/error.util';
             @for (c of conversations(); track c.id) {
               <a
                 mat-list-item
+                href="#"
                 [class.active]="c.id === activeConversationId()"
-                (click)="selectConversation(c.id)"
+                (click)="$event.preventDefault(); selectConversation(c.id)"
               >
                 <span matListItemTitle>{{ c.title }}</span>
                 <span matListItemLine>
@@ -85,7 +86,7 @@ import { extractApiErrorMessage } from '../../core/services/error.util';
               <pre class="content markdown">{{ m.content }}</pre>
               @if (m.role === 'assistant') {
                 <div class="meta">
-                  @if (m.confidence != null) {
+                  @if (m.confidence !== null && m.confidence !== undefined) {
                     <span>Confidence: {{ (m.confidence * 100 | number: '1.0-0') }}%</span>
                   }
                   <button mat-button type="button" (click)="copy(m.content)">Copy</button>

@@ -1,7 +1,41 @@
 from fastapi import APIRouter
-from ecotrace.api.v1 import activity_records, ai_copilot, analytics, attachments, auth, carbon_inventories, carbon_preferences, data_sources, digital_product_passports, emission_factor_sources, emission_factors, equipment, facilities, health, imports, lca_studies, materials, organizations, intelligence, product_carbon_footprints, production_lines, products, reference, reporting_periods, reports, scenarios, suppliers, sustainability_targets, system_ops
+
+from ecotrace.api.v1 import (
+    activity_records,
+    ai_copilot,
+    analytics,
+    attachments,
+    auth,
+    carbon_inventories,
+    carbon_preferences,
+    cbam,
+    data_sources,
+    digital_product_passports,
+    emission_factor_sources,
+    emission_factors,
+    equipment,
+    facilities,
+    health,
+    imports,
+    intelligence,
+    lca_studies,
+    materials,
+    organizations,
+    product_carbon_footprints,
+    production_lines,
+    products,
+    reference,
+    reporting_periods,
+    reports,
+    scenarios,
+    suppliers,
+    sustainability_targets,
+    system_ops,
+)
+
 api_router = APIRouter()
 api_router.include_router(auth.router)
+api_router.include_router(cbam.router)
 api_router.include_router(organizations.router)
 api_router.include_router(facilities.router)
 api_router.include_router(production_lines.router)

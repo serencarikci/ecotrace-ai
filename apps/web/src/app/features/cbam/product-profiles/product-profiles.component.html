@@ -1,0 +1,345 @@
+<div class="pp-panel">
+  <h2 class="pp-title">Product Profiles</h2>
+  <p class="help-text">
+    Classify products with official CN codes. Special fields come from the selected CN code.
+    Readiness is calculated by the server.
+  </p>
+
+  <div class="live-region" aria-live="polite">
+    @if (feedback()) {
+      <p class="feedback-text">{{ feedback() }}</p>
+    }
+    @if (errorMessage()) {
+      <p class="error-text" role="alert">{{ errorMessage() }}</p>
+    }
+  </div>
+
+  @if (productsLoading()) {
+    <div class="loading-state" aria-busy="true">
+      <mat-spinner diameter="36"></mat-spinner>
+      <span class="sr-only">Loading products</span>
+    </div>
+  } @else if (productsError()) {
+    <div class="error-block">
+      <p class="error-text" role="alert">{{ productsError() }}</p>
+      <button mat-stroked-button type="button" (click)="loadProducts()">Retry</button>
+    </div>
+  } @else if (products().length === 0) {
+    <div class="empty-state">
+      <p>No products are available.</p>
+      <a mat-stroked-button routerLink="/app/products">Open product management</a>
+    </div>
+  } @else {
+    <div class="pp-layout">
+      <aside class="pp-products" aria-label="Products">
+        <h3>Products</h3>
+        <ul class="product-list">
+          @for (product of products(); track product.id) {
+            <li>
+              <button
+                type="button"
+                class="product-item"
+                [class.selected]="selectedProductId() === product.id"
+                [attr.aria-current]="selectedProductId() === product.id ? 'true' : null"
+                (click)="selectProduct(product.id)"
+              >
+                <span class="product-code">{{ product.code }}</span>
+                <span class="product-name">{{ product.name }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </aside>
+
+      <section class="pp-detail" aria-label="Product profile detail">
+        @if (versionsLoading() || profileLoading()) {
+          <div class="loading-state" aria-busy="true">
+            <mat-spinner diameter="32"></mat-spinner>
+          </div>
+        }
+
+        @if (versionsError()) {
+          <div class="error-block">
+            <p class="error-text" role="alert">{{ versionsError() }}</p>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="selectedProductId() && loadVersions(selectedProductId()!)"
+            >
+              Retry
+            </button>
+          </div>
+        }
+
+        @if (!versionsLoading() && !versionsError() && versions().length === 0) {
+          <div class="empty-state">
+            <p>This product does not have a profile yet.</p>
+            @if (canConfigure()) {
+              <button mat-flat-button color="primary" type="button" (click)="createDraft()" [disabled]="saving()">
+                Create draft profile
+              </button>
+            }
+          </div>
+        }
+
+        @if (selectedProfile(); as profile) {
+          <div class="status-row">
+            <p>
+              <strong>Version</strong> {{ profile.version }}
+              ·
+              <span>{{ profileStatusLabel(profile.status) }}</span>
+              ·
+              <span>{{ readinessLabel(profile.classificationReady) }}</span>
+            </p>
+            @if (readinessSummary(); as summary) {
+              <p class="readiness-summary" [class.ready]="profile.classificationReady">
+                {{ summary }}
+              </p>
+            }
+            @if (!profile.classificationReady && profile.missingRequirements.length > 0) {
+              <ul class="issue-list" aria-label="Missing requirements">
+                @for (issue of profile.missingRequirements; track issue.code) {
+                  <li>{{ displayRequirement(issue) }}</li>
+                }
+              </ul>
+            }
+            @if (profile.validationIssues.length > 0) {
+              <ul class="issue-list" aria-label="Validation issues">
+                @for (issue of profile.validationIssues; track issue.code + issue.message) {
+                  <li>{{ displayRequirement(issue) }}</li>
+                }
+              </ul>
+            }
+          </div>
+
+          <form class="surface-card form-grid" [formGroup]="form" (ngSubmit)="saveDraft()">
+            <mat-form-field appearance="outline">
+              <mat-label>Profile name</mat-label>
+              <input matInput formControlName="productName" autocomplete="off" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>CN code</mat-label>
+              <input
+                matInput
+                formControlName="cnSearch"
+                [matAutocomplete]="cnAuto"
+                (input)="onCnSearchInput($any($event.target).value)"
+                autocomplete="off"
+                aria-autocomplete="list"
+              />
+              <mat-autocomplete #cnAuto="matAutocomplete" (optionSelected)="onCnSelected($event)">
+                @for (code of cnResults(); track code.id) {
+                  <mat-option [value]="code.id">{{ formatCnOption(code) }}</mat-option>
+                }
+              </mat-autocomplete>
+              @if (cnSearchLoading() || cnDetailLoading()) {
+                <mat-hint>Searching…</mat-hint>
+              } @else if (cnSearchError()) {
+                <mat-hint>{{ cnSearchError() }}</mat-hint>
+              } @else if (cnResults().length === 0 && form.controls.cnSearch.value.trim()) {
+                <mat-hint>No CN codes found.</mat-hint>
+              }
+            </mat-form-field>
+            @if (cnSearchError()) {
+              <button mat-stroked-button type="button" (click)="retryCnSearch()">Retry CN search</button>
+            }
+
+            @if (selectedCn(); as cn) {
+              <p class="muted cn-meta">
+                Selected: {{ cn.normalizedCode }} — {{ cn.descriptionEn }}
+                @if (cn.datasetVersion) {
+                  <span>(dataset {{ cn.datasetVersion }})</span>
+                }
+              </p>
+            }
+
+            @if (fieldApplicability().reducingAgent) {
+              <mat-form-field appearance="outline">
+                <mat-label>Reducing material</mat-label>
+                <mat-select formControlName="reducingAgent">
+                  <mat-option value="">—</mat-option>
+                  @for (opt of reducingAgents(); track opt.valueCode) {
+                    <mat-option [value]="opt.valueCode">{{ opt.valueLabel }}</mat-option>
+                  }
+                </mat-select>
+                @if (reducingAgentsLoading()) {
+                  <mat-hint>Loading options…</mat-hint>
+                } @else if (reducingAgentsError()) {
+                  <mat-hint>{{ reducingAgentsError() }}</mat-hint>
+                } @else if (reducingAgents().length === 0) {
+                  <mat-hint>No options are available.</mat-hint>
+                }
+              </mat-form-field>
+              @if (reducingAgentsError()) {
+                <button mat-stroked-button type="button" (click)="retryReducingAgents()">
+                  Retry reducing materials
+                </button>
+              }
+            }
+
+            @if (fieldApplicability().steelMillIdentificationNumber) {
+              <mat-form-field appearance="outline">
+                <mat-label>Steel mill ID</mat-label>
+                <input matInput formControlName="steelMillIdentificationNumber" autocomplete="off" />
+              </mat-form-field>
+            }
+
+            @if (fieldApplicability().percentMn) {
+              <mat-form-field appearance="outline">
+                <mat-label>Manganese (Mn), %</mat-label>
+                <input
+                  matInput
+                  formControlName="percentMn"
+                  inputmode="decimal"
+                  (input)="updatePercentWarning()"
+                />
+              </mat-form-field>
+            }
+            @if (fieldApplicability().percentCr) {
+              <mat-form-field appearance="outline">
+                <mat-label>Chromium (Cr), %</mat-label>
+                <input
+                  matInput
+                  formControlName="percentCr"
+                  inputmode="decimal"
+                  (input)="updatePercentWarning()"
+                />
+              </mat-form-field>
+            }
+            @if (fieldApplicability().percentNi) {
+              <mat-form-field appearance="outline">
+                <mat-label>Nickel (Ni), %</mat-label>
+                <input
+                  matInput
+                  formControlName="percentNi"
+                  inputmode="decimal"
+                  (input)="updatePercentWarning()"
+                />
+              </mat-form-field>
+            }
+            @if (fieldApplicability().percentOtherAlloys) {
+              <mat-form-field appearance="outline">
+                <mat-label>Other alloys, %</mat-label>
+                <input
+                  matInput
+                  formControlName="percentOtherAlloys"
+                  inputmode="decimal"
+                  (input)="updatePercentWarning()"
+                />
+              </mat-form-field>
+            }
+            @if (fieldApplicability().percentOtherMaterials) {
+              <mat-form-field appearance="outline">
+                <mat-label>Other materials, %</mat-label>
+                <input
+                  matInput
+                  formControlName="percentOtherMaterials"
+                  inputmode="decimal"
+                  (input)="updatePercentWarning()"
+                />
+              </mat-form-field>
+            }
+
+            @if (percentWarning()) {
+              <p class="warning-text" role="status">{{ percentWarning() }}</p>
+            }
+
+            <div class="date-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Valid from</mat-label>
+                <input matInput type="date" formControlName="validFrom" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Valid to</mat-label>
+                <input matInput type="date" formControlName="validTo" />
+              </mat-form-field>
+            </div>
+
+            @if (canConfigure()) {
+              <div class="actions">
+                @if (isDraft()) {
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="saving() || isReadOnly()"
+                  >
+                    Save draft
+                  </button>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="publish()"
+                    [disabled]="saving()"
+                  >
+                    Publish
+                  </button>
+                }
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="createNewVersion()"
+                  [disabled]="saving()"
+                >
+                  Create new version
+                </button>
+                @if (profile.status !== 'archived') {
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="archive()"
+                    [disabled]="saving()"
+                  >
+                    Archive
+                  </button>
+                }
+                @if (isDraft()) {
+                  <button mat-button type="button" (click)="cancelEdits()" [disabled]="saving()">
+                    Cancel
+                  </button>
+                }
+              </div>
+            }
+          </form>
+        }
+
+        <div class="history-block">
+          <h3>Version history</h3>
+          @if (!versionsLoading() && versions().length === 0) {
+            <p class="empty-state">No profile versions found.</p>
+          } @else if (versions().length > 0) {
+            <div class="table-wrap">
+              <table mat-table [dataSource]="versions()" class="full-width">
+                <ng-container matColumnDef="version">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Version</th>
+                  <td mat-cell *matCellDef="let row">{{ row.version }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Status</th>
+                  <td mat-cell *matCellDef="let row">{{ profileStatusLabel(row.status) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="cn">
+                  <th mat-header-cell *matHeaderCellDef scope="col">CN code</th>
+                  <td mat-cell *matCellDef="let row">{{ cnLabel(row) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="ready">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Classification</th>
+                  <td mat-cell *matCellDef="let row">{{ readinessLabel(row.classificationReady) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Actions</th>
+                  <td mat-cell *matCellDef="let row">
+                    <button mat-button type="button" (click)="selectProfile(row.id)">Open</button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="versionColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: versionColumns"></tr>
+              </table>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</div>

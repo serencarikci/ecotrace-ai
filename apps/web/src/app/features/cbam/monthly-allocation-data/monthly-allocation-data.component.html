@@ -1,0 +1,207 @@
+<section class="monthly-allocation" aria-labelledby="monthly-allocation-heading">
+  <h3 id="monthly-allocation-heading">Monthly allocation data</h3>
+  <p class="help-text">
+    Enter the total production and the amount sent to the importer for each month.
+  </p>
+  <p class="muted">These values are used to calculate the CBAM share for the month.</p>
+
+  <div class="sr-only" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (summaryLoading()) {
+    <div class="loading-state" role="status">
+      <mat-spinner diameter="36"></mat-spinner>
+      <span>Loading monthly data…</span>
+    </div>
+  }
+
+  @if (summaryError(); as err) {
+    <div class="error-text" role="alert">
+      <p>{{ err }}</p>
+      <button mat-button type="button" (click)="reload()">Retry</button>
+    </div>
+  }
+
+  @if (summary(); as s) {
+    <div class="summary-card" data-testid="monthly-allocation-summary">
+      <p>
+        <strong>{{ summaryReadyText() }}</strong>
+      </p>
+      <p class="muted">
+        Ready months: {{ s.completedMonthCount }} / {{ s.expectedMonthCount }}
+      </p>
+      @if (blockingMessages().length > 0) {
+        <ul class="issue-list">
+          @for (item of blockingMessages(); track item.code) {
+            <li>
+              {{ item.text }}
+              @if (item.text === 'More information is needed.') {
+                <span class="muted"> ({{ item.code }})</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+      @if (combustionItems().length > 0) {
+        <div class="compat-block">
+          <h4>Fuel record checks</h4>
+          <ul class="issue-list">
+            @for (item of combustionItems(); track item.activityRecordId) {
+              @for (code of item.issueCodes; track code) {
+                <li>{{ issueMessage(code) }}</li>
+              }
+            }
+          </ul>
+          <button mat-button type="button" (click)="openDirectEmissions()">
+            Open Direct Emissions
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="month-list">
+      @for (row of monthRows(); track row.monthStart) {
+        <article class="month-card" [attr.data-month]="row.monthStart">
+          <header class="month-card-header">
+            <h4>{{ monthLabel(row.monthStart) }}</h4>
+            <p class="status-text">{{ coverageLabel(row.coverage) }}</p>
+          </header>
+
+          @if (editingMonth() === row.monthStart) {
+            <form class="month-form" [formGroup]="editForm" (ngSubmit)="saveMonth(row)">
+              <mat-form-field appearance="outline">
+                <mat-label>Total production</mat-label>
+                <input
+                  matInput
+                  formControlName="totalProductionQuantity"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  [attr.aria-label]="'Total production for ' + monthLabel(row.monthStart)"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Amount sent to the importer</mat-label>
+                <input
+                  matInput
+                  formControlName="cbamQuantity"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  [attr.aria-label]="'Amount sent to the importer for ' + monthLabel(row.monthStart)"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <mat-select
+                  formControlName="quantityUnit"
+                  [attr.aria-label]="'Unit for ' + monthLabel(row.monthStart)"
+                >
+                  @for (u of massUnits; track u) {
+                    <mat-option [value]="u">{{ u }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              @if (rowError(); as re) {
+                <p class="error-text" role="alert">{{ re }}</p>
+              }
+              @if (concurrencyMonth() === row.monthStart) {
+                <button mat-button type="button" (click)="reloadMonth(row)">Reload</button>
+              }
+
+              <div class="actions">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="submit"
+                  [disabled]="savingMonth() === row.monthStart"
+                  [attr.aria-label]="'Save ' + monthLabel(row.monthStart)"
+                >
+                  Save
+                </button>
+                <button
+                  mat-button
+                  type="button"
+                  (click)="cancelEdit()"
+                  [attr.aria-label]="'Cancel editing ' + monthLabel(row.monthStart)"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          } @else {
+            <dl class="month-values">
+              <div>
+                <dt>Total production</dt>
+                <dd>
+                  {{ row.record?.totalProductionQuantity ?? '—' }}
+                  @if (row.record?.quantityUnit) {
+                    <span> {{ row.record?.quantityUnit }}</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Amount sent to the importer</dt>
+                <dd>
+                  {{ row.record?.cbamQuantity ?? '—' }}
+                  @if (row.record?.quantityUnit) {
+                    <span> {{ row.record?.quantityUnit }}</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>CBAM share</dt>
+                <dd>{{ shareDisplay(row.record?.cbamShare ?? null) }}</dd>
+              </div>
+              @if (row.reconciliation; as recon) {
+                <div>
+                  <dt>Product records</dt>
+                  <dd>{{ recon.recordedCbamProductionTonnes ?? '—' }}</dd>
+                </div>
+                <div>
+                  <dt>Difference</dt>
+                  <dd>{{ recon.differenceTonnes ?? '—' }}</dd>
+                </div>
+                <div>
+                  <dt>Compare status</dt>
+                  <dd>
+                    {{ reconciliationLabel(recon.reconciliationStatus) }}
+                    @if (recon.reconciliationStatus === 'MISMATCH') {
+                      <p class="muted">
+                        The importer amount does not match the product records.
+                      </p>
+                    }
+                  </dd>
+                </div>
+              }
+            </dl>
+
+            @if (canMutate()) {
+              <div class="actions">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="startEdit(row)"
+                  [attr.aria-label]="
+                    (row.record ? 'Edit ' : 'Enter ') + monthLabel(row.monthStart)
+                  "
+                >
+                  {{ row.record ? 'Edit' : 'Enter' }}
+                </button>
+                @if (row.record) {
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="deleteMonth(row)"
+                    [disabled]="savingMonth() === row.monthStart"
+                    [attr.aria-label]="'Delete ' + monthLabel(row.monthStart)"
+                  >
+                    Delete
+                  </button>
+                }
+              </div>
+            }
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

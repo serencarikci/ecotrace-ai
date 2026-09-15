@@ -1,0 +1,222 @@
+<section class="official-see-panel" data-testid="official-see-export">
+  <h2>Official Excel</h2>
+  <p class="help-text">
+    Generate the official CBAM SEE workbook from the current EcoTrace period data.
+    Values are checked on the server before download.
+  </p>
+
+  <div class="visually-hidden" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (loading()) {
+    <div class="loading-state" role="status">
+      <mat-spinner diameter="36"></mat-spinner>
+      <span>Loading official Excel status…</span>
+    </div>
+  }
+
+  @if (loadError(); as err) {
+    <p class="error-text" role="alert">{{ err }}</p>
+  }
+
+  @if (actionError(); as err) {
+    <p class="error-text" role="alert">{{ err }}</p>
+  }
+
+  @if (successMessage(); as msg) {
+    <p class="success-text" role="status">{{ msg }}</p>
+  }
+
+  @if (readiness(); as ready) {
+    <div class="surface-card detail-block">
+      <h3>Official Excel readiness</h3>
+      <p>
+        <strong>Status:</strong>
+        <span [attr.data-ready]="ready.ready">{{ ready.ready ? 'Ready' : 'Not ready' }}</span>
+      </p>
+      <p>
+        <strong>Template version:</strong>
+        {{ ready.templateVersion }}
+      </p>
+      <p>
+        <strong>Mapping version:</strong>
+        {{ ready.mappingVersion }}
+      </p>
+      <p>
+        <strong>Template checksum:</strong>
+        {{ ready.templateSha256.slice(0, 12) }}…
+      </p>
+      <p>
+        <strong>Recalculation engine:</strong>
+        {{ ready.sofficeAvailable ? 'Available' : 'Unavailable' }}
+      </p>
+
+      <h4>Capacity</h4>
+      <ul class="capacity-list" aria-label="Workbook capacity">
+        @for (row of capacityRows(); track row.key) {
+          <li>
+            {{ row.label }}:
+            <span [class.capacity-over]="!row.ok">{{ row.status }}</span>
+          </li>
+        }
+      </ul>
+
+      @if (blockingIssues().length > 0) {
+        <h4>Blocking issues</h4>
+        <ul class="blocking-list">
+          @for (issue of blockingIssues(); track issue.code) {
+            <li>
+              <span>{{ issue.message }}</span>
+              @if (issue.navTarget; as target) {
+                <button mat-button type="button" (click)="navigate(target)">
+                  Open related section
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="actions">
+        <button mat-button type="button" (click)="refresh()">Refresh status</button>
+      </div>
+    </div>
+  }
+
+  <div class="surface-card detail-block">
+    <h3>Generate</h3>
+    @if (activeRun(); as run) {
+      <p>
+        <strong>Generation status:</strong>
+        <span aria-live="polite">{{ generationStatusLabel() }}</span>
+      </p>
+      <p>
+        <strong>Validation:</strong>
+        {{ validationLabel(run.validationStatus) }}
+      </p>
+      <p>
+        <strong>Formula check:</strong>
+        {{ parityLabel(run.formulaParityStatus) }}
+      </p>
+    }
+
+    @if (currentArtifact(); as artifact) {
+      <div class="current-artifact">
+        <p>
+          <strong>Current file:</strong>
+          {{ safeFileName(artifact.fileName) }}
+          ({{ fileSizeLabel(artifact.fileSizeBytes) }})
+        </p>
+        <button
+          mat-stroked-button
+          type="button"
+          data-official-download-current
+          [disabled]="!!downloadingRunId()"
+          (click)="downloadCurrent()"
+        >
+          Download current official Excel
+        </button>
+      </div>
+    }
+
+    @if (canConfigure()) {
+      <div class="actions">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          data-official-generate
+          [disabled]="!canGenerate()"
+          [attr.aria-disabled]="!canGenerate()"
+          [attr.title]="generateDisabledReason() ?? 'Generate official Excel'"
+          (click)="generate()"
+        >
+          @if (submitting()) {
+            Generating…
+          } @else {
+            Generate official Excel
+          }
+        </button>
+      </div>
+      @if (generateDisabledReason(); as reason) {
+        <p class="muted disabled-reason">{{ reason }}</p>
+      }
+    } @else {
+      <p class="muted">
+        You can view history and download valid files. Configure permission is required to
+        generate.
+      </p>
+    }
+  </div>
+
+  <h3>Official Excel history</h3>
+  @if (runs().length === 0) {
+    <p class="empty-state">No official Excel exports yet.</p>
+  } @else {
+    <div class="table-scroll" role="region" aria-label="Official Excel history" tabindex="0">
+      <table mat-table [dataSource]="runs()" class="full-width history-table">
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let r">{{ runStatusLabel(r) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="created">
+          <th mat-header-cell *matHeaderCellDef>Created</th>
+          <td mat-cell *matCellDef="let r">
+            {{ (r.generatedAt || r.createdAt) | date: 'medium' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="template">
+          <th mat-header-cell *matHeaderCellDef>Template version</th>
+          <td mat-cell *matCellDef="let r">{{ r.templateVersion }}</td>
+        </ng-container>
+        <ng-container matColumnDef="mapping">
+          <th mat-header-cell *matHeaderCellDef>Mapping version</th>
+          <td mat-cell *matCellDef="let r">{{ r.mappingVersion }}</td>
+        </ng-container>
+        <ng-container matColumnDef="validation">
+          <th mat-header-cell *matHeaderCellDef>Validation</th>
+          <td mat-cell *matCellDef="let r">{{ validationLabel(r.validationStatus) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="parity">
+          <th mat-header-cell *matHeaderCellDef>Formula check</th>
+          <td mat-cell *matCellDef="let r">{{ parityLabel(r.formulaParityStatus) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="size">
+          <th mat-header-cell *matHeaderCellDef>File size</th>
+          <td mat-cell *matCellDef="let r">{{ fileSizeLabel(r.outputSizeBytes) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="fileName">
+          <th mat-header-cell *matHeaderCellDef>File name</th>
+          <td mat-cell *matCellDef="let r">
+            {{
+              canDownloadRun(r) && currentArtifact()?.exportRunId === r.id
+                ? safeFileName(currentArtifact()!.fileName)
+                : canDownloadRun(r)
+                  ? 'Available'
+                  : '—'
+            }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Download</th>
+          <td mat-cell *matCellDef="let r">
+            @if (canDownloadRun(r)) {
+              <button
+                mat-button
+                type="button"
+                [attr.data-official-download-run]="r.id"
+                [disabled]="downloadingRunId() === r.id"
+                (click)="downloadRun(r)"
+              >
+                Download
+              </button>
+            } @else {
+              <span class="muted">Not available</span>
+            }
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: historyColumns"></tr>
+      </table>
+    </div>
+  }
+</section>

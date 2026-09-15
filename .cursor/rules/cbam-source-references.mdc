@@ -1,0 +1,28 @@
+---
+description: Authoritative local CBAM/GHG source documents that must be retained and consulted
+alwaysApply: true
+---
+
+# CBAM / GHG source documents — do not forget
+
+When working on EcoTrace CBAM, stationary combustion, allocation, Official SEE, or regulatory interpretation, treat these project files as **retained source materials**:
+
+**Directory:** `local-reference/source-docs/`  
+**Index:** `local-reference/source-docs/README.md` (includes SHA-256)
+
+| File | Use for |
+|------|---------|
+| `ghg-protocol-v2-ch1-introduction.pdf` | GHG Protocol framing |
+| `ghg-protocol-v2-ch2-stationary-combustion.pdf` | Stationary combustion methodology (primary) |
+| `ghg-protocol-v2-ch2-stationary-combustion-variant-b.pdf` | Alternate SC chapter upload (different bytes) |
+| `cbam-uygulama-ve-benchmark.pdf` | CBAM uygulama / benchmark context |
+| `cbam-uygulama-yonetmeligi-2025-12-22.pdf` | 22 Dec 2025 CBAM uygulama yönetmeliği |
+| `ecotrace-executive-sample.csv` | Demo executive report shape only (not regulatory) |
+
+## Rules for the agent
+
+1. **Never delete** these files or the `local-reference/source-docs/` folder.
+2. Prefer this folder over chat/attachment copies when answering CBAM questions.
+3. Do not invent regulatory claims that contradict these sources; if unsure, cite the file path.
+4. Workbook templates remain in `local-reference/` (SEE V2.1, DVs catalog, SKDM allocation template).
+5. Exact duplicate uploads (`*_1.pdf`, `__1__1.pdf`) are discarded; unique SHA-256 variants may both be kept until proven identical in content.

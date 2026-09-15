@@ -1,0 +1,782 @@
+<section class="ppc-panel" aria-labelledby="ppc-heading" data-testid="purchased-precursors">
+  <h2 id="ppc-heading">Purchased precursors</h2>
+  <p class="help-text">
+    Precursors bought for this reporting period. Balance, readiness, EU default resolution and
+    embedded-emission results come from the server.
+  </p>
+
+  <div class="sr-only" aria-live="polite">{{ liveMessage() }}</div>
+
+  @if (loadError()) {
+    <div class="surface-card empty-state">
+      <p class="error-text" role="alert">{{ loadError() }}</p>
+      <button mat-stroked-button type="button" (click)="reload()">Retry</button>
+    </div>
+  } @else if (loading()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="28" aria-label="Loading purchased precursors"></mat-spinner>
+    </div>
+  } @else {
+    @if (successMessage()) {
+      <p class="success-text" role="status">{{ successMessage() }}</p>
+    }
+    @if (actionError()) {
+      <p class="error-text" role="alert">{{ actionError() }}</p>
+    }
+    @if (conflictMessage()) {
+      <div class="surface-card conflict-banner" role="alert">
+        <p class="error-text">{{ conflictMessage() }}</p>
+        <button
+          mat-stroked-button
+          type="button"
+          data-testid="ppc-conflict-reload"
+          (click)="selected()?.id ? openPrecursor(selected()!.id) : reload()"
+        >
+          Reload
+        </button>
+      </div>
+    }
+
+    <div class="list-toolbar">
+      @if (canConfigure() && canMutate()) {
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="startCreate()"
+          [disabled]="submitting()"
+        >
+          Create draft precursor
+        </button>
+      }
+    </div>
+
+    @if (showCreateForm()) {
+      <form
+        class="surface-card form-grid"
+        [formGroup]="createForm"
+        (ngSubmit)="createDraft()"
+        aria-labelledby="ppc-create-heading"
+        data-testid="ppc-create"
+      >
+        <h3 id="ppc-create-heading">New draft precursor</h3>
+        <mat-form-field appearance="outline">
+          <mat-label>Installation</mat-label>
+          <mat-select formControlName="installationProfileId" aria-required="true">
+            @for (inst of installations(); track inst.id) {
+              <mat-option [value]="inst.id">{{ inst.name }} ({{ inst.code }})</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Precursor name</mat-label>
+          <input matInput formControlName="name" autocomplete="off" />
+        </mat-form-field>
+        <fieldset class="mode-fieldset">
+          <legend>Data source</legend>
+          <mat-radio-group formControlName="dataSourceMode" class="mode-group">
+            <mat-radio-button [value]="modeSupplierData">Supplier data</mat-radio-button>
+            <mat-radio-button [value]="modeEuDefault">EU default</mat-radio-button>
+          </mat-radio-group>
+        </fieldset>
+        <div class="actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+            Create draft
+          </button>
+          <button mat-stroked-button type="button" (click)="cancelCreate()">Cancel</button>
+        </div>
+      </form>
+    }
+
+    @if (precursors().length === 0 && !showCreateForm()) {
+      <div class="empty-state surface-card" data-testid="ppc-empty">
+        <p>No purchased precursors have been added for this period.</p>
+        @if (canConfigure() && canMutate()) {
+          <button mat-stroked-button type="button" (click)="startCreate()">
+            Create draft precursor
+          </button>
+        }
+      </div>
+    } @else if (precursors().length > 0) {
+      <div class="table-wrap surface-card">
+        <table
+          mat-table
+          [dataSource]="precursors()"
+          class="full-width"
+          aria-label="Purchased precursors"
+        >
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef scope="col">Precursor</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.name || 'Untitled precursor' }}
+              <span class="muted">{{ cnLabel(row) }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="mode">
+            <th mat-header-cell *matHeaderCellDef scope="col">Data source</th>
+            <td mat-cell *matCellDef="let row">{{ modeLabel(row.dataSourceMode) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef scope="col">Quantity</th>
+            <td mat-cell *matCellDef="let row">
+              {{ formatDecimal(row.distribution.quantity) }}
+              {{ row.distribution.quantityUnit || '' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef scope="col">Readiness</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="result-badge">{{ readinessLabel(row.readiness.status) }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="balance">
+            <th mat-header-cell *matHeaderCellDef scope="col">Balance</th>
+            <td mat-cell *matCellDef="let row">
+              {{ balanceLabel(row.distribution.balanceStatus) }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef scope="col">Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <button
+                mat-button
+                type="button"
+                (click)="openPrecursor(row.id)"
+                [attr.aria-label]="'Open precursor ' + (row.name || row.id)"
+              >
+                Open
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="listColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: listColumns"></tr>
+        </table>
+      </div>
+    }
+
+    @if (detailLoading()) {
+      <div class="loading-state" role="status">
+        <mat-spinner diameter="28" aria-label="Loading precursor detail"></mat-spinner>
+      </div>
+    }
+
+    @if (selected(); as precursor) {
+      <form
+        class="surface-card form-grid"
+        [formGroup]="form"
+        (ngSubmit)="saveDraft()"
+        aria-labelledby="ppc-detail-heading"
+        data-testid="ppc-detail"
+      >
+        <h3 id="ppc-detail-heading">{{ precursor.name || 'Precursor draft' }}</h3>
+
+        @if (readiness(); as ready) {
+          <section class="summary-card nested" aria-labelledby="ppc-readiness-heading">
+            <h4 id="ppc-readiness-heading">Readiness</h4>
+            <p>
+              <span class="result-badge" data-testid="ppc-readiness-status">
+                {{ readinessLabel(ready.status) }}
+              </span>
+            </p>
+            @if (ready.blockingIssueCodes.length > 0) {
+              <ul class="blocking-list" role="list">
+                @for (code of ready.blockingIssueCodes; track code) {
+                  <li>{{ blockingMessage(code) }}</li>
+                }
+              </ul>
+            }
+          </section>
+        }
+
+        <section aria-labelledby="ppc-identity-heading">
+          <h4 id="ppc-identity-heading">Precursor details</h4>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Precursor name</mat-label>
+              <input matInput formControlName="name" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Identifier</mat-label>
+              <input matInput formControlName="identifier" autocomplete="off" />
+            </mat-form-field>
+          </div>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Aggregated goods category</mat-label>
+              <input matInput formControlName="aggregatedGoodsCategory" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Purchased input record</mat-label>
+              <mat-select formControlName="purchasedInputRecordId">
+                <mat-option value="">Not linked</mat-option>
+                @for (input of purchasedInputs(); track input.id) {
+                  <mat-option [value]="input.id">
+                    {{ input.inputName }} ({{ input.quantity }} {{ input.unit }})
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Supplier</mat-label>
+              <mat-select formControlName="supplierId">
+                <mat-option value="">Not linked</mat-option>
+                @for (supplier of suppliers(); track supplier.id) {
+                  <mat-option [value]="supplier.id">
+                    {{ supplier.code }} — {{ supplier.name }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>CN code</mat-label>
+              <input
+                matInput
+                formControlName="cnSearch"
+                autocomplete="off"
+                data-testid="ppc-cn-search"
+                [matAutocomplete]="cnAuto"
+                (input)="onCnSearchInput($any($event.target).value)"
+              />
+              <mat-autocomplete #cnAuto="matAutocomplete" (optionSelected)="onCnSelected($event)">
+                @for (code of cnResults(); track code.id) {
+                  <mat-option [value]="code.id">{{ cnOptionLabel(code) }}</mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+          </div>
+          @if (cnSearchError()) {
+            <p class="error-text" role="alert">{{ cnSearchError() }}</p>
+          }
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Country of origin</mat-label>
+              <input matInput formControlName="countryOfOrigin" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Production route</mat-label>
+              <input matInput formControlName="productionRoute" autocomplete="off" />
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section aria-labelledby="ppc-quantity-heading">
+          <h4 id="ppc-quantity-heading">Purchased quantity</h4>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Purchased quantity</mat-label>
+              <input matInput formControlName="quantity" inputmode="decimal" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Unit</mat-label>
+              <mat-select formControlName="quantityUnit">
+                @for (unit of massUnits; track unit) {
+                  <mat-option [value]="unit">{{ unit }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section aria-labelledby="ppc-mode-heading" data-testid="ppc-mode">
+          <h4 id="ppc-mode-heading">Data source</h4>
+          <fieldset class="mode-fieldset">
+            <legend>Where do the embedded emission values come from?</legend>
+            <mat-radio-group formControlName="dataSourceMode" class="mode-group">
+              <mat-radio-button [value]="modeSupplierData">Supplier data</mat-radio-button>
+              <mat-radio-button [value]="modeEuDefault">EU default</mat-radio-button>
+            </mat-radio-group>
+          </fieldset>
+          <p class="help-text">
+            One precursor uses one data source. Changing the data source clears the values that
+            belong to the other one.
+          </p>
+        </section>
+
+        @if (supplierModeActive()) {
+          <section aria-labelledby="ppc-supplier-heading" data-testid="ppc-supplier">
+            <h4 id="ppc-supplier-heading">Supplier data</h4>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Specific direct embedded emissions ({{ specificDirectUnit() }})</mat-label>
+                <input
+                  matInput
+                  formControlName="specificDirectEmbeddedEmissions"
+                  inputmode="decimal"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Direct value source</mat-label>
+                <mat-select formControlName="specificDirectSourceCode">
+                  <mat-option value="">Not set</mat-option>
+                  @for (item of parameterSourceList()?.items ?? []; track item.code) {
+                    <mat-option [value]="item.code">{{ item.labelEn }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>
+                  Electricity consumption intensity ({{ electricityIntensityUnit() }})
+                </mat-label>
+                <input
+                  matInput
+                  formControlName="electricityConsumptionIntensity"
+                  inputmode="decimal"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Electricity intensity source</mat-label>
+                <mat-select formControlName="electricityIntensitySourceCode">
+                  <mat-option value="">Not set</mat-option>
+                  @for (item of parameterSourceList()?.items ?? []; track item.code) {
+                    <mat-option [value]="item.code">{{ item.labelEn }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="field-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Electricity emission factor ({{ electricityEfUnit() }})</mat-label>
+                <input matInput formControlName="electricityEmissionFactor" inputmode="decimal" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Electricity factor source</mat-label>
+                <mat-select formControlName="electricityEfSourceCode">
+                  <mat-option value="">Not set</mat-option>
+                  @for (item of electricitySourceList()?.items ?? []; track item.code) {
+                    <mat-option [value]="item.code">{{ item.labelEn }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="readonly-grid">
+              <p data-testid="ppc-specific-indirect">
+                <strong>Specific indirect embedded emissions</strong><br />
+                {{ formatDecimal(precursor.supplierData.specificIndirectEmbeddedEmissions) }}
+                {{ precursor.supplierData.specificIndirectUnit || specificIndirectUnit() }}
+                <span class="muted">(server)</span>
+              </p>
+            </div>
+          </section>
+        }
+
+        @if (euDefaultModeActive()) {
+          <section aria-labelledby="ppc-default-heading" data-testid="ppc-default">
+            <h4 id="ppc-default-heading">EU default value</h4>
+            <p class="help-text">{{ precursor.defaultSource.otherCountriesNote }}</p>
+
+            @if (precursor.defaultSource.fromSnapshot) {
+              <div class="readonly-grid" data-testid="ppc-snapshot">
+                <p>
+                  <strong>Saved default value</strong><br />
+                  Dataset {{ snapshotDatasetVersion(precursor) }}
+                </p>
+                <p>
+                  <strong>Specific direct</strong><br />
+                  {{ formatDecimal(precursor.defaultSource.specificDirectEmbeddedEmissions) }}
+                  {{ precursor.defaultSource.specificDirectUnit || specificDirectUnit() }}
+                </p>
+                <p>
+                  <strong>Specific indirect</strong><br />
+                  {{ formatDecimal(precursor.defaultSource.specificIndirectEmbeddedEmissions) }}
+                  {{ precursor.defaultSource.specificIndirectUnit || specificIndirectUnit() }}
+                </p>
+                <p>
+                  <strong>Lookup key</strong><br />
+                  {{ precursor.defaultSource.lookupKey || '—' }}
+                </p>
+              </div>
+              <p class="muted">
+                Saved default values are a snapshot. They do not change when the catalog changes.
+              </p>
+            } @else {
+              <p data-testid="ppc-resolution-status">
+                <span class="result-badge">
+                  {{ resolutionLabel(precursor.defaultSource.resolutionStatus) }}
+                </span>
+              </p>
+              @if (resolutionHelp(precursor.defaultSource.resolutionStatus); as help) {
+                <p class="warning-text" role="status">{{ help }}</p>
+              }
+            }
+
+            @if (canEdit()) {
+              <div class="surface-card nested" [formGroup]="defaultSearchForm" data-testid="ppc-default-search">
+                <h5>Search EU default values</h5>
+                <div class="field-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Country</mat-label>
+                    <input matInput formControlName="country" autocomplete="off" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>CN code</mat-label>
+                    <input matInput formControlName="cn" autocomplete="off" />
+                  </mat-form-field>
+                </div>
+                <div class="field-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Production route</mat-label>
+                    <input matInput formControlName="route" autocomplete="off" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Goods description</mat-label>
+                    <input matInput formControlName="description" autocomplete="off" />
+                  </mat-form-field>
+                </div>
+                <mat-checkbox formControlName="includeOtherCountries">
+                  Include the "Other Countries and Territories" group
+                </mat-checkbox>
+                <div class="actions">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="searchDefaultValues()"
+                    [disabled]="defaultSearchLoading()"
+                    data-testid="ppc-default-search-button"
+                  >
+                    Search default values
+                  </button>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="resolveDefaultValue()"
+                    [disabled]="resolving()"
+                    data-testid="ppc-resolve-button"
+                  >
+                    Resolve default value
+                  </button>
+                </div>
+                @if (defaultSearchError()) {
+                  <p class="error-text" role="alert">{{ defaultSearchError() }}</p>
+                }
+              </div>
+
+              @if (defaultSearchDone() && defaultResults().length === 0) {
+                <p class="muted" data-testid="ppc-default-no-results">
+                  No default values match this search.
+                </p>
+              }
+              @if (defaultResults().length > 0) {
+                <div class="table-wrap surface-card" data-testid="ppc-default-results">
+                  <table
+                    mat-table
+                    [dataSource]="defaultResults()"
+                    class="full-width"
+                    aria-label="EU default value candidates"
+                  >
+                    <ng-container matColumnDef="identity">
+                      <th mat-header-cell *matHeaderCellDef scope="col">Default value</th>
+                      <td mat-cell *matCellDef="let row">{{ defaultIdentityLabel(row) }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="direct">
+                      <th mat-header-cell *matHeaderCellDef scope="col">Direct</th>
+                      <td mat-cell *matCellDef="let row">
+                        {{ formatDecimal(row.directValue) }} {{ row.directUnit }}
+                        <span class="muted">{{ defaultStatusLabel(row.directValueStatus) }}</span>
+                      </td>
+                    </ng-container>
+                    <ng-container matColumnDef="indirect">
+                      <th mat-header-cell *matHeaderCellDef scope="col">Indirect</th>
+                      <td mat-cell *matCellDef="let row">
+                        {{ formatDecimal(row.indirectValue) }} {{ row.indirectUnit }}
+                        <span class="muted">{{ defaultStatusLabel(row.indirectValueStatus) }}</span>
+                      </td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                      <th mat-header-cell *matHeaderCellDef scope="col">Actions</th>
+                      <td mat-cell *matCellDef="let row">
+                        <button
+                          mat-button
+                          type="button"
+                          (click)="useDefaultCandidate(row)"
+                          [attr.aria-label]="'Use default value ' + defaultIdentityLabel(row)"
+                        >
+                          Use this value
+                        </button>
+                      </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="defaultColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: defaultColumns"></tr>
+                  </table>
+                </div>
+              }
+
+              @if (resolution(); as res) {
+                <div class="readonly-grid" data-testid="ppc-default-preview">
+                  <p>
+                    <strong>Resolution</strong><br />
+                    <span data-testid="ppc-resolve-status">{{ resolutionLabel(res.status) }}</span>
+                  </p>
+                  @if (res.value; as value) {
+                    <p>
+                      <strong>Matched value</strong><br />
+                      {{ defaultIdentityLabel(value) }}
+                    </p>
+                    <p>
+                      <strong>Specific direct</strong><br />
+                      {{ formatDecimal(value.directValue) }} {{ value.directUnit }}
+                    </p>
+                    <p>
+                      <strong>Specific indirect</strong><br />
+                      {{ formatDecimal(value.indirectValue) }} {{ value.indirectUnit }}
+                    </p>
+                  }
+                  @if (res.dataset; as dataset) {
+                    <p>
+                      <strong>Dataset version</strong><br />
+                      {{ dataset.datasetVersion }}
+                    </p>
+                  }
+                </div>
+                @if (resolutionHelp(res.status); as help) {
+                  <p class="warning-text" role="status">{{ help }}</p>
+                }
+              }
+
+              <mat-form-field appearance="outline">
+                <mat-label>Justification for using a default value</mat-label>
+                <mat-select formControlName="defaultJustificationCode">
+                  <mat-option value="">Not set</mat-option>
+                  @for (item of justificationList()?.items ?? []; track item.code) {
+                    <mat-option [value]="item.code">{{ item.labelEn }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+          </section>
+        }
+
+        <section aria-labelledby="ppc-provenance-heading" data-testid="ppc-provenance">
+          <h4 id="ppc-provenance-heading">Provenance and evidence</h4>
+          <p class="help-text">
+            @if (supplierModeActive()) {
+              Supplier emission values need provenance notes or an evidence reference.
+            } @else {
+              Optional for EU default values. Use the justification field above to record why a
+              default value is used.
+            }
+          </p>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Provenance notes</mat-label>
+              <input matInput formControlName="provenanceNotes" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Evidence reference</mat-label>
+              <input matInput formControlName="evidenceReference" />
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section aria-labelledby="ppc-distribution-heading" data-testid="ppc-distribution">
+          <h4 id="ppc-distribution-heading">Quantity distribution</h4>
+
+          <h5>Used in CBAM products</h5>
+          @if (precursor.distribution.productUses.length === 0) {
+            <p class="muted">No CBAM product uses yet.</p>
+          } @else {
+            <ul class="product-use-list" role="list">
+              @for (use of precursor.distribution.productUses; track use.id) {
+                <li class="product-use-row">
+                  <span>{{ profileName(use.targetProductProfileVersionId) }}</span>
+                  <span>{{ formatDecimal(use.quantity) }} {{ use.unit }}</span>
+                  @if (canEdit()) {
+                    <span class="row-actions">
+                      <button
+                        mat-button
+                        type="button"
+                        (click)="startEditProductUse(use)"
+                        [attr.aria-label]="
+                          'Edit product use for ' + profileName(use.targetProductProfileVersionId)
+                        "
+                        [disabled]="submitting()"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        mat-button
+                        type="button"
+                        (click)="removeProductUse(use)"
+                        [attr.aria-label]="
+                          'Remove product use for ' + profileName(use.targetProductProfileVersionId)
+                        "
+                        [disabled]="submitting()"
+                      >
+                        Remove
+                      </button>
+                    </span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+          @if (canEdit()) {
+            <div class="product-use-add" [formGroup]="productUseForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Target product</mat-label>
+                <mat-select formControlName="targetProductProfileVersionId">
+                  <mat-option value="">Not selected</mat-option>
+                  @for (profile of profiles(); track profile.id) {
+                    <mat-option [value]="profile.id">{{ profileLabel(profile) }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Quantity</mat-label>
+                <input matInput formControlName="quantity" inputmode="decimal" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Unit</mat-label>
+                <mat-select formControlName="unit">
+                  @for (unit of massUnits; track unit) {
+                    <mat-option [value]="unit">{{ unit }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="submitProductUse()"
+                [disabled]="submitting()"
+                data-testid="ppc-submit-product-use"
+              >
+                {{ editingUseId() ? 'Update product use' : 'Add product use' }}
+              </button>
+              @if (editingUseId()) {
+                <button mat-button type="button" (click)="cancelEditProductUse()">Cancel</button>
+              }
+            </div>
+          }
+
+          <h5>Used in non-CBAM products</h5>
+          <div class="field-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Quantity</mat-label>
+              <input matInput formControlName="nonCbamQuantity" inputmode="decimal" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Unit</mat-label>
+              <mat-select formControlName="nonCbamQuantityUnit">
+                @for (unit of massUnits; track unit) {
+                  <mat-option [value]="unit">{{ unit }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section aria-labelledby="ppc-balance-heading" data-testid="ppc-balance">
+          <h4 id="ppc-balance-heading">Balance</h4>
+          <div class="readonly-grid" aria-label="Server balance values">
+            <p>
+              <strong>Purchased quantity</strong><br />
+              {{ formatDecimal(precursor.distribution.purchasedTonnes) }} t
+            </p>
+            <p>
+              <strong>Distributed quantity</strong><br />
+              {{ formatDecimal(precursor.distribution.distributedTonnes) }} t
+            </p>
+            <p>
+              <strong>Remaining quantity</strong><br />
+              {{ formatDecimal(precursor.distribution.remainingTonnes) }} t
+            </p>
+            <p>
+              <strong>Balance status</strong><br />
+              <span data-testid="ppc-balance-status">
+                {{ balanceLabel(precursor.distribution.balanceStatus) }}
+              </span>
+            </p>
+          </div>
+          @if (balanceHelp(precursor.distribution.balanceStatus); as help) {
+            <p class="help-text">{{ help }}</p>
+          }
+        </section>
+
+        <section aria-labelledby="ppc-calculation-heading" data-testid="ppc-calculation">
+          <h4 id="ppc-calculation-heading">Calculated embedded emissions</h4>
+          <p class="muted">These values are calculated by the server. They are not entered here.</p>
+          <div class="readonly-grid">
+            <p>
+              <strong>Total direct embedded emissions</strong><br />
+              {{ formatDecimal(precursor.calculation.totalDirectEmbeddedEmissions) }}
+              {{ precursor.calculation.resultUnit }}
+            </p>
+            <p>
+              <strong>Total indirect embedded emissions</strong><br />
+              {{ formatDecimal(precursor.calculation.totalIndirectEmbeddedEmissions) }}
+              {{ precursor.calculation.resultUnit }}
+            </p>
+            <p>
+              <strong>Total embedded emissions</strong><br />
+              {{ formatDecimal(precursor.calculation.totalEmbeddedEmissions) }}
+              {{ precursor.calculation.resultUnit }}
+            </p>
+          </div>
+          @if (precursor.calculation.rollupNote) {
+            <p class="help-text" data-testid="ppc-rollup-note">
+              {{ precursor.calculation.rollupNote }}
+            </p>
+          }
+          @if (euDefaultModeActive()) {
+            <p class="help-text" data-testid="ppc-default-calc-note">
+              These values use the saved EU default value for this precursor.
+            </p>
+          }
+        </section>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Notes</mat-label>
+          <textarea matInput formControlName="notes" rows="2"></textarea>
+        </mat-form-field>
+
+        @if (canEdit()) {
+          <div class="actions">
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="submitting()"
+              data-testid="ppc-save-draft"
+            >
+              Save draft
+            </button>
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="requestArchive()"
+              [disabled]="submitting()"
+            >
+              Archive
+            </button>
+          </div>
+        }
+
+        @if (showArchiveConfirm()) {
+          <div
+            class="surface-card archive-confirm"
+            role="alertdialog"
+            aria-labelledby="ppc-archive-title"
+          >
+            <h4 id="ppc-archive-title">Archive this precursor?</h4>
+            <p>Archived precursors stay readable in history but can no longer be edited.</p>
+            <div class="actions">
+              <button
+                mat-flat-button
+                color="warn"
+                type="button"
+                (click)="confirmArchive()"
+                [disabled]="submitting()"
+              >
+                Confirm archive
+              </button>
+              <button mat-stroked-button type="button" (click)="cancelArchive()">Cancel</button>
+            </div>
+          </div>
+        }
+      </form>
+    }
+  }
+</section>

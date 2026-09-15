@@ -16,7 +16,11 @@ Rules:
 - Unauthorized / cross-tenant access follows the existing **404 non-disclosure** policy.
 - See also [api-conventions.md](../api-conventions.md).
 
-**Not implemented** — proposal only.
+**Phase 1 implemented endpoint (foundation only):**
+
+`GET /api/v1/cbam/organizations/{organizationId}/module-status`
+
+Confirms module registration and authorization (`cbam:view`). Response fields include `enforcedPermissions` (currently only `cbam:view`). Explicitly reports that domain functionality, calculation, and reporting are **not** implemented and that **no compliance claim** is made. Future permission codes may exist as documentation vocabulary only; they are not implied by this endpoint. All other resource groups below remain proposal-only.
 
 ## Cross-cutting API rules
 
@@ -51,22 +55,32 @@ Place idempotency foundation in roadmap phase 1 before the first REQUIRED operat
 ### Installations
 
 `.../installations` — CBAM installation profiles linked to facilities.  
-Ops: list/create/get/patch/archive. Concurrency: `rowVersion`. Cardinality: D-041.
+Ops: list/create/get/patch/activate/archive. Concurrency: `rowVersion`. Cardinality: D-041 (pilot).  
+**Phase 2:** implemented.
 
 ### Reporting period bindings
 
 `.../reporting-period-bindings` — CBAM workflow + **CBAM lock** (not generic RP lock).  
 Transition commands only for **explicitly listed** transitions in workflows.md.  
 `approve` / `lock` commands must remain inactive or fail closed until **D-030** is resolved.  
-Period approval payload must be able to carry `calculationRunId` when activated.
+Period approval payload must be able to carry `calculationRunId` when activated.  
+**Phase 2:** list/create/get/patch/`open-data-collection`/archive (draft cleanup); further transitions blocked.
 
 ### Reference-data versions
 
 `/api/v1/cbam/reference-data/versions` (global) + org pin under organization path.
 
-### Product profiles (temporal)
+### Product profiles (temporal) + CN catalog (Phase 6A)
 
-`.../product-profiles` and `.../product-profiles/{id}/versions` — versioned CN/AGC/FU classifications (D-029).
+`GET .../cn-codes` / `GET .../cn-codes/{id}` — platform SEE CN catalog (`cbam:view`; global reference data, org-scoped permission gate).
+
+`GET .../cn-controlled-lists/{listCode}` — controlled lists (e.g. reducing agents).
+
+`.../product-profile-versions` — create draft, patch draft, publish, archive, get/list (`cbam:view` / `cbam:configure`).
+
+`GET .../reporting-period-bindings/{bindingId}/product-profiles` — list org profiles available for a binding (ownership check).
+
+`classificationReady` is **server-computed** (CN snapshot + required steel fields + percentage rules). Clients cannot force it true. Published versions are immutable; corrections create a new version. Allocation remains unavailable.
 
 ### Production processes / routes (installation-scoped)
 
@@ -75,10 +89,96 @@ Period approval payload must be able to carry `calculationRunId` when activated.
 
 Reporting-period resources may **read** selected/snapshotted configuration; they must **not** host process/route master CRUD.
 
-### Activity records
+### Production / activity / purchased inputs (Phase 3)
 
-`.../activity-records` — entity **`CbamActivityRecord`**.  
-Ops include submit/accept/reject and **`rejected → draft`** (correction reason, history preserved).
+Under `.../reporting-period-bindings/{bindingId}/`:
+
+- `production-records`
+- `activity-records`
+- `purchased-inputs`
+
+Plus detail/archive under `.../production-records/{id}`, `.../activity-records/{id}`, `.../purchased-inputs/{id}`.  
+Catalogs: `.../activity-types`, `.../units`, `.../activity-property-types`.  
+**Phase 3:** create/list/get/patch/archive only — **no** emission calculation, submit/accept workflow, or Excel.
+
+**Phase 6C:** production create/update must link an active classification-ready `productProfileVersionId`. Responses include `profileLinkStatus` / `profileLinkIssueCodes`. Binding summary: `.../production-profile-link-summary` (authoritative allocation-profile readiness counts; not a substitute for allocation).
+
+**Phase 7A-0:** monthly workbook D/E inputs under `.../monthly-production-basis` (+ `-summary`). Does **not** execute direct-emissions allocation.
+
+**Phase 7A-2:** dedicated direct-emissions allocation under `.../direct-emissions-allocation/` (`readiness`, `executions`, `results`, `summary`). Methodology `STATIONARY_COMBUSTION_DIRECT_EMISSIONS_ALLOCATION_V1`. Request body is `{ clientRequestId }` only — server resolves all D/E, SC sources, and product quantities. Does **not** cover electricity/process/precursor or Angular UI.
+
+**Phase 8A:** purchased-electricity indirect emissions under `.../purchased-electricity/` (`factors/default`, `readiness`, `summary`, `executions`, `results`, `results/{id}`). Methodology `PURCHASED_ELECTRICITY_INDIRECT_EMISSIONS_V1`. Client submits activity + factor source mode (and manual provenance when applicable); **must not** submit calculated emissions. Permissions: `cbam:view` for factors/readiness/results/summary; `cbam:configure` for execution. Does **not** cover product allocation, Angular UI, process/heat/waste gas/precursors, or Excel wiring.
+
+Future activity workflow ops (submit/accept/reject and **`rejected → draft`**) remain later-phase.
+
+### Allocation (Phase 4A)
+
+Under `.../reporting-period-bindings/{bindingId}/`:
+
+- `allocation-rules` (GET/POST)
+- `allocation-results` (GET)
+
+Under org root:
+
+- `allocation-rules/{ruleId}` (GET/PATCH)
+- `allocation-rules/{ruleId}/activate`
+- `allocation-rules/{ruleId}/archive`
+- `allocation-rules/{ruleId}/allocate/activity-records/{activityRecordId}`
+- `allocation-rules/{ruleId}/allocate/purchased-inputs/{inputRecordId}`
+- `allocation-results/{resultId}` (GET)
+- `allocation-results/{resultId}/recalculate`
+
+Permissions: `cbam:view` for GET; `cbam:configure` for mutations/allocate/recalculate.  
+**Phase 4A:** quantity allocation only — **no** emission factors, CO2e, Excel, or report generation.
+
+### Factor resolution (Phase 4B)
+
+Under org root:
+
+- `reference-sources` (GET/POST) · `reference-sources/{sourceId}` (GET/PATCH) · `.../archive`
+- `factor-definitions` (GET) · `factor-definitions/{id}` (GET)
+- `factor-definitions/{id}/values` (GET/POST)
+- `factor-values/{id}` (GET/PATCH) · `.../activate` · `.../archive`
+- `activity-records/{id}/properties` (POST — primary property reuse)
+- `activity-records/{id}/factor-resolutions/{factorDefinitionCode}/resolve` (POST)
+- `purchased-inputs/{id}/factor-resolutions/{factorDefinitionCode}/resolve` (POST)
+- `allocation-results/{id}/factor-resolutions/{factorDefinitionCode}/resolve` (POST)
+- `factor-resolutions/{id}` (GET)
+- `reporting-period-bindings/{bindingId}/factor-resolutions` (GET)
+
+Permissions: `cbam:view` for GET; `cbam:configure` for org-level factor values and resolve/re-resolve.  
+**Phase 4B:** selection metadata only — **no** automatic IPCC/DEFRA/EPA import, Excel, or report generation. Seeded reference sources are **names/metadata only**.
+
+### Calculation (Phase 5)
+
+Under org root:
+
+- `calculation-definitions` (GET)
+- `reporting-period-bindings/{bindingId}/calculation-runs` (GET/POST)
+- `calculation-runs/{runId}` (GET)
+- `calculation-runs/{runId}/execute` (POST)
+- `calculation-runs/{runId}/results` (GET)
+- `calculation-results/{resultId}` (GET)
+- `calculation-results/{resultId}/recalculate` (POST)
+
+Permissions: `cbam:view` for GET; `cbam:configure` for create/execute/recalculate.  
+**Phase 5:** minimal `MULTIPLY_ACTIVITY_BY_FACTOR` only — **no** official regulatory totals, CN, shipment, certificate/financial liability, or guessed sector formulas.
+
+### Export / reporting (Phase 6)
+
+Under org root:
+
+- `export-templates` (GET)
+- `export-templates/{templateId}` (GET)
+- `reporting-period-bindings/{bindingId}/export-readiness` (GET)
+- `reporting-period-bindings/{bindingId}/summary` (GET)
+- `reporting-period-bindings/{bindingId}/exports` (GET/POST)
+- `exports/{exportRunId}` (GET)
+- `exports/{exportRunId}/artifacts` (GET)
+- `export-artifacts/{artifactId}/download` (GET)
+
+Permissions: `cbam:view` for readiness/summary/history/download; `cbam:configure` for create export.  
+**Phase 6:** internal SKDM workbook + summary only. Official CBAM workbook mapping remains **BLOCKED**. Export does not recalculate Phase 5 results.
 
 ### Inventory
 
@@ -90,11 +190,6 @@ Ops include submit/accept/reject and **`rejected → draft`** (correction reason
 ### Precursors / complex-goods graphs
 
 `.../precursors` · `.../complex-goods-graphs`
-
-### Allocation
-
-`.../allocation-rule-applications`  
-`/api/v1/cbam/allocation-rule-definitions`
 
 ### Shipments
 

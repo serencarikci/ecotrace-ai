@@ -9,7 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AuthService } from '../core/services/auth.service';
 import { OpsApiService } from '../core/services/ops-api.service';
-import { canManageReferenceData } from '../core/services/roles.util';
+import { canManageReferenceData, canViewCbam } from '../core/services/roles.util';
 import { APP_VERSION } from '../core/version';
 
 @Component({
@@ -41,12 +41,12 @@ export class ShellComponent {
   readonly sidenavOpen = signal(true);
   readonly unreadCount = signal(0);
   readonly showSystemAdmin = computed(() => canManageReferenceData(this.auth.currentRoles()));
+  readonly showCbam = computed(() => canViewCbam(this.auth.currentRoles()));
 
   readonly selectedOrganizationName = computed(() => {
     const id = this.currentOrganizationId();
     return (
-      this.organizations().find((o) => o.organizationId === id)?.organizationName ??
-      'Organization'
+      this.organizations().find((o) => o.organizationId === id)?.organizationName ?? 'Organization'
     );
   });
 

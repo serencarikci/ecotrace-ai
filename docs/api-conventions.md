@@ -99,7 +99,7 @@ Attachment and CSV import endpoints accept `multipart/form-data` with a `file` f
 
 Under `/api/v1`: `agents`, `agent-executions`, `agent-action-requests`, `automation-rules`, `job-executions`, `anomaly-rules`, `anomalies`, `forecast-definitions`, `forecast-runs`, `data-quality`, `alerts`, `notifications`, `scheduled-reports`, `generated-reports`, `supplier-monitoring`, `regulatory-documents`, `regulatory-assessments`, `system/health*`.
 
-## CBAM / SKDM endpoint group (planned — not implemented)
+## CBAM / SKDM endpoint group
 
 Deliberate **bounded-context-first** exception to the organization-first layout used by most Operations resources:
 
@@ -108,3 +108,5 @@ Deliberate **bounded-context-first** exception to the organization-first layout 
 - `organizationId` is never trusted without membership and permission checks (`ensure_org_access` / CBAM helpers).
 - Unauthorized or cross-tenant access follows the existing **404 non-disclosure** policy.
 - This exception does **not** change existing non-CBAM endpoint conventions.
+
+**Phase 1–7:** `/api/v1/cbam/organizations/{organizationId}/...` includes module-status, foundation aggregates, data-collection records, quantity allocation, factor/property resolution, minimal calculation runs/results (`MULTIPLY_ACTIVITY_BY_FACTOR`), and Phase 6 export readiness / internal XLSX / SKDM period summary / artifact download. Phase 7 freezes MVP scope after audit (`status=mvp_ready_for_domain_validation`, classification READY_FOR_DOMAIN_VALIDATION). `enforcedPermissions` includes `cbam:view` and `cbam:configure`. Official CBAM workbook mapping, regulatory submission, automatic external factor import, CN, shipment, and certificate/financial liability are **not** implemented.

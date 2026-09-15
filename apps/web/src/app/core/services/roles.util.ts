@@ -42,7 +42,20 @@ export function canManageReferenceData(roles: string[]): boolean {
   return hasAny(roles, ROLE_SYSTEM_ADMIN);
 }
 
-export function canManageFactorPreferences(roles: string[]): boolean {
+
+export function canViewCbam(roles: string[]): boolean {
+  return hasAny(
+    roles,
+    ROLE_SYSTEM_ADMIN,
+    ROLE_ORGANIZATION_ADMIN,
+    ROLE_SUSTAINABILITY_MANAGER,
+    ROLE_ANALYST,
+    ROLE_VIEWER,
+  );
+}
+
+
+export function canConfigureCbam(roles: string[]): boolean {
   return hasAny(
     roles,
     ROLE_SYSTEM_ADMIN,
@@ -51,13 +64,26 @@ export function canManageFactorPreferences(roles: string[]): boolean {
   );
 }
 
+export const CBAM_VIEW_ROLES = [
+  ROLE_SYSTEM_ADMIN,
+  ROLE_ORGANIZATION_ADMIN,
+  ROLE_SUSTAINABILITY_MANAGER,
+  ROLE_ANALYST,
+  ROLE_VIEWER,
+] as const;
+
+export const CBAM_CONFIGURE_ROLES = [
+  ROLE_SYSTEM_ADMIN,
+  ROLE_ORGANIZATION_ADMIN,
+  ROLE_SUSTAINABILITY_MANAGER,
+] as const;
+
+export function canManageFactorPreferences(roles: string[]): boolean {
+  return hasAny(roles, ROLE_SYSTEM_ADMIN, ROLE_ORGANIZATION_ADMIN, ROLE_SUSTAINABILITY_MANAGER);
+}
+
 export function canCalculateInventory(roles: string[]): boolean {
-  return hasAny(
-    roles,
-    ROLE_SYSTEM_ADMIN,
-    ROLE_ORGANIZATION_ADMIN,
-    ROLE_SUSTAINABILITY_MANAGER,
-  );
+  return hasAny(roles, ROLE_SYSTEM_ADMIN, ROLE_ORGANIZATION_ADMIN, ROLE_SUSTAINABILITY_MANAGER);
 }
 
 export function canApproveInventory(roles: string[]): boolean {

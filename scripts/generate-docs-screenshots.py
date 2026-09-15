@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Generate EcoTrace docs screenshots (English UI mockups) via Chrome headless."""
 from __future__ import annotations
 
 import json
@@ -24,7 +23,6 @@ GROUPS = {
     "09-infra-demo": "Infrastructure and Demo",
 }
 
-# (group, filename, title, kind, blurb, nav_hint)
 SHOTS: list[tuple[str, str, str, str, str, str]] = [
     ("01-intro", "01-sign-in.png", "Sign In", "login", "Secure sign-in with email and password. Uses JWT and refresh tokens.", "Sign in"),
     ("01-intro", "02-document-purpose.png", "Document Purpose", "doc", "This guide explains EcoTrace AI features and screens. It is a reference portfolio app, not a certification product.", "Docs"),

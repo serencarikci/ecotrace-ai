@@ -1,0 +1,45 @@
+<section class="page">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">New Installation</h1>
+      <p class="page-subtitle">Create a draft installation profile from a facility.</p>
+    </div>
+    <a mat-stroked-button routerLink="/app/cbam/installations">Back</a>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="error-text" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (canConfigure) {
+    <form class="surface-card form-grid" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline">
+        <mat-label>Facility</mat-label>
+        <mat-select formControlName="facilityId">
+          @for (facility of facilities(); track facility.id) {
+            <mat-option [value]="facility.id">{{ facility.code }} — {{ facility.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Code</mat-label>
+        <input matInput formControlName="code" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Timezone</mat-label>
+        <input matInput formControlName="timezone" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Operator ID (optional)</mat-label>
+        <input matInput formControlName="operatorIdentityRef" />
+      </mat-form-field>
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="loading()">Save</button>
+      </div>
+    </form>
+  }
+</section>
