@@ -22,8 +22,9 @@ services:
 
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: ecotrace-api:local
     container_name: ecotrace-api
     restart: unless-stopped
     env_file:
@@ -36,6 +37,9 @@ services:
       KNOWLEDGE_STORAGE_PATH: /data/knowledge
       REPORT_STORAGE_PATH: /data/reports
       BACKUP_STORAGE_PATH: /data/backups
+      LIBREOFFICE_SOFFICE_PATH: /usr/bin/soffice
+      OFFICIAL_SEE_TEMPLATE_PATH: /app/official-see/template.xlsx
+      TRUSTED_HOSTS: localhost,127.0.0.1,api,ecotrace-api
     ports:
       - "${API_HOST_PORT:-8000}:8000"
     volumes:
@@ -51,14 +55,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 40s
+      start_period: 90s
     networks:
       - ecotrace-net
 
   scheduler:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: ecotrace-api:local
     container_name: ecotrace-scheduler
     restart: unless-stopped
     command: ["python", "-m", "ecotrace.scheduler_main"]
@@ -74,6 +79,8 @@ services:
       ATTACHMENT_STORAGE_PATH: /data/attachments
       KNOWLEDGE_STORAGE_PATH: /data/knowledge
       REPORT_STORAGE_PATH: /data/reports
+      LIBREOFFICE_SOFFICE_PATH: /usr/bin/soffice
+      OFFICIAL_SEE_TEMPLATE_PATH: /app/official-see/template.xlsx
     volumes:
       - ecotrace_attachments:/data/attachments
       - ecotrace_knowledge:/data/knowledge

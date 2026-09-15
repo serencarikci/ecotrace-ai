@@ -768,6 +768,11 @@ def seed_ops(db: Session, org: Organization, analyst: User) -> None:
 
 def run_seed(db: Session | None = None) -> None:
     settings = get_settings()
+    if settings.is_production:
+        raise RuntimeError(
+            "Demo/bootstrap seed is forbidden when APP_ENV=production "
+            "(set RUN_SEED=false and provision accounts explicitly)"
+        )
     own_session = db is None
     if db is None:
         init_db(settings)

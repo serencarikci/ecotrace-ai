@@ -16,11 +16,14 @@ services:
       APP_DEBUG: "false"
       RUN_SEED: "false"
       ENABLE_HSTS: "true"
+      ENABLE_API_DOCS: "false"
+      LIBREOFFICE_SOFFICE_PATH: /usr/bin/soffice
+      OFFICIAL_SEE_TEMPLATE_PATH: /app/official-see/template.xlsx
     deploy:
       resources:
         limits:
           cpus: "2.0"
-          memory: 1G
+          memory: 4G
     logging:
       driver: json-file
       options:

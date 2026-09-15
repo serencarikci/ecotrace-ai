@@ -19,8 +19,14 @@ from ecotrace.modules.cbam.application.official_see_export.constants import (
     CODE_RECALCULATION_ENGINE_UNAVAILABLE,
 )
 
-# Prefer explicit macOS app path (Phase 12A+ acceptance environment).
-_EXPLICIT_SOFFICE = Path("/Applications/LibreOffice.app/Contents/MacOS/soffice")
+# Local macOS acceptance path (never required in Linux containers).
+_MACOS_SOFFICE = Path("/Applications/LibreOffice.app/Contents/MacOS/soffice")
+_LINUX_SOFFICE_CANDIDATES = (
+    Path("/usr/bin/soffice"),
+    Path("/usr/lib/libreoffice/program/soffice"),
+    Path("/opt/libreoffice26.8/program/soffice"),
+    Path("/opt/libreoffice25.8/program/soffice"),
+)
 
 
 class RecalculationEngineUnavailable(BusinessRuleError):  # noqa: N818
@@ -33,26 +39,23 @@ class RecalculationEngineUnavailable(BusinessRuleError):  # noqa: N818
 
 
 def resolve_soffice_path() -> Path | None:
-    """Resolve soffice binary: explicit path first, then env, then PATH, then common Linux paths."""
-    for candidate in (
-        _EXPLICIT_SOFFICE,
-        Path(os.environ["LIBREOFFICE_SOFFICE_PATH"])
-        if os.environ.get("LIBREOFFICE_SOFFICE_PATH")
-        else None,
-    ):
-        if candidate is None:
-            continue
-        if candidate.is_file() and os.access(candidate, os.X_OK):
-            return candidate
-
+    """Resolve soffice: env → Linux paths → PATH → macOS app (local only)."""
+    env_path = os.environ.get("LIBREOFFICE_SOFFICE_PATH")
+    ordered: list[Path] = []
+    if env_path:
+        ordered.append(Path(env_path))
+    ordered.extend(_LINUX_SOFFICE_CANDIDATES)
     which = shutil.which("soffice")
     if which:
-        return Path(which)
+        ordered.append(Path(which))
+    ordered.append(_MACOS_SOFFICE)
 
-    for candidate in (
-        Path("/usr/bin/soffice"),
-        Path("/usr/lib/libreoffice/program/soffice"),
-    ):
+    seen: set[str] = set()
+    for candidate in ordered:
+        key = str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
         if candidate.is_file() and os.access(candidate, os.X_OK):
             return candidate
     return None
@@ -81,7 +84,6 @@ def strip_cached_formula_values(xlsx_path: Path) -> int:
     forces a real recalc pass after EcoTrace INPUT patches.
     """
     stripped = 0
-    # Match <f>...</f><v>...</v> or <f .../><v>...</v> (and empty v)
     pattern = re.compile(
         r"(<f\b[^>]*(?:/>|>.*?</f>))(\s*)(<v(?:\s[^>]*)?>.*?</v>|<v\s*/>)",
         re.DOTALL,
@@ -108,7 +110,7 @@ def strip_cached_formula_values(xlsx_path: Path) -> int:
     return stripped
 
 
-def recalculate_workbook(source_xlsx: Path, *, timeout_seconds: int = 300) -> Path:
+def recalculate_workbook(source_xlsx: Path, *, timeout_seconds: int | None = None) -> Path:
     """Recalculate ``source_xlsx`` via LibreOffice headless in a temp directory.
 
     Uses a unique UserInstallation profile per run. Returns the path to the
@@ -122,6 +124,13 @@ def recalculate_workbook(source_xlsx: Path, *, timeout_seconds: int = 300) -> Pa
     if not source_xlsx.is_file():
         raise RecalculationEngineUnavailable("Workbook for recalculation is missing.")
 
+    if timeout_seconds is None:
+        raw = os.environ.get("LIBREOFFICE_RECALC_TIMEOUT_SECONDS", "300")
+        try:
+            timeout_seconds = max(30, int(raw))
+        except ValueError:
+            timeout_seconds = 300
+
     tmp_root = Path(tempfile.mkdtemp(prefix="ecotrace-see-recalc-"))
     profile_dir = tmp_root / f"lo-profile-{uuid.uuid4().hex}"
     profile_dir.mkdir(parents=True, exist_ok=True)
@@ -133,8 +142,15 @@ def recalculate_workbook(source_xlsx: Path, *, timeout_seconds: int = 300) -> Pa
         out_dir = tmp_root / "out"
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        # file:/// URI for UserInstallation (required by LO on macOS/Linux).
         profile_uri = profile_dir.resolve().as_uri()
+        # Keep all writable state outside the signed/installed LibreOffice tree.
+        pycache_dir = tmp_root / "pycache"
+        pycache_dir.mkdir(parents=True, exist_ok=True)
+        env = os.environ.copy()
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
+        env["PYTHONPYCACHEPREFIX"] = str(pycache_dir)
+        env["HOME"] = str(tmp_root)
+        env["TMPDIR"] = str(tmp_root)
         convert_cmd = [
             str(soffice),
             "--headless",
@@ -154,6 +170,7 @@ def recalculate_workbook(source_xlsx: Path, *, timeout_seconds: int = 300) -> Pa
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=str(tmp_root),
+                env=env,
                 start_new_session=True,
             )
             try:
@@ -188,7 +205,6 @@ def recalculate_workbook(source_xlsx: Path, *, timeout_seconds: int = 300) -> Pa
                 )
             produced = candidates[0]
 
-        # Brief settle — LO sometimes still holds profile locks briefly.
         time.sleep(0.05)
         return produced
     except RecalculationEngineUnavailable:
@@ -202,6 +218,5 @@ def recalculate_workbook(source_xlsx: Path, *, timeout_seconds: int = 300) -> Pa
 def cleanup_recalc_dir(path: Path | None) -> None:
     if path is None:
         return
-    # produced = tmp_root/out/file.xlsx → remove tmp_root
     root = path.parent.parent if path.parent.name == "out" else path.parent
     shutil.rmtree(root, ignore_errors=True)
