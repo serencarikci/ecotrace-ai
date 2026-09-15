@@ -102,6 +102,21 @@ jobs:
 
       - name: Seed idempotency smoke
         run: |
+          # Pytest session teardown drops ORM tables but leaves alembic_version at head,
+          # so a bare `alembic upgrade head` is a no-op. Rebuild schema, then seed twice.
+          python - <<'PY'
+          import os
+          from sqlalchemy import create_engine, text
+
+          engine = create_engine(os.environ["DATABASE_URL"], isolation_level="AUTOCOMMIT")
+          with engine.connect() as conn:
+              conn.execute(text("DROP SCHEMA public CASCADE"))
+              conn.execute(text("CREATE SCHEMA public"))
+              conn.execute(text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
+              conn.execute(text("GRANT ALL ON SCHEMA public TO public"))
+          engine.dispose()
+          PY
+          alembic upgrade head
           python -m ecotrace.db.seed
           python -m ecotrace.db.seed
 
