@@ -5,19 +5,25 @@ on:
     branches: [main, master, develop]
     paths:
       - "docker-compose.yml"
+      - "docker-compose.prod.yml"
+      - "docker-compose.external-test.yml"
       - "apps/api/Dockerfile"
       - "apps/web/Dockerfile"
       - "apps/web/nginx.conf"
       - ".github/workflows/compose-ci.yml"
       - ".env.example"
+      - ".env.production.example"
   pull_request:
     paths:
       - "docker-compose.yml"
+      - "docker-compose.prod.yml"
+      - "docker-compose.external-test.yml"
       - "apps/api/Dockerfile"
       - "apps/web/Dockerfile"
       - "apps/web/nginx.conf"
       - ".github/workflows/compose-ci.yml"
       - ".env.example"
+      - ".env.production.example"
 
 jobs:
   compose:
@@ -25,10 +31,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create temporary CI .env
+        run: |
+          set -euo pipefail
+          # Tracked safe example; satisfies env_file + interpolation for compose config.
+          # Never print contents. Removed in always() cleanup below.
+          cp .env.example .env
+          test -f .env
+
       - name: Validate Docker Compose configuration
-        run: docker compose -f docker-compose.yml config --quiet
+        run: |
+          set -euo pipefail
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+          docker compose -f docker-compose.external-test.yml config --quiet
 
       - name: Ensure attachment volume is declared
         run: |
+          set -euo pipefail
           docker compose -f docker-compose.yml config | grep -q 'ecotrace_attachments'
           docker compose -f docker-compose.yml config | grep -q 'ATTACHMENT_STORAGE_PATH'
+
+      - name: Remove temporary CI .env
+        if: always()
+        run: |
+          set -euo pipefail
+          rm -f .env
+          test ! -f .env

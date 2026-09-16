@@ -6,10 +6,12 @@ on:
     paths:
       - "apps/api/**"
       - ".github/workflows/backend-ci.yml"
+      - ".github/workflows/api-image-ci.yml"
   pull_request:
     paths:
       - "apps/api/**"
       - ".github/workflows/backend-ci.yml"
+      - ".github/workflows/api-image-ci.yml"
 
 jobs:
   backend:
@@ -120,9 +122,20 @@ jobs:
           python -m ecotrace.db.seed
           python -m ecotrace.db.seed
 
-      - name: Build Docker image
-        run: docker build -t ecotrace-api:ci .
-        working-directory: apps/api
+      - name: Assert production Dockerfile LO pins (fast)
+        working-directory: ${{ github.workspace }}
+        run: |
+          test -f apps/api/Dockerfile
+          test -f apps/api/official-see/template.xlsx
+          grep -q 'LIBREOFFICE_VERSION=26.8.0' apps/api/Dockerfile
+          grep -q 'LIBREOFFICE_SHA256_AARCH64=f989b73c31e7e16b3f99475bc5befaffdf42af75f83fe882293e1a0258cc9173' apps/api/Dockerfile
+          grep -q 'LIBREOFFICE_SHA256_X86_64=d0a6031a3837e48f9854e6d2da6489b9fadbd814afa4741fa32a197741663a22' apps/api/Dockerfile
+          grep -q 'LO_FILE_ARCH=x86-64' apps/api/Dockerfile
+          grep -q 'useradd --create-home --uid 10001' apps/api/Dockerfile
+          grep -q 'USER ecotrace' apps/api/Dockerfile
+          grep -q 'alembic upgrade head' apps/api/docker-entrypoint.sh
+          ! grep -q 'alembic stamp' apps/api/docker-entrypoint.sh
+          echo '83170fde547c418dcae7f6a32852555d6874e092769f387b263108a231b2dd64  apps/api/official-see/template.xlsx' | sha256sum -c -
 
       - name: Dependency vulnerability scan (pip-audit)
         run: |

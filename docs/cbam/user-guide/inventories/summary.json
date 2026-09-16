@@ -1,0 +1,11 @@
+{
+  "fields_discovered": 436,
+  "actions_discovered": 150,
+  "fe_api_methods_approx": 128,
+  "fe_http_call_sites": 97,
+  "fe_unique_endpoint_patterns": 97,
+  "be_unique_endpoint_patterns": 154,
+  "frontend_used_fuzzy": 92,
+  "backend_only_fuzzy": 62,
+  "fe_unmatched_fuzzy": 5
+}

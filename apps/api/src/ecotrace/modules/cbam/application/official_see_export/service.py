@@ -102,20 +102,50 @@ __all__ = [
 
 
 def _repo_root() -> Path:
-    # .../apps/api/src/ecotrace/modules/cbam/application/official_see_export/service.py
-    # parents: 0 pkg,1 application,2 cbam,3 modules,4 ecotrace,5 src,6 api,7 apps,8 repo
-    return Path(__file__).resolve().parents[8]
+    """Walk parents until local-reference or apps/api layout is found."""
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "local-reference").is_dir() or (parent / "apps" / "api").is_dir():
+            return parent
+    # Fallback: historical depth when running from repo checkout.
+    try:
+        return here.parents[8]
+    except IndexError:
+        return here.parents[min(6, len(here.parents) - 1)]
+
+
+def _bundled_official_see_template() -> Path | None:
+    """Resolve packaged/container template without requiring host local-reference."""
+    import os
+
+    env = os.environ.get("OFFICIAL_SEE_TEMPLATE_PATH")
+    candidates: list[Path] = []
+    if env:
+        candidates.append(Path(env))
+    candidates.append(Path("/app/official-see/template.xlsx"))
+    # apps/api/official-see/template.xlsx when present beside package root
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "official-see" / "template.xlsx"
+        if candidate.is_file():
+            candidates.append(candidate)
+            break
+    for path in candidates:
+        if path.is_file():
+            return path
+    return None
 
 
 def ensure_official_see_template() -> Path:
-    """Copy local-reference template into export storage after SHA-256 verify."""
+    """Materialize Official SEE template into export storage after SHA-256 verify."""
     dest = template_storage_path(code=TEMPLATE_CODE, version=TEMPLATE_VERSION)
     if dest.is_file() and sha256_file(dest) == TEMPLATE_SHA256:
         return dest
-    source = _repo_root() / LOCAL_REFERENCE_RELATIVE
+    source = _bundled_official_see_template()
+    if source is None:
+        source = _repo_root() / LOCAL_REFERENCE_RELATIVE
     if not source.is_file():
         raise BusinessRuleError(
-            "Official SEE template file is missing from local-reference.",
+            "Official SEE template file is missing.",
             code=CODE_MAPPING_OR_TEMPLATE_INVALID,
             details=[{"code": CODE_MAPPING_OR_TEMPLATE_INVALID}],
         )
@@ -217,6 +247,34 @@ def create_official_see_export_run(
     binding = get_binding_for_org(db, organization_id, binding_id)
     require_writable_binding(binding)
 
+    from ecotrace.modules.cbam.application.official_see_export.concurrency import (
+        official_see_org_slot,
+    )
+
+    with official_see_org_slot(organization_id):
+        return _create_official_see_export_run_locked(
+            db,
+            user,
+            organization_id,
+            binding_id,
+            payload,
+            request_id=request_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+
+
+def _create_official_see_export_run_locked(
+    db: Session,
+    user: User,
+    organization_id: uuid.UUID,
+    binding_id: uuid.UUID,
+    payload: OfficialSeeExportCreateRequest,
+    *,
+    request_id: str | None = None,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> OfficialSeeExportRunResponse:
     assessment = assess_official_see_readiness(
         db, user, organization_id, binding_id, require_recalc_engine=True
     )
@@ -469,6 +527,15 @@ def create_official_see_export_run(
         published = True
         digest = sha256_file(output_xlsx)
         size = output_xlsx.stat().st_size
+        from ecotrace.core.config import get_settings
+
+        max_bytes = get_settings().official_see_max_file_size_mb * 1024 * 1024
+        if size > max_bytes:
+            raise BusinessRuleError(
+                "Official Excel output exceeds the configured maximum file size.",
+                code="OFFICIAL_SEE_FILE_TOO_LARGE",
+                details=[{"code": "OFFICIAL_SEE_FILE_TOO_LARGE"}],
+            )
         artifact = CbamOfficialSeeExportArtifact(
             organization_id=organization_id,
             export_run_id=run.id,

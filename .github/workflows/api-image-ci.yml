@@ -1,0 +1,111 @@
+name: API Image CI
+
+# Proves the production API Dockerfile builds on GitHub-hosted amd64 with
+# TDF LibreOffice 26.8 (x86-64 archive) and the tracked Official SEE template.
+#
+# What this job proves:
+#   - Dockerfile builds on linux/amd64
+#   - TDF 26.8.0 x86-64 URL is reachable and checksum matches
+#   - packages install; soffice reports LibreOffice 26.8
+#   - template is present and SHA-256 matches
+#   - image USER is non-root (ecotrace / 10001)
+#   - writable paths exist for non-root
+#
+# What this job does NOT prove:
+#   - Official SEE golden PEE↔I/J/K parity (authoritative on linux/arm64 acceptance)
+#   - Host-runner LibreOffice is never used as container proof
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "apps/api/Dockerfile"
+      - "apps/api/docker-entrypoint.sh"
+      - "apps/api/official-see/**"
+      - "apps/api/pyproject.toml"
+      - "apps/api/src/**"
+      - "apps/api/VERSION"
+      - "apps/api/alembic.ini"
+      - ".dockerignore"
+      - ".github/workflows/api-image-ci.yml"
+  pull_request:
+    paths:
+      - "apps/api/Dockerfile"
+      - "apps/api/docker-entrypoint.sh"
+      - "apps/api/official-see/**"
+      - "apps/api/pyproject.toml"
+      - "apps/api/src/**"
+      - "apps/api/VERSION"
+      - "apps/api/alembic.ini"
+      - ".dockerignore"
+      - ".github/workflows/api-image-ci.yml"
+
+jobs:
+  api-image-amd64:
+    name: Build production API image (linux/amd64 smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert runner architecture is amd64
+        run: |
+          echo "uname=$(uname -m)"
+          arch="$(uname -m)"
+          case "${arch}" in
+            x86_64|amd64) ;;
+            *) echo "Expected GitHub-hosted amd64 runner, got ${arch}" >&2; exit 1 ;;
+          esac
+
+      - name: Fast Dockerfile pin asserts
+        run: |
+          test -f apps/api/Dockerfile
+          test -f apps/api/official-see/template.xlsx
+          grep -q 'LIBREOFFICE_VERSION=26.8.0' apps/api/Dockerfile
+          grep -q 'LIBREOFFICE_SHA256_AARCH64=f989b73c31e7e16b3f99475bc5befaffdf42af75f83fe882293e1a0258cc9173' apps/api/Dockerfile
+          grep -q 'LIBREOFFICE_SHA256_X86_64=d0a6031a3837e48f9854e6d2da6489b9fadbd814afa4741fa32a197741663a22' apps/api/Dockerfile
+          grep -q 'LO_FILE_ARCH=x86-64' apps/api/Dockerfile
+          grep -q 'COPY apps/api/official-see/template.xlsx' apps/api/Dockerfile
+          ! grep -Eq 'apt-get install.*libreoffice' apps/api/Dockerfile
+          echo '83170fde547c418dcae7f6a32852555d6874e092769f387b263108a231b2dd64  apps/api/official-see/template.xlsx' | sha256sum -c -
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build production API image (fail closed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          load: true
+          tags: ecotrace-api:ci-amd64
+          platforms: linux/amd64
+          # Scope GHA cache to this workflow+platform so arm64 local layers cannot be reused.
+          cache-from: type=gha,scope=api-image-linux-amd64
+          cache-to: type=gha,mode=max,scope=api-image-linux-amd64
+          provenance: false
+      - name: Non-golden image smoke (container LibreOffice + template + permissions)
+        run: |
+          set -eux
+          docker image inspect ecotrace-api:ci-amd64 --format '{{.Architecture}} {{.Os}} {{.Config.User}}' | tee /tmp/api-image-inspect.txt
+          grep -E '^amd64 linux ecotrace$' /tmp/api-image-inspect.txt
+          # Refuse claiming host LibreOffice; only inspect the image.
+          docker run --rm --platform linux/amd64 --entrypoint /bin/bash ecotrace-api:ci-amd64 -lc '
+            set -eux
+            uname -m | grep -Eq "x86_64|amd64"
+            id -u | grep -qx 10001
+            test -f /app/official-see/template.xlsx
+            echo "83170fde547c418dcae7f6a32852555d6874e092769f387b263108a231b2dd64  /app/official-see/template.xlsx" | sha256sum -c -
+            test -x /usr/bin/soffice
+            soffice --version | tee /tmp/lo-version.txt
+            grep -E "LibreOffice 26\.8\.0\.3" /tmp/lo-version.txt
+            ! grep -E "LibreOffice 7\.4" /tmp/lo-version.txt
+            test ! -e /usr/lib/libreoffice/program/soffice -o -e /opt/libreoffice26.8/program/soffice
+            test -d /data/reports
+            test -d /tmp/ecotrace-lo
+            touch /data/reports/.ci-write /tmp/ecotrace-lo/.ci-write
+            rm -f /data/reports/.ci-write /tmp/ecotrace-lo/.ci-write
+          '
+          echo "API image amd64 smoke OK (not Official SEE golden parity)"

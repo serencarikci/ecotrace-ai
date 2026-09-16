@@ -1,0 +1,648 @@
+{
+  "FRONTEND_USED": {
+    "count": 99,
+    "items": [
+      {
+        "http": "DELETE",
+        "path": "/api/v1/cbam/organizations/{organization_id}/monthly-production-basis/{record_id}"
+      },
+      {
+        "http": "DELETE",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/{process_id}/product-uses/{use_id}"
+      },
+      {
+        "http": "DELETE",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/{precursor_id}/product-uses/{use_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/activity-types"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/cn-codes/{cn_code_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/cn-controlled-lists/{list_code}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/export-artifacts/{artifact_id}/download"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/exports/{export_run_id}/artifacts"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/installations/{installation_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/module-status"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/official-see-export/artifacts/{artifact_id}/download"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/official-see-export/runs/{run_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/official-see-export/runs/{run_id}/artifacts"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{profile_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/production-processes/controlled-lists"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/production-processes/controlled-lists/{list_code}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/production-processes/metadata"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/purchased-precursors/metadata"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/direct-emissions-allocation/readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/direct-emissions-allocation/results/{result_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/direct-emissions-allocation/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/export-readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/indirect-emissions-allocation/readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/indirect-emissions-allocation/results/{result_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/indirect-emissions-allocation/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/monthly-production-basis-summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/official-see-export/readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/product-embedded-emissions/readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/product-embedded-emissions/results/{result_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/product-embedded-emissions/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/{process_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/{process_id}/readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-profile-link-summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-electricity/factors/default"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-electricity/readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-electricity/results/{result_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-electricity/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/{precursor_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/{precursor_id}/readiness"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/stationary-combustion/results/{result_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/stationary-combustion/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/summary"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/stationary-combustion/fuels"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/stationary-combustion/fuels/{fuel_code}/parameters"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/units"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/installations/{installation_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/monthly-production-basis/{record_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{profile_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/production-records/{record_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/{process_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/{process_id}/product-uses/{use_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/{precursor_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/{precursor_id}/product-uses/{use_id}"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{record_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{record_id}/factor-resolutions/{factor_definition_code}/resolve"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{record_id}/properties"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-results/{result_id}/factor-resolutions/{factor_definition_code}/resolve"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-results/{result_id}/recalculate"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{rule_id}/activate"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{rule_id}/allocate/activity-records/{activity_record_id}"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{rule_id}/allocate/purchased-inputs/{input_record_id}"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{rule_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/calculation-results/{result_id}/recalculate"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/calculation-runs/{run_id}/execute"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/installations"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/installations/{installation_id}/activate"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/installations/{installation_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{profile_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions/{profile_id}/publish"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/production-records/{record_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/purchased-inputs/{record_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/purchased-inputs/{record_id}/factor-resolutions/{factor_definition_code}/resolve"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/purchased-precursors/default-values/resolve"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/activity-records"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/allocation-rules"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/calculation-runs"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/direct-emissions-allocation/executions"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/exports"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/indirect-emissions-allocation/executions"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/monthly-production-basis"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/official-see-export/executions"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/open-data-collection"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/product-embedded-emissions/executions"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/{process_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes/{process_id}/product-uses"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-records"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-electricity/executions"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-inputs"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/{precursor_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors/{precursor_id}/product-uses"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/stationary-combustion/executions"
+      }
+    ]
+  },
+  "BACKEND_ONLY_VALID": {
+    "count": 56,
+    "items": [
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/activity-property-types"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{record_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-results/{result_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{rule_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/calculation-definitions"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/calculation-results/{result_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/calculation-runs/{run_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/calculation-runs/{run_id}/results"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/cn-codes"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/export-templates"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/export-templates/{template_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/exports/{export_run_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-definitions"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-definitions/{definition_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-definitions/{definition_id}/values"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-resolutions/{resolution_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-values/{value_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/installations"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/monthly-production-basis/{record_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/product-profile-versions"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/production-records/{record_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/purchased-inputs/{record_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/purchased-precursors/default-values/search"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reference-sources"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reference-sources/{source_id}"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/activity-records"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/allocation-results"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/allocation-rules"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/calculation-runs"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/direct-emissions-allocation/results"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/exports"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/factor-resolutions"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/indirect-emissions-allocation/results"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/monthly-production-basis"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/official-see-export/runs"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/product-embedded-emissions/results"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/product-profiles"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-processes"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/production-records"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-electricity/results"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-inputs"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/purchased-precursors"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/stationary-combustion/activity-coverage"
+      },
+      {
+        "http": "GET",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}/stationary-combustion/results"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/activity-records/{record_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/allocation-rules/{rule_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-values/{value_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/purchased-inputs/{record_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reference-sources/{source_id}"
+      },
+      {
+        "http": "PATCH",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reporting-period-bindings/{binding_id}"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-definitions/{definition_id}/values"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-values/{value_id}/activate"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/factor-values/{value_id}/archive"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reference-sources"
+      },
+      {
+        "http": "POST",
+        "path": "/api/v1/cbam/organizations/{organization_id}/reference-sources/{source_id}/archive"
+      }
+    ]
+  },
+  "ADMIN_OR_INTERNAL": {
+    "count": 0,
+    "items": []
+  },
+  "LEGACY_BUT_SUPPORTED": {
+    "count": 0,
+    "items": []
+  },
+  "UNREACHABLE_OR_OBSOLETE": {
+    "count": 0,
+    "items": []
+  },
+  "UNMAPPED": {
+    "count": 0,
+    "items": []
+  }
+}

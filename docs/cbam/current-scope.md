@@ -3,9 +3,11 @@
 **Classification:** `MVP_ACCEPTANCE_PASSED` (Official SEE path 2026-08-31)
 **Not claimed:** regulatory-ready, official-CBAM submission-ready
 
-## Implemented workflow
+## Implemented workflow (current product path)
 
-Installation → Reporting Period → Production → Activity Data → Purchased Inputs → Allocation → Factor Resolution → Calculation → SKDM Summary → Internal Excel Export
+Installation → Reporting Period → Product Profiles → Production (+ monthly D/E) → Activities → Direct Emissions → Indirect Emissions → Processes → Purchased Inputs / Precursors → Product Results (PEE V2) → Allocation (DEA / IEA) → Factors / Calculation (generic path) → Report / Excel (**Official SEE** + Internal Excel)
+
+> Older bullets below may say “Excel export / allocation / precursors still out of scope” for the phase in which they were written. Those lines are historical phase notes. **Later phases supersede them:** PEE V2, precursors, DEA/IEA, and Official SEE are implemented. Migration head: `0032_cbam_prec_audit`. The supported Docker API image ships **TDF LibreOffice 26.8** for Official SEE; GitHub Actions does not yet run the golden LO job on amd64.
 
 ## Included
 

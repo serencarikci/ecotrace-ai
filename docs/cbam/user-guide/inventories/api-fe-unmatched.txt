@@ -1,0 +1,5 @@
+POST /activity-records/{param}/factor-resolutions/{param}/resolve
+POST /allocation-results/{param}/factor-resolutions/{param}/resolve
+POST /allocation-rules/{param}/allocate/activity-records/{param}
+POST /allocation-rules/{param}/allocate/purchased-inputs/{param}
+POST /purchased-inputs/{param}/factor-resolutions/{param}/resolve
